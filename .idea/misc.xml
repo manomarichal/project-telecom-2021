@@ -1,6 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="CMakeWorkspace" PROJECT_DIR="$PROJECT_DIR$" />
+  <component name="CidrRootsConfiguration">
+    <excludeRoots>
+      <file path="$PROJECT_DIR$/apps" />
+      <file path="$PROJECT_DIR$/bin" />
+      <file path="$PROJECT_DIR$/bsdmodule" />
+      <file path="$PROJECT_DIR$/conf" />
+      <file path="$PROJECT_DIR$/doc" />
+      <file path="$PROJECT_DIR$/drivers" />
+      <file path="$PROJECT_DIR$/etc" />
+      <file path="$PROJECT_DIR$/exopc" />
+      <file path="$PROJECT_DIR$/include" />
+      <file path="$PROJECT_DIR$/lib" />
+      <file path="$PROJECT_DIR$/linuxmodule" />
+      <file path="$PROJECT_DIR$/m4" />
+      <file path="$PROJECT_DIR$/minios" />
+      <file path="$PROJECT_DIR$/ns" />
+      <file path="$PROJECT_DIR$/share" />
+      <file path="$PROJECT_DIR$/test" />
+      <file path="$PROJECT_DIR$/tools" />
+      <file path="$PROJECT_DIR$/userlevel" />
+    </excludeRoots>
+  </component>
   <component name="JavaScriptSettings">
     <option name="languageLevel" value="ES6" />
+  </component>
+  <component name="ProjectPlainTextFileTypeManager">
+    <file url="file://$PROJECT_DIR$/CMakeLists.txt" />
   </component>
 </project>
