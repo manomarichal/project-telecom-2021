@@ -1,8 +1,23 @@
-//
-// Created by Gebruiker on 7/04/2021.
-//
+#ifndef CLICK_IGMPCLIENTSIDE_HH
+#define CLICK_IGMPCLIENTSIDE_HH
+#include <click/element.hh>
+CLICK_DECLS
 
-#ifndef PROJECT_TELECOM_2021_IGMPCLIENTSIDE_HH
-#define PROJECT_TELECOM_2021_IGMPCLIENTSIDE_HH
+class IGMPClientSide : public Element {
+public:
+    IGMPClientSide();
+    ~IGMPClientSide();
 
-#endif //PROJECT_TELECOM_2021_IGMPCLIENTSIDE_HH
+    const char *class_name() const	{ return "IGMPClientSide"; }
+    const char *port_count() const	{ return "1/1"; }
+    const char *processing() const	{ return PUSH; }
+    int configure(Vector<String>&, ErrorHandler*);
+
+    void push(int, Packet *);
+private:
+    uint32_t maxSize;
+};
+
+CLICK_ENDDECLS
+#endif
+
