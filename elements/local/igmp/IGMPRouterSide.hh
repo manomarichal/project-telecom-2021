@@ -1,0 +1,14 @@
+//
+// Created by Gebruiker on 7/04/2021.
+//
+
+#ifndef PROJECT_TELECOM_2021_IGMPROUTERSIDE_HH
+#define PROJECT_TELECOM_2021_IGMPROUTERSIDE_HH
+
+
+class IGMPRouterSide {
+
+};
+
+
+#endif //PROJECT_TELECOM_2021_IGMPROUTERSIDE_HH
