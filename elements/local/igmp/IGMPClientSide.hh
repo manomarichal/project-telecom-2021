@@ -14,6 +14,13 @@ public:
     int configure(Vector<String>&, ErrorHandler*);
 
     void push(int, Packet *);
+
+
+    void client_join();
+    void add_handlers();
+
+
+
 private:
     uint32_t maxSize;
 };
