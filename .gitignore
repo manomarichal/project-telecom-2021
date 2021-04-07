@@ -1,4 +1,6 @@
 /elements/*
+!elements/local
+
 /install-sh
 /config-minios.h.in
 /LICENSE
@@ -11,7 +13,6 @@
 /config.guess
 /AUTHORS
 /config.mk.in
-/igmp_opgave/*
 /click-buildtool.in
 /CMakeLists.txt
 /click-mkelemmap
@@ -36,5 +37,5 @@
 /switch.pcap
 /aclocal.m4
 /click.spec
-/scripts/
+/scripts/*
 /config.log
