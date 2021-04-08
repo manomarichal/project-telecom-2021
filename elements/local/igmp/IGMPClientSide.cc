@@ -10,16 +10,18 @@ IGMPClientSide::IGMPClientSide()
 IGMPClientSide::~IGMPClientSide()
 {}
 
-void IGMPClientSide::client_join() {
-    click.chatter("hallo")
+int IGMPClientSide::configure(Vector<String> &conf, ErrorHandler *errh)
+{
+    return 0;
 }
 
-void IGMPClientSide::client_join() {
-    click.chatter("hallo")
+int IGMPClientSide::client_join(const String &conf, Element *e, void *thunk, ErrorHandler *errh) {
+    click_chatter("hallo");
+    return 0;
 }
 
 void IGMPClientSide::add_handlers() {
-    add_write_handler("client_join", client_join, (void *) 0)
+    add_write_handler("client_join", &client_join, (void *)0);
 //    add_write_handler("client_leave")
 }
 

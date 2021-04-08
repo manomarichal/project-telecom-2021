@@ -13,9 +13,10 @@ public:
     const char *processing() const	{ return PUSH; }
     int configure(Vector<String>&, ErrorHandler*);
 
-    void push(int, Packet *);
+//    void push(int, Packet *);
 
-    void client_join();
+    //static handles, important will not work otherwise
+    static int client_join(const String &conf, Element *e, void *thunk, ErrorHandler *errh);
     void add_handlers();
 
 private:
