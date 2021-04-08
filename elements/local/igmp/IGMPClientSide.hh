@@ -24,7 +24,7 @@ public:
 
 private:
     uint32_t maxSize;
-    Vector<Vector<click_ip>> groups;
+    Vector<igmp_group_record> group_records; // the group records that need to be contained in membership reports
     Packet* make_membership_packet();
 };
 

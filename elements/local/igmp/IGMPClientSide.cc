@@ -51,7 +51,7 @@ Packet * IGMPClientSide::make_membership_packet()
     memset(p->data(), '\0', p->length()); // sets all the data to \0's, ¯\_(ツ)_/¯ but examples do it
 
     // IP HEADER, based on elements/icmp/icmpsendpings.cc
-    click_ip *nip = reinterpret_cast<click_ip *>(p->data());
+    click_ip *nip = reinterpret_cast<click_ip *>(p->data()); // why reinterpret, ¯\_(ツ)_/¯
     nip->ip_v = 4;
     nip->ip_hl = (sizeof(click_ip)) >> 2; // IHL field, right shift by 2, ¯\_(ツ)_/¯
     nip->ip_len = htons(p->length()); // converts host byte order to network byte order
@@ -64,8 +64,9 @@ Packet * IGMPClientSide::make_membership_packet()
     nip->ip_sum = click_in_cksum((unsigned char *)nip, sizeof(click_ip)); // TODO no idea
 
     // IP OPTIONS, every packet needs an IP Router Alert option [RFC-2113], specified in RFC3376 page 7
-    // geen ide hoe
+    // TODO
 
+    // IGMP membership reports
 
 
 }
