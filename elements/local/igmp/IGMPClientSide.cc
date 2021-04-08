@@ -15,7 +15,8 @@ void IGMPClientSide::add_handlers() {
 }
 
 
-
+CLICK_ENDDECLS
+EXPORT_ELEMENT(IGMPClientSide)
 
 
 
