@@ -25,7 +25,15 @@ int IGMPClientSide::client_join(const String &conf, Element *e, void *thunk, Err
     IGMPClientSide *element = reinterpret_cast<IGMPClientSide *>(e); //convert element to igmpclientside element
     Vector<String> arg_list;
     cp_argvec(conf, arg_list);   //splits up the conf vector into more readable version in the arg_list vector
+    //make new group record if it does not yet exist
+    //    igmp_group_record grRecord;
+    IPAddress groupaddr = IPAddress(arg_list[0]);
 
+    for(int i = 0; i<= group_records.size(); i++){
+        if (group_records[i].multicast_adress == groupaddr){
+            return -1;
+        }
+    }
     click_chatter("hallo, join");
     return 0;
 }
