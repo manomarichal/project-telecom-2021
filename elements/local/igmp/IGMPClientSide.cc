@@ -27,13 +27,35 @@ int IGMPClientSide::client_join(const String &conf, Element *e, void *thunk, Err
     cp_argvec(conf, arg_list);   //splits up the conf vector into more readable version in the arg_list vector
     //make new group record if it does not yet exist
     //    igmp_group_record grRecord;
-    IPAddress groupaddr = IPAddress(arg_list[0]);
 
-    for(int i = 0; i<= group_records.size(); i++){
-        if (group_records[i].multicast_adress == groupaddr){
-            return -1;
-        }
-    }
+
+//    IPAddress groupaddr = IPAddress(arg_list[0]);
+//    bool exists = false;
+//    for(int i = 0; i<= group_records.size(); i++){
+//        if (group_records[i].multicast_adress == groupaddr){
+//            //check if the client is a part of this group record already
+//            for (int y =0; y<=group_records[i].source_adresses.size(); y++){
+//                if (group_records[i].source_adresses[y] == clientIP){
+//                    //case if the client has already joined the group address
+//                    //the mc address exists and the client is already a part of it
+//                    return -1;
+//                }
+//            }
+//            //if the client is not a part off the group, add it to the group
+//            group_records[i].source_adresses.push_back(clientIP);
+//            group_records[i].number_of_sources++;
+//            exists = true;
+//        }
+//    }
+//    if(!exists){
+//        //the group record needs to be made
+//        grRecord.record_type = 0;
+//        grRecord.multicast_adress = groupaddr;
+//        grRecord.number_of_sources = 1;
+//        grRecord.source_adresses.push_back(clientIP);
+//    }
+
+
     click_chatter("hallo, join");
     return 0;
 }
