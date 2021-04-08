@@ -22,11 +22,21 @@ int IGMPClientSide::configure(Vector<String> &conf, ErrorHandler *errh)
  * return integer, done throughout other click elements
  */
 int IGMPClientSide::client_join(const String &conf, Element *e, void *thunk, ErrorHandler *errh) {
+    IGMPClientSide *element = reinterpret_cast<IGMPClientSide *>(e); //convert element to igmpclientside element
+    Vector<String> arg_list;
+    cp_argvec(conf, arg_list);   //splits up the conf vector into more readable version in the arg_list vector
+
     click_chatter("hallo, join");
     return 0;
 }
 
 int IGMPClientSide::client_leave(const String &conf, Element *e, void *thunk, ErrorHandler *errh) {
+    IGMPClientSide *element = reinterpret_cast<IGMPClientSide *>(e); //convert element to igmpclientside element
+    Vector<String> arg_list;
+    cp_argvec(conf, arg_list);   //splits up the conf vector into more readable version in the arg_list vector
+
+
+
     click_chatter("hallo, leave");
     return 0;
 }
