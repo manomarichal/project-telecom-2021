@@ -19,7 +19,7 @@ struct igmp_group_record
     const uint8_t aux_data_len = 0; //IGMPv3 does not define any auxiliary data thus length must be zero
     uint16_t number_of_sources;
     uint32_t multicast_adress;
-    Vector<IPAddress> source_adresses;
+    Vector<uint32_t> source_adresses;
 };
 
 // struct used to represent a membership report, see RFC3367 page 13
@@ -29,7 +29,7 @@ struct igmp_membership_report
     const uint8_t reserved_1 = 0;
     uint16_t number_of_group_records;
     uint16_t checksum;
-    const uint16_t reserved1 = 0;
+    const uint16_t reserved2 = 0;
 };
 
 #endif //PROJECT_TELECOM_IGMP_H
