@@ -20,6 +20,8 @@ public:
 
 private:
     uint32_t maxSize;
+    Vector<Vector<click_ip>> groups;
+    Packet* make_membership_packet();
 };
 
 CLICK_ENDDECLS
