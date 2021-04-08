@@ -1,6 +1,7 @@
 #ifndef CLICK_IGMPCLIENTSIDE_HH
 #define CLICK_IGMPCLIENTSIDE_HH
 #include <click/element.hh>
+#include "igmp.h"
 CLICK_DECLS
 
 class IGMPClientSide : public Element {

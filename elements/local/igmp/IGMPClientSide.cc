@@ -1,6 +1,7 @@
 #include <click/config.h>
 #include <click/args.hh>
 #include <click/error.hh>
+#include <click/ipaddress.hh>
 #include "IGMPClientSide.hh"
 
 CLICK_DECLS
@@ -30,19 +31,25 @@ Packet * IGMPClientSide::make_membership_packet()
 {
     uint32_t size = 1; // idk yet how to calculate this
     WritablePacket *p = Packet::make(size);
+    memset(p->data(), '\0', p->length()); // sets all the data to \0's, ¯\_(ツ)_/¯ but examples do it
 
-    // IP HEADER (copy pasted/edited slightly from ements/icmp/icmpsendpings.cc)
-    click_ip *ip_header = reinterpret_cast<click_ip *>(q->data());
-    ip_header->ip_v = 4;
-    ip_header->ip_hl = sizeof(click_ip) >> 2;
-    ip_header->ip_len = htons(p->length());
-    uint16_t ip_id = (_count % 0xFFFF) + 1; // ensure ip_id != 0
-    ip_header->ip_id = htons(ip_id);
-    ip_header->ip_p = 2 // specified in RFC3376 page 7
-    ip_header->ip_ttl = 1; // specified in RFC3376 page 7
-    ip_header->ip_src = _src; // source adress of this element
-    ip_header->ip_dst = IPAdress("224.0.0.22"); // all multicast routers listen to this adress
-    ip_header->ip_sum = click_in_cksum((unsigned char *)nip, sizeof(click_ip));
+    // IP HEADER, based on elements/icmp/icmpsendpings.cc
+    click_ip *nip = reinterpret_cast<click_ip *>(p->data());
+    nip->ip_v = 4;
+    nip->ip_hl = (sizeof(click_ip) + sizeof(IP_options)) >> 2; // IHL field, right shift by 2, ¯\_(ツ)_/¯
+    nip->ip_len = htons(p->length()); // converts host byte order to network byte order
+    uint16_t ip_id = (_count % 0xFFFF) + 1; // TODO no idea
+    nip->ip_id = htons(ip_id); // converts host byte order to network byte order
+    nip->ip_p = IP_PROTO_IGMP //TODO found in elements/ip/ipnameinfo.cc, either this or 2 (according to RFC3367 page 7)
+    nip->ip_ttl = 1; // specified in RFC3376 page 7
+    nip->ip_src = _src; // source adress of this element
+    nip->ip_dst = IPAdress(); // all multicast routers listen to this adress
+    nip->ip_sum = click_in_cksum((unsigned char *)nip, sizeof(click_ip)); // TODO no idea
+
+    // IP OPTIONS, every packet needs an IP Router Alert option [RFC-2113], specified in RFC3376 page 7
+    // geen ide hoe
+
+
 
 }
 CLICK_ENDDECLS
