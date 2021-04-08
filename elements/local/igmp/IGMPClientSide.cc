@@ -84,7 +84,7 @@ void IGMPClientSide::add_handlers() {
 }
 
 // makes membership v3 packets, based on RFC3376 page 13-14
-Packet * IGMPClientSide::make_membership_packet()
+WritablePacket * IGMPClientSide::make_membership_packet()
 {
     uint32_t size = 1; // idk yet how to calculate this
     WritablePacket *p = Packet::make(size);
@@ -106,8 +106,10 @@ Packet * IGMPClientSide::make_membership_packet()
     // IP OPTIONS, every packet needs an IP Router Alert option [RFC-2113], specified in RFC3376 page 7
     // TODO
 
-    // IGMP membership reports
-
+    // add IGMP membership reports, based on how they add the icmp strucs in elements/icmp/icmpsendpings.cc
+    igmp_membership_report *igmp_p = (struct igmp_membership_report *) (nip + 1);
+    igmp_p->number_of_group_records = 0; //TODO
+    igmp_p-> checksum = 0; //TODO
 
 }
 CLICK_ENDDECLS
