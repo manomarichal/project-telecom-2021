@@ -12,12 +12,12 @@
 
 #include <click/ipaddress.hh>
 
-// struct used to represent a single group record for a client, see RFC3367 page 14 for more info
+// struct used to represent a single group record for a client, see RFC3367 page 14
 struct igmp_group_record
 {
     uint32_t aux_data_len;
     uint32_t number_of_sources;
-    IPAdress source_adress;
+    IPAddress source_adress;
 
 };
 
