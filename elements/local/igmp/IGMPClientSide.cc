@@ -90,24 +90,24 @@ WritablePacket * IGMPClientSide::make_membership_packet()
     WritablePacket *p = Packet::make(size);
     memset(p->data(), '\0', p->length()); // sets all the data to \0's, ¯\_(ツ)_/¯ but examples do it
 
-    // IP HEADER, based on elements/icmp/icmpsendpings.cc
-    click_ip *nip = reinterpret_cast<click_ip *>(p->data()); // why reinterpret, ¯\_(ツ)_/¯
+    // IP HEADER, based on elements/icmp/icmpsendpings.cc, line 133
+    click_ip *nip = reinterpret_cast<click_ip *>(p->data()); // place ip header at data pointer
     nip->ip_v = 4;
-    nip->ip_hl = (sizeof(click_ip)) >> 2; // IHL field, right shift by 2, ¯\_(ツ)_/¯
+    nip->ip_hl = (sizeof(click_ip)) >> 2; //TODO IHL field, right shift by 2, ¯\_(ツ)_/¯
     nip->ip_len = htons(p->length()); // converts host byte order to network byte order
     uint16_t ip_id = 1; // TODO no idea
     nip->ip_id = htons(ip_id); // converts host byte order to network byte order
-    nip->ip_p = IP_PROTO_IGMP; //TODO found in elements/ip/ipnameinfo.cc, either this or 2 (according to RFC3367 page 7)
+    nip->ip_p = IP_PROTO_IGMP; // must be 2, check ipadress/clicknet/ip.h, line 56
     nip->ip_ttl = 1; // specified in RFC3376 page 7
     nip->ip_src = IPAddress(); // TODO no variable for it yet
-    nip->ip_dst = IPAddress(("224.0.0.1")); // all multicast routers listen to this adress
+    nip->ip_dst = IPAddress(("224.0.0.22")); // all multicast routers listen to this adress
     nip->ip_sum = click_in_cksum((unsigned char *)nip, sizeof(click_ip)); // TODO no idea
 
     // IP OPTIONS, every packet needs an IP Router Alert option [RFC-2113], specified in RFC3376 page 7
     // TODO
 
-    // add IGMP membership reports, based on how they add the icmp strucs in elements/icmp/icmpsendpings.cc
-    igmp_membership_report *igmp_p = (struct igmp_membership_report *) (nip + 1);
+    // add IGMP membership reports, based on how they add the icmp strutcs in elements/icmp/icmpsendpings.cc, line 145
+    igmp_membership_report *igmp_p = (struct igmp_membership_report *) (nip + 1); // place igmp data after the ip header
     igmp_p->number_of_group_records = 0; //TODO
     igmp_p-> checksum = 0; //TODO
 
