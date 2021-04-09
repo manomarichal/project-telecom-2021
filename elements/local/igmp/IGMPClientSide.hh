@@ -26,13 +26,14 @@ private:
     uint32_t reportInterval = 10; // TODO not hardcoded
     uint32_t maxSize;
     igmp_mem_report memReport;
-    igmp_grp_records groupRecords;
+    Vector<igmp_group_record> groupRecords;
     
     // packet functions
     WritablePacket* make_mem_report_packet();
+    /*
     click_ip * ip_encap(WritablePacket *p);
     void * igmp_encap(click_ip *p)
-
+    */
     uint32_t clientIP;
 };
 

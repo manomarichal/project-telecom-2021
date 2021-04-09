@@ -16,16 +16,23 @@
 enum filter_mode{include, exclude};
 // struct used to represent a single group record, see RFC3367 page 14
 
-struct igmp_grp_record_info
+struct igmp_group_record_message
 {
     uint8_t record_type; // see RFC3376 page 16
     const uint8_t aux_data_len = 0; // IGMPv3 does not define any auxiliary data thus length must be zero
     uint16_t number_of_sources;
-    uint32_t multicast_adress;
     filter_mode mode;
 };
 
-typedef std::map<igmp_grp_record_info, Vector<IPAdress>> igmp_grp_records;
+struct igmp_group_record
+{
+    uint32_t multicast_adress;
+    uint16_t number_of_sources;
+    uint8_t record_type; // see RFC3376 page 16
+    const uint8_t aux_data_len = 0; // IGMPv3 does not define any auxiliary data thus length must be zero
+    filter_mode mode;
+    Vector<IPAddress()> sources;
+};
 
 #define IGMP_V3_MEM_RECORD 0x22
 #define IGMP_MEM_QUERY 0x11
