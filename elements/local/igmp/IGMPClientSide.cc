@@ -154,30 +154,33 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
     nip->ip_sum = click_in_cksum((unsigned char *)nip, sizeof(click_ip)); // TODO misschien gewoon zo laten
 
     // add the membership report info
-    igmp_mem_report *igmp_p = (struct igmp_mem_report *) (nip + 1);
-    igmp_p->number_of_group_records = group_records.size();
-    igmp_p-> checksum = 0; //TODO
+    igmp_mem_report *igmp_mr = (struct igmp_mem_report *) (nip + 1);
+    igmp_mr->number_of_group_records = group_records.size();
+    igmp_mr-> checksum = 0; //TODO
 
     // TODO ip otions
 
     // reserve space for a group record
-    igmp_grp_record_info *igmp_grp = (struct igmp_grp_record_info)(igmp_p + 1)
+    igmp_group_record_message *igmp_grp = (struct igmp_group_record_message)(igmp_mr + 1);
 
-    for(igmp_group_record group_record: group_records)
+    for(igmp_group_record record: group_records)
     {
         // set the fields in the reserved space to the correct thing
-        igmp_grp->multicast_adress = group_record.multicast_adress;
-        igmp_grp->mode = group_record.info.;
-        igmp_grp->number_of_sources = group_record->first->number_of_sources;
-        igmp_grp->record_type = group_record->first->record_type;
+        igmp_grp->multicast_adress = record.multicast_adress.addr();
+        igmp_grp->mode = record.mode;
+        igmp_grp->number_of_sources = record.number_of_sources;
+        igmp_grp->record_type = record.record_type;
 
         // add source adresses on top
-        for (IPAddress adress:group_record.)
+        uint32_t igmp_adr = (uint32_t) (igmp_grp + 1);
+        for (IPAddress adress:record.sources)
         {
-
+            igmp_adr = adress.addr()
+            uint32_t igmp_adr = (uint32_t) (igmp_adr + 1);
         }
+
         // move pointer to add a new info
-        igmp_grp = (struct igmp_grp_record_info)(igmp_grp + 1)
+        igmp_grp = (struct igmp_group_record_message)(igmp_grp + 1)
     }
 
     // finishing up
