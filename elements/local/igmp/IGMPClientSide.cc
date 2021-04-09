@@ -36,6 +36,7 @@ int IGMPClientSide::client_join(const String &conf, Element *e, void *thunk, Err
                 if (element->memReportMsg.group_records[i].source_adresses[y] == element->clientIP){
                     //case if the client has already joined the group address
                     //the mc address exists and the client is already a part of it
+                    click_chatter("did not fiend multicast group when executing join");
                     return -1;
                 }
             }
@@ -66,9 +67,38 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, void *thunk, Er
     IGMPClientSide *element = reinterpret_cast<IGMPClientSide *>(e); //convert element to igmpclientside element
     Vector<String> arg_list;
     cp_argvec(conf, arg_list);   //splits up the conf vector into more readable version in the arg_list vector
+    uint32_t groupaddr = IPAddress(arg_list[0]);
+    //iterate over the different group records
+    bool found_group = false;
+    for(int i = 0; i<= element->memReportMsg.group_records.size(); i++){
+        //if the grouprecord has the same address as the input address then go into statement
+        if (element->memReportMsg.group_records[i].multicast_adress == groupaddr) {
+            //The group address exists
+            bool found_group = true;
+            bool found_client = false;
+            for (int y =0; y<=element->memReportMsg.group_records[i].source_adresses.size(); y++){
+                if (element->memReportMsg.group_records[i].source_adresses[y] == element->clientIP){
+                    //the client's address has been found within the group record's source addresses
+                    found_client = true;
+                    element->memReportMsg.group_records[i].mode = include;
+                    WritablePacket * p =element->make_mem_report_packet();
+                    element->output(0).push(p);
+                    click_chatter("completed leave");
+                }
+            }
+            if(!found_client){
+                //the client does not exist in the group record
+                click_chatter("did not find client when executing leave");
+                return -1;
+            }
 
-
-    click_chatter("hallo, leave");
+        }
+    }
+    if(!found_group){
+        //the group has not been found
+        click_chatter("did not find group when executing leave");
+        return -1;
+    }
     return 0;
 }
 
