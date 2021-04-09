@@ -67,9 +67,6 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, void *thunk, Er
     IGMPClientSide *element = reinterpret_cast<IGMPClientSide *>(e); //convert element to igmpclientside element
     Vector<String> arg_list;
     cp_argvec(conf, arg_list);   //splits up the conf vector into more readable version in the arg_list vector
-
-
-
     click_chatter("hallo, leave");
     return 0;
 }
@@ -131,8 +128,7 @@ void IGMPClientSide::push(int, Packet *p)
     // unpacking data, based on elements/icmp/icmpsendpings.cc, line 194
     const click_ip *iph = p->ip_header();
     // TODO how to unpack
-
-
+    click_chatter("packet recieved");
 }
 
 CLICK_ENDDECLS
