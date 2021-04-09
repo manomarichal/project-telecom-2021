@@ -24,7 +24,7 @@ public:
 
 private:
     uint32_t maxSize;
-    Vector<igmp_group_record> group_records; // the group records that need to be contained in membership reports
+    igmp_mem_report_msg memReportMsg;
     Packet* make_membership_packet();
     IPAddress clientIP;
 };

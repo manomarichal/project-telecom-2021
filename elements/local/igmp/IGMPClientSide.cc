@@ -88,14 +88,14 @@ WritablePacket * IGMPClientSide::make_membership_packet()
 {
     uint32_t size = 1; // idk yet how to calculate this
     WritablePacket *p = Packet::make(size);
-    memset(p->data(), '\0', p->length()); // sets all the data to \0's, ¯\_(ツ)_/¯ but examples do it
+    memset(p->data(), '\0', p->length()); // TODO why
 
     // IP HEADER, based on elements/icmp/icmpsendpings.cc, line 133
     click_ip *nip = reinterpret_cast<click_ip *>(p->data()); // place ip header at data pointer
     nip->ip_v = 4;
-    nip->ip_hl = (sizeof(click_ip)) >> 2; //TODO IHL field, right shift by 2, ¯\_(ツ)_/¯
-    nip->ip_len = htons(p->length()); // converts host byte order to network byte order
-    uint16_t ip_id = 1; // TODO no idea
+    nip->ip_hl = (sizeof(click_ip)) >> 2; //TODO why shift two bits?
+    nip->ip_len = htons(p->length()); // TODO why only hton lenght
+    uint16_t ip_id = 1; // TODO does it matter?
     nip->ip_id = htons(ip_id); // converts host byte order to network byte order
     nip->ip_p = IP_PROTO_IGMP; // must be 2, check ipadress/clicknet/ip.h, line 56
     nip->ip_ttl = 1; // specified in RFC3376 page 7
