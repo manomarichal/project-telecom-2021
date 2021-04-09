@@ -23,9 +23,10 @@ struct igmp_grp_record
     filter_mode mode;
 };
 
+#define IGMP_V3_MEM_RECORD 0x22
+#define IGMP_MEM_QUERY 0x11
 
 // struct used to represent a membership report, see RFC3367 page 13
-#define IGMP_MEM_QUERY 0x11
 struct igmp_mem_report_msg
 {
     const uint8_t type = IGMP_V3_MEM_RECORD;
@@ -37,7 +38,6 @@ struct igmp_mem_report_msg
 };
 
 // struct used to represent a membership query, see RFC3367 page 9
-#define IGMP_V3_MEM_RECORD 0x22
 struct igmp_mem_query_msg
 {
     const uint8_t type = IGMP_MEM_QUERY; // indicate its a membership query
