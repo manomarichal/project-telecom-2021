@@ -18,7 +18,7 @@ struct igmp_grp_record
     uint8_t record_type; // see RFC3376 page 16
     const uint8_t aux_data_len = 0; // IGMPv3 does not define any auxiliary data thus length must be zero
     uint16_t number_of_sources;
-    uint32_t multicast_adress; // TODO RFC says uint32, but how
+    uint32_t multicast_adress; // TODO RFC says uint32, but how?
     Vector<uint32_t> source_adresses; // maybe use arrays here to avoid sending extra ptrs
     filter_mode mode;
 };
@@ -31,8 +31,19 @@ struct igmp_mem_report_msg
     const uint16_t reserved2 = 0;
     uint16_t number_of_group_records;
     uint16_t checksum;
-    Vector<igmp_grp_record> group_records; // maybe use arrays here to avoid sending extra ptrs
-
+    Vector<igmp_grp_record> group_records; // TODO, okay to use vectors here?
 };
 
+// struct used to represent a membership query, see RFC3367 page 9
+struct igmp_mem_query_msg
+{
+    const uint8_t type = 0x11; // indicate its a membership query
+    uint8_t max_resp_code; // max amount of time allowed to respond
+    uint16_t checksum;
+    uint32_t group_adress;
+    // TODO resv & S & QRV, how
+    uint8_t qqic = 0; // queries query interval
+    uint16_t number_of_sources;
+    Vector<uint32_t> source_adresses;
+};
 #endif //PROJECT_TELECOM_IGMP_H

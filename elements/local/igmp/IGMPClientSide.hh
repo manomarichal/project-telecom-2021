@@ -13,8 +13,7 @@ public:
     const char *port_count() const	{ return "1/1"; }
     const char *processing() const	{ return PUSH; }
     int configure(Vector<String>&, ErrorHandler*);
-//not implemented, causes linking error
-//    void push(int, Packet *);
+    void push(int, Packet *);
 
     //static handles, important will not work otherwise
     //found in ipsecroutetable.cc/hh
@@ -23,9 +22,12 @@ public:
     void add_handlers();
 
 private:
+    uint32_t robustness = 1; // TODO not hardcoded
+    uint32_t reportInterval = 10; // TODO not hardcoded
     uint32_t maxSize;
     igmp_mem_report_msg memReportMsg;
-    Packet* make_mem_report_packet();
+    WritablePacket* make_mem_report_packet();
+
     IPAddress clientIP;
 };
 

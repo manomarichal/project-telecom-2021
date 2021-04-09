@@ -59,7 +59,7 @@ int IGMPClientSide::client_join(const String &conf, Element *e, void *thunk, Err
     }
     element->make_mem_report_packet();
     element->output(0).push(p);
-    click_chatter(clientIP, "completed join");
+    click_chatter("completed join");
     return 0;
 }
 
@@ -89,6 +89,8 @@ void IGMPClientSide::add_handlers() {
 // makes membership v3 packets, based on RFC3376 page 13-14
 WritablePacket * IGMPClientSide::make_mem_report_packet()
 {
+    click_chatter("creating membership report");
+
     uint32_t size = sizeof(click_ip) + sizeof(memReportMsg); // TODO is this the correct way of doing it
     WritablePacket *p = Packet::make(size);
     memset(p->data(), '\0', p->length()); // TODO why, they do it in icmpsendpings
@@ -102,12 +104,12 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
     nip->ip_id = htons(ip_id); // converts host byte order to network byte order
     nip->ip_p = IP_PROTO_IGMP; // must be 2, check ipadress/clicknet/ip.h, line 56
     nip->ip_ttl = 1; // specified in RFC3376 page 7
-    nip->ip_src = IPAddress(); // TODO no variable for it yet
+    nip->ip_src = IPAddress(clientIP);
     nip->ip_dst = IPAddress(("224.0.0.22")); // all multicast routers listen to this adress
     nip->ip_sum = click_in_cksum((unsigned char *)nip, sizeof(click_ip)); // TODO no idea
 
     // IP OPTIONS, every packet needs an IP Router Alert option [RFC-2113], specified in RFC3376 page 7
-    // TODO
+    // TODO ??? do we make a struct ourselves or is there something for this
 
     // add IGMP membership reports, based on how they add the icmp strutcs in elements/icmp/icmpsendpings.cc, line 145
     igmp_mem_report_msg *igmp_p = (struct igmp_mem_report_msg *) (nip + 1); // place igmp data after the ip header
@@ -118,9 +120,19 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
     // finishing up
     p->set_dst_ip_anno(IPAddress(("224.0.0.22")));
     p->set_ip_header(nip, sizeof(click_ip));
-    p->timestamp_anno().assign_now()
+    p->timestamp_anno().assign_now();
 
     return p;
+}
+
+void IGMPClientSide::push(int, Packet *p)
+{
+    // TODO needs to accept and process queries (also something about udp)
+    // unpacking data, based on elements/icmp/icmpsendpings.cc, line 194
+    const click_ip *iph = p->ip_header();
+    // TODO how to unpack
+
+
 }
 
 CLICK_ENDDECLS
