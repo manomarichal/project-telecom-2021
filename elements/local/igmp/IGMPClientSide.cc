@@ -119,28 +119,28 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
 {
     click_chatter("creating membership report");
 
-    uint32_t size = sizeof(click_ip) + sizeof(memReportMsg); // TODO is this the correct way of doing it
+    uint32_t size = sizeof(click_ip) + sizeof(memReportMsg); // size of the entire packet
     WritablePacket *p = Packet::make(size);
-    memset(p->data(), '\0', p->length()); // TODO why, they do it in icmpsendpings
+    memset(p->data(), '\0', p->length()); // TODO ?
 
     // IP HEADER, based on elements/icmp/icmpsendpings.cc, line 133
     click_ip *nip = reinterpret_cast<click_ip *>(p->data()); // place ip header at data pointer
     nip->ip_v = 4;
-    nip->ip_hl = (sizeof(click_ip)) >> 2; //TODO why shift two bits?
-    nip->ip_len = htons(p->length()); // TODO why only hton lenght
-    uint16_t ip_id = 1; // TODO does it matter?
+    nip->ip_hl = (sizeof(click_ip)) >> 2; //TODO ?
+    nip->ip_len = htons(p->length()); // TODO ?
+    uint16_t ip_id = 1; // TODO ?
     nip->ip_id = htons(ip_id); // converts host byte order to network byte order
     nip->ip_p = IP_PROTO_IGMP; // must be 2, check ipadress/clicknet/ip.h, line 56
     nip->ip_ttl = 1; // specified in RFC3376 page 7
     nip->ip_src = IPAddress(clientIP);
     nip->ip_dst = IPAddress(("224.0.0.22")); // all multicast routers listen to this adress
-    nip->ip_sum = click_in_cksum((unsigned char *)nip, sizeof(click_ip)); // TODO no idea
+    nip->ip_sum = click_in_cksum((unsigned char *)nip, sizeof(click_ip)); // TODO ?
 
     // IP OPTIONS, every packet needs an IP Router Alert option [RFC-2113], specified in RFC3376 page 7
-    // TODO ??? do we make a struct ourselves or is there something for this
+    // TODO ???
 
     // add IGMP membership reports, based on how they add the icmp strutcs in elements/icmp/icmpsendpings.cc, line 145
-    igmp_mem_report_msg *igmp_p = (struct igmp_mem_report_msg *) (nip + 1); // place igmp data after the ip header
+    igmp_mem_report_msg *igmp_p = (struct igmp_mem_report_msg *) (p->data() + sizeof(nip)); // place igmp data after the ip header
     igmp_p->number_of_group_records = 0; //TODO
     igmp_p-> checksum = 0; //TODO
     igmp_p-> group_records = memReportMsg.group_records;
@@ -158,11 +158,9 @@ void IGMPClientSide::push(int, Packet *p)
     // TODO needs to accept and process queries (also something about udp)
     // unpacking data, based on elements/icmp/icmpsendpings.cc, line 194
     const click_ip *iph = p->ip_header();
-    // TODO how to unpack
-
-
 }
 
 CLICK_ENDDECLS
-EXPORT_ELEMENT(IGMPClientSide)
+EXPORT_ELEMENT(IGMPClientSide) // forces to create element within click
+
 
