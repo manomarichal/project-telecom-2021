@@ -31,7 +31,7 @@ struct igmp_group_record
     uint8_t record_type; // see RFC3376 page 16
     const uint8_t aux_data_len = 0; // IGMPv3 does not define any auxiliary data thus length must be zero
     filter_mode mode;
-    Vector<IPAddress()> sources;
+    Vector<IPAddress> sources;
 };
 
 #define IGMP_V3_MEM_RECORD 0x22
