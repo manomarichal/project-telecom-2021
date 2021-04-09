@@ -27,9 +27,11 @@ struct igmp_mem_report_msg
 {
     const uint8_t type = 0x22; // indicate its a membership record
     const uint8_t reserved_1 = 0;
+    const uint16_t reserved2 = 0;
     uint16_t number_of_group_records;
     uint16_t checksum;
-    const uint16_t reserved2 = 0;
+    Vector<igmp_grp_record> group_records; // maybe use arrays here to avoid sending extra ptrs
+
 };
 
 #endif //PROJECT_TELECOM_IGMP_H

@@ -84,11 +84,11 @@ void IGMPClientSide::add_handlers() {
 }
 
 // makes membership v3 packets, based on RFC3376 page 13-14
-WritablePacket * IGMPClientSide::make_membership_packet()
+WritablePacket * IGMPClientSide::make_mem_report_packet()
 {
-    uint32_t size = 1; // idk yet how to calculate this
+    uint32_t size = sizeof(click_ip) + sizeof(memReportMsg); // TODO is this the correct way of doing it
     WritablePacket *p = Packet::make(size);
-    memset(p->data(), '\0', p->length()); // TODO why
+    memset(p->data(), '\0', p->length()); // TODO why, they do it in icmpsendpings
 
     // IP HEADER, based on elements/icmp/icmpsendpings.cc, line 133
     click_ip *nip = reinterpret_cast<click_ip *>(p->data()); // place ip header at data pointer
@@ -107,11 +107,19 @@ WritablePacket * IGMPClientSide::make_membership_packet()
     // TODO
 
     // add IGMP membership reports, based on how they add the icmp strutcs in elements/icmp/icmpsendpings.cc, line 145
-    igmp_membership_report *igmp_p = (struct igmp_membership_report *) (nip + 1); // place igmp data after the ip header
+    igmp_mem_report_msg *igmp_p = (struct igmp_mem_report_msg *) (nip + 1); // place igmp data after the ip header
     igmp_p->number_of_group_records = 0; //TODO
     igmp_p-> checksum = 0; //TODO
+    igmp_p-> group_records = memReportMsg.group_records;
 
+    // finishing up
+    p->set_dst_ip_anno(IPAddress(("224.0.0.22")));
+    p->set_ip_header(nip, sizeof(click_ip));
+    p->timestamp_anno().assign_now()
+
+    return p;
 }
+
 CLICK_ENDDECLS
 EXPORT_ELEMENT(IGMPClientSide)
 

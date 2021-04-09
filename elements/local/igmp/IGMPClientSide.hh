@@ -25,7 +25,7 @@ public:
 private:
     uint32_t maxSize;
     igmp_mem_report_msg memReportMsg;
-    Packet* make_membership_packet();
+    Packet* make_mem_report_packet();
     IPAddress clientIP;
 };
 
