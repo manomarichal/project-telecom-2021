@@ -20,44 +20,43 @@ int IGMPClientSide::configure(Vector<String> &conf, ErrorHandler *errh)
 /*
  * handles the client join for the system.
  * return integer, done throughout other click elements
+ *
  */
 int IGMPClientSide::client_join(const String &conf, Element *e, void *thunk, ErrorHandler *errh) {
     IGMPClientSide *element = reinterpret_cast<IGMPClientSide *>(e); //convert element to igmpclientside element
     Vector<String> arg_list;
     cp_argvec(conf, arg_list);   //splits up the conf vector into more readable version in the arg_list vector
 
-
-
-    IPAddress groupaddr = IPAddress(arg_list[0]);
+    uint32_t groupaddr = IPAddress(arg_list[0]);
     bool exists = false;
-    for(int i = 0; i<= memReportMsg.group_records.size(); i++){
-        if (memReportMsg.group_records[i].multicast_adress == groupaddr){
+    for(int i = 0; i<= element->memReportMsg.group_records.size(); i++){
+        if (element->memReportMsg.group_records[i].multicast_adress == groupaddr){
             //check if the client is a part of this group record already
-            for (int y =0; y<=memReportMsg.group_records[i].source_adresses.size(); y++){
-                if (memReportMsg.group_records[i].source_adresses[y] == clientIP){
+            for (int y =0; y<=element->memReportMsg.group_records[i].source_adresses.size(); y++){
+                if (element->memReportMsg.group_records[i].source_adresses[y] == element->clientIP){
                     //case if the client has already joined the group address
                     //the mc address exists and the client is already a part of it
                     return -1;
                 }
             }
             //if the client is not a part off the group, add it to the group
-            memReportMsg.group_records[i].source_adresses.push_back(clientIP);
-            memReportMsg.group_records[i].number_of_sources++;
+            element->memReportMsg.group_records[i].source_adresses.push_back(element->clientIP);
+            element->memReportMsg.group_records[i].number_of_sources++;
             exists = true;
         }
     }
     if(!exists){
         //make new group record if it does not yet exist
-        igmp_group_record grRecord;
+        igmp_grp_record grRecord;
         //the group record needs to be made
         grRecord.record_type = 0;
         grRecord.multicast_adress = groupaddr;
         grRecord.number_of_sources = 1;
-        grRecord.source_adresses.push_back(clientIP);
-        grRecord.mode = exclude
-        memReportMsg.group_records.push_back(grRecord);
+        grRecord.source_adresses.push_back(element->clientIP);
+        grRecord.mode = exclude;
+        element->memReportMsg.group_records.push_back(grRecord);
     }
-    element->make_mem_report_packet();
+    WritablePacket * p =element->make_mem_report_packet();
     element->output(0).push(p);
     click_chatter("completed join");
     return 0;
@@ -67,6 +66,8 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, void *thunk, Er
     IGMPClientSide *element = reinterpret_cast<IGMPClientSide *>(e); //convert element to igmpclientside element
     Vector<String> arg_list;
     cp_argvec(conf, arg_list);   //splits up the conf vector into more readable version in the arg_list vector
+
+
     click_chatter("hallo, leave");
     return 0;
 }
@@ -128,7 +129,8 @@ void IGMPClientSide::push(int, Packet *p)
     // unpacking data, based on elements/icmp/icmpsendpings.cc, line 194
     const click_ip *iph = p->ip_header();
     // TODO how to unpack
-    click_chatter("packet recieved");
+
+
 }
 
 CLICK_ENDDECLS
