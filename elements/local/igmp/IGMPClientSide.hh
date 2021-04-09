@@ -23,18 +23,18 @@ public:
 
 private:
     uint32_t robustness = 1; // TODO not hardcoded
-    uint32_t reportInterval = 10; // TODO not hardcoded
-    uint32_t maxSize;
-    igmp_mem_report memReport;
-    Vector<igmp_group_record> groupRecords;
-    
+    uint32_t report_interval = 10; // TODO not hardcoded
+    uint32_t max_size;
+    igmp_mem_report mem_report;
+    Vector<igmp_group_record> group_records;
+
     // packet functions
     WritablePacket* make_mem_report_packet();
     /*
     click_ip * ip_encap(WritablePacket *p);
     void * igmp_encap(click_ip *p)
     */
-    uint32_t clientIP;
+    IPAddress clientIP;
 };
 
 CLICK_ENDDECLS
