@@ -29,11 +29,11 @@ int IGMPClientSide::client_join(const String &conf, Element *e, void *thunk, Err
 
     uint32_t groupaddr = IPAddress(arg_list[0]);
     bool exists = false;
-    for(int i = 0; i<= element->memReportMsg.group_records.size(); i++){
-        if (element->memReportMsg.group_records[i].multicast_adress == groupaddr){
+    for(int i = 0; i<= element->mem_report.group_records.size(); i++){
+        if (element->mem_report.group_records[i].multicast_adress == groupaddr){
             //check if the client is a part of this group record already
-            for (int y =0; y<=element->memReportMsg.group_records[i].source_adresses.size(); y++){
-                if (element->memReportMsg.group_records[i].source_adresses[y] == element->clientIP){
+            for (int y =0; y<=element->mem_report.group_records[i].source_adresses.size(); y++){
+                if (element->mem_report.group_records[i].source_adresses[y] == element->clientIP){
                     //case if the client has already joined the group address
                     //the mc address exists and the client is already a part of it
                     click_chatter("did not fiend multicast group when executing join");
@@ -41,8 +41,8 @@ int IGMPClientSide::client_join(const String &conf, Element *e, void *thunk, Err
                 }
             }
             //if the client is not a part off the group, add it to the group
-            element->memReportMsg.group_records[i].source_adresses.push_back(element->clientIP);
-            element->memReportMsg.group_records[i].number_of_sources++;
+            element->mem_report.group_records[i].source_adresses.push_back(element->clientIP);
+            element->mem_report.group_records[i].number_of_sources++;
             exists = true;
         }
     }
@@ -55,7 +55,7 @@ int IGMPClientSide::client_join(const String &conf, Element *e, void *thunk, Err
         grRecord.number_of_sources = 1;
         grRecord.source_adresses.push_back(element->clientIP);
         grRecord.mode = exclude;
-        element->memReportMsg.group_records.push_back(grRecord);
+        element->mem_report.group_records.push_back(grRecord);
     }
     WritablePacket * p =element->make_mem_report_packet();
     element->output(0).push(p);
@@ -73,17 +73,17 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, void *thunk, Er
     uint32_t groupaddr = IPAddress(arg_list[0]);
     //iterate over the different group records
     bool found_group = false;
-    for(int i = 0; i<= element->memReportMsg.group_records.size(); i++){
+    for(int i = 0; i<= element->mem_report.group_records.size(); i++){
         //if the grouprecord has the same address as the input address then go into statement
-        if (element->memReportMsg.group_records[i].multicast_adress == groupaddr) {
+        if (element->mem_report.group_records[i].multicast_adress == groupaddr) {
             //The group address exists
             bool found_group = true;
             bool found_client = false;
-            for (int y =0; y<=element->memReportMsg.group_records[i].source_adresses.size(); y++){
-                if (element->memReportMsg.group_records[i].source_adresses[y] == element->clientIP){
+            for (int y =0; y<=element->mem_report.group_records[i].source_adresses.size(); y++){
+                if (element->mem_report.group_records[i].source_adresses[y] == element->clientIP){
                     //the client's address has been found within the group record's source addresses
                     found_client = true;
-                    element->memReportMsg.group_records[i].mode = include;
+                    element->mem_report.group_records[i].mode = include;
                     WritablePacket * p =element->make_mem_report_packet();
                     //push the packet to update mode
                     element->output(0).push(p);
@@ -153,30 +153,33 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
     nip->ip_sum = click_in_cksum((unsigned char *)nip, sizeof(click_ip)); // TODO misschien gewoon zo laten
 
     // add the membership report info
-    igmp_mem_report *igmp_p = (struct igmp_mem_report *) (nip + 1);
-    igmp_p->number_of_group_records = groupRecords.size();
-    igmp_p-> checksum = 0; //TODO
+    igmp_mem_report *igmp_mr = (struct igmp_mem_report *) (nip + 1);
+    igmp_mr->number_of_group_records = group_records.size();
+    igmp_mr-> checksum = 0; //TODO
 
     // TODO ip otions
 
     // reserve space for a group record
-    igmp_grp_record_info *igmp_grp = (struct igmp_grp_record_info)(igmp_p + 1)
+    igmp_group_record_message *igmp_grp = (struct igmp_group_record_message)(igmp_mr + 1);
 
-    for(igmp_group_record group_record: groupRecords)
+    for(igmp_group_record record: group_records)
     {
         // set the fields in the reserved space to the correct thing
-        igmp_grp->multicast_adress = group_record.multicast_adress;
-        igmp_grp->mode = group_record.info.;
-        igmp_grp->number_of_sources = group_record->first->number_of_sources;
-        igmp_grp->record_type = group_record->first->record_type;
+        igmp_grp->multicast_adress = record.multicast_adress.addr();
+        igmp_grp->mode = record.mode;
+        igmp_grp->number_of_sources = record.number_of_sources;
+        igmp_grp->record_type = record.record_type;
 
         // add source adresses on top
-        for (IPAddress adress:group_record.)
+        uint32_t igmp_adr = (uint32_t) (igmp_grp + 1);
+        for (IPAddress adress:record.sources)
         {
-
+            igmp_adr = adress.addr()
+            uint32_t igmp_adr = (uint32_t) (igmp_adr + 1);
         }
+
         // move pointer to add a new info
-        igmp_grp = (struct igmp_grp_record_info)(igmp_grp + 1)
+        igmp_grp = (struct igmp_group_record_message)(igmp_grp + 1)
     }
 
     // finishing up

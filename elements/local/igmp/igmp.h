@@ -22,16 +22,17 @@ struct igmp_group_record_message
     const uint8_t aux_data_len = 0; // IGMPv3 does not define any auxiliary data thus length must be zero
     uint16_t number_of_sources;
     filter_mode mode;
+    uint32_t multicast_adress;
 };
 
 struct igmp_group_record
 {
-    uint32_t multicast_adress;
+    IPAddress multicast_adress;
     uint16_t number_of_sources;
     uint8_t record_type; // see RFC3376 page 16
     const uint8_t aux_data_len = 0; // IGMPv3 does not define any auxiliary data thus length must be zero
     filter_mode mode;
-    Vector<IPAddress()> sources;
+    Vector<IPAddress> sources;
 };
 
 #define IGMP_V3_MEM_RECORD 0x22
