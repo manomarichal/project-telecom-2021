@@ -62,7 +62,10 @@ int IGMPClientSide::client_join(const String &conf, Element *e, void *thunk, Err
     click_chatter("completed join");
     return 0;
 }
-
+/*
+ * handles the client leave, changes the filter mode fo that group record from exclude to include as defined in RFC
+ *
+ */
 int IGMPClientSide::client_leave(const String &conf, Element *e, void *thunk, ErrorHandler *errh) {
     IGMPClientSide *element = reinterpret_cast<IGMPClientSide *>(e); //convert element to igmpclientside element
     Vector<String> arg_list;
@@ -82,6 +85,7 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, void *thunk, Er
                     found_client = true;
                     element->memReportMsg.group_records[i].mode = include;
                     WritablePacket * p =element->make_mem_report_packet();
+                    //push the packet to update mode
                     element->output(0).push(p);
                     click_chatter("completed leave");
                 }
