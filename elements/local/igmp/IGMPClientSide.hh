@@ -28,7 +28,7 @@ private:
     igmp_mem_report_msg memReportMsg;
     WritablePacket* make_mem_report_packet();
 
-    IPAddress clientIP;
+    uint32_t clientIP;
 };
 
 CLICK_ENDDECLS
