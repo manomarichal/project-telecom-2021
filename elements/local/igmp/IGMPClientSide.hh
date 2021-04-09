@@ -27,10 +27,11 @@ private:
     uint32_t maxSize;
     igmp_mem_report memReport;
     igmp_grp_records groupRecords;
+    
     // packet functions
     WritablePacket* make_mem_report_packet();
     click_ip * ip_encap(WritablePacket *p);
-    igmp_mem_report_msg * igmp_encap(click_ip *p)
+    void * igmp_encap(click_ip *p)
 
     uint32_t clientIP;
 };

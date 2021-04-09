@@ -12,6 +12,7 @@
 
 #include <click/ipaddress.hh>
 #include <map>
+
 enum filter_mode{include, exclude};
 // struct used to represent a single group record, see RFC3367 page 14
 
@@ -24,7 +25,7 @@ struct igmp_grp_record_info
     filter_mode mode;
 };
 
-typedef std::map<igmp_grp_record_info, Vector<uint32_t>> igmp_grp_records;
+typedef std::map<igmp_grp_record_info, Vector<IPAdress>> igmp_grp_records;
 
 #define IGMP_V3_MEM_RECORD 0x22
 #define IGMP_MEM_QUERY 0x11
