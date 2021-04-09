@@ -118,21 +118,18 @@ void IGMPClientSide::add_handlers() {
     add_write_handler("client_leave", &client_leave, 0);
 }
 
-// makes membership v3 packets, based on RFC3376 page 13-14
-WritablePacket * IGMPClientSide::make_mem_report_packet()
+////////////////////////
+/// PACKET FUNCTIONS ///
+////////////////////////
+
+click_ip * IGMPClientSide::ip_encap(WritablePacket *p)
 {
-    click_chatter("creating membership report");
-
-    uint32_t size = sizeof(click_ip) + sizeof(memReportMsg); // size of the entire packet
-    WritablePacket *p = Packet::make(size);
-    memset(p->data(), '\0', p->length()); // TODO ?
-
-    // IP HEADER, based on elements/icmp/icmpsendpings.cc, line 133
+    // based on elements/icmp/icmpsendpings.cc, line 133
     click_ip *nip = reinterpret_cast<click_ip *>(p->data()); // place ip header at data pointer
     nip->ip_v = 4;
     nip->ip_hl = (sizeof(click_ip)) >> 2; //TODO ?
     nip->ip_len = htons(p->length()); // TODO ?
-    uint16_t ip_id = 1; // TODO ?
+    uint16_t ip_id = 1; // does not matter
     nip->ip_id = htons(ip_id); // converts host byte order to network byte order
     nip->ip_p = IP_PROTO_IGMP; // must be 2, check ipadress/clicknet/ip.h, line 56
     nip->ip_ttl = 1; // specified in RFC3376 page 7
@@ -140,14 +137,36 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
     nip->ip_dst = IPAddress(("224.0.0.22")); // all multicast routers listen to this adress
     nip->ip_sum = click_in_cksum((unsigned char *)nip, sizeof(click_ip)); // TODO ?
 
-    // IP OPTIONS, every packet needs an IP Router Alert option [RFC-2113], specified in RFC3376 page 7
-    // TODO ???
+    return nip;
+}
 
-    // add IGMP membership reports, based on how they add the icmp strutcs in elements/icmp/icmpsendpings.cc, line 145
-    igmp_mem_report_msg *igmp_p = (struct igmp_mem_report_msg *) (p->data() + sizeof(nip)); // place igmp data after the ip header
+igmp_mem_report_msg* IGMPClientSide::igmp_encap(click_ip *p)
+{
+    igmp_mem_report_info *igmp_p = (struct igmp_mem_report_info *) (p + 1); // place igmp info after the ip packet
     igmp_p->number_of_group_records = 0; //TODO
     igmp_p-> checksum = 0; //TODO
-    igmp_p-> group_records = memReportMsg.group_records;
+
+    // add group records
+    for(int i = 0; i<= memReportMsg.size(); i++)
+    {
+        // for every group record, we first push the info in the packet
+    }
+
+
+        return igmp_p
+}
+// makes membership v3 packets, based on RFC3376 page 13-14
+WritablePacket * IGMPClientSide::make_mem_report_packet()
+{
+    click_chatter("creating membership report");
+
+    uint32_t size = sizeof(click_ip) + sizeof(memReportMsg); // size of the entire packet
+    WritablePacket *p = Packet::make(size);
+    memset(p->data(), '\0', p->length()); // erase previous random data on memory requested
+
+    nip = ip_encap(p);
+    // TODO ip otions
+    igmp_p = igmp_encap(nip);
 
     // finishing up
     p->set_dst_ip_anno(IPAddress(("224.0.0.22")));
