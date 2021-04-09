@@ -11,7 +11,7 @@
 #define PROJECT_TELECOM_IGMP_H
 
 #include <click/ipaddress.hh>
-
+enum filter_mode{include, exclude};
 // struct used to represent a single group record, see RFC3367 page 14
 struct igmp_grp_record
 {
@@ -20,6 +20,7 @@ struct igmp_grp_record
     uint16_t number_of_sources;
     uint32_t multicast_adress; // TODO RFC says uint32, but how
     Vector<uint32_t> source_adresses; // maybe use arrays here to avoid sending extra ptrs
+    filter_mode mode;
 };
 
 // struct used to represent a membership report, see RFC3367 page 13
