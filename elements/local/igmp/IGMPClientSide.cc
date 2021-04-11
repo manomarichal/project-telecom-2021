@@ -75,7 +75,7 @@ int IGMPClientSide::client_join(const String &conf, Element *e, void *thunk, Err
         grRecord.mode = exclude;
         element->group_records.push_back(grRecord);
         click_chatter("making a new group record");
-        grRecord.print_record();
+//        grRecord.print_record();
     }
     WritablePacket * p =element->make_mem_report_packet();
     element->output(0).push(p);
