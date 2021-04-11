@@ -6,26 +6,26 @@
 elementclass Client {
 	$address, $gateway |
 
-	ip :: Strip(14)
-		-> CheckIPHeader()
-		-> rt :: StaticIPLookup(
+	ip :: Strip(14)                             // get rid of ethernet header
+		-> CheckIPHeader()                      // check if ip header is correct
+		-> rt :: StaticIPLookup(                // generic routing table, idk hoe ge die update
 					$address:ip/32 0,
 					$address:ipnet 0,
 					0.0.0.0/0.0.0.0 $gateway 1)
-		-> [1]output;
+		-> [1]output;                            // sends packet to output 1
 	
 	rt[1]
-		-> DropBroadcasts
-		-> ipgw :: IPGWOptions($address)
-		-> FixIPSrc($address)
-		-> ttl :: DecIPTTL
-		-> frag :: IPFragmenter(1500)
+		-> DropBroadcasts                   // drops packets that arrived as link-level broadcast or multicast
+		-> ipgw :: IPGWOptions($address)    // no idea why this is heare
+		-> FixIPSrc($address)               // sets source adress to parameter
+		-> ttl :: DecIPTTL                  // dec time to live
+		-> frag :: IPFragmenter(1500)       // fragments ip packet
 		-> arpq :: ARPQuerier($address)
 		-> output;
 
-	ipgw[1] -> ICMPError($address, parameterproblem) -> output;
-	ttl[1]  -> ICMPError($address, timeexceeded) -> output;
-	frag[1] -> ICMPError($address, unreachable, needfrag) -> output;
+	ipgw[1] -> ICMPError($address, parameterproblem) -> output;         // IPGWOptions error poort
+	ttl[1]  -> ICMPError($address, timeexceeded) -> output;             // DecIPTTL error poort
+	frag[1] -> ICMPError($address, unreachable, needfrag) -> output;    // IPFragmenter error poort
 	
 	// Incoming Packets
 	input

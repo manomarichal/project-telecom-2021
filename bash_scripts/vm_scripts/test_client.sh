@@ -1,9 +1,12 @@
 set -e
 echo "================= REMOVING OLD FILES ===================="
-rm -rf /home/student/click/elements/local/igmp
+sudo rm -rf /home/student/click/elements/local/igmp
+rm -rf /home/student/click/scripts/library
 mkdir /home/student/click/elements/local/igmp
+mkdir /home/student/click/scripts/library
 echo "================= COPYING NEW FILES ===================="
 cp -r /home/student/Desktop/project-telecom-2021/elements/local/igmp /home/student/click/elements/local/igmp
+cp -r /home/student/Desktop/project-telecom-2021/library /home/student/click/scripts
 echo "================= UPDATING START SCRIPTS ===================="
 rm -f /home/student/click/scripts/start_click.sh
 cp /home/student/Desktop/project-telecom-2021/bash_scripts/start_scripts/reference_scripts/client_reference.sh /home/student/click/scripts/start_click.sh

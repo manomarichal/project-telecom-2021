@@ -14,13 +14,13 @@
 #include <map>
 
 enum filter_mode{include, exclude};
-// struct used to represent a single group record, see RFC3367 page 14
 
 struct ipadress
 {
     uint32_t adress;
 };
 
+// struct used to represent a single group record, see RFC3367 page 14
 struct igmp_group_record_message
 {
     uint8_t record_type; // see RFC3376 page 16
