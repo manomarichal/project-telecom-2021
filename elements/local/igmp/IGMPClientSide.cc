@@ -22,8 +22,9 @@ IGMPClientSide::~IGMPClientSide()
  */
 int IGMPClientSide::configure(Vector<String> &conf, ErrorHandler *errh)
 {
-    if (Args(conf, this, errh).read_mp("CADDR", clientIP).complete()<0){click_chatter("failed read"); return -1;}
-
+    String ipadresstest;
+    if (Args(conf, this, errh).read_mp("CADDR", ipadresstest).complete()<0){click_chatter("failed read, returning 0", ipadresstest); return -1;}
+    clientIP = IPAddress(ipadresstest);
     return 0;
 }
 
