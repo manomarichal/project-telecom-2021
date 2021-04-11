@@ -7,7 +7,7 @@ elementclass Client {
 	$address, $gateway |
 	igmpclient::IGMPClientSide($adress, 224.0.0.22, 224.0.0.1);
 
-    igmpclient ->
+    igmpclient
         -> FixIPSrc($address)               // sets source adress to parameter
 		-> frag :: IPFragmenter(1500)       // fragments ip packet
 		-> arpq :: ARPQuerier($address)
@@ -27,14 +27,15 @@ elementclass Client {
 		-> ipgw :: IPGWOptions($address)    // no idea why this is heare
 		-> FixIPSrc($address)               // sets source adress to parameter
 		-> ttl :: DecIPTTL                  // dec time to live
-		-> frag :: IPFragmenter(1500)       // fragments ip packet
-		-> arpq :: ARPQuerier($address)
+		-> frag 			    // fragments ip packet
+		-> arpq
 		-> output;
 
-	ipgw[1] -> ICMPError($address, parameterproblem) -> output;         // IPGWOptions error poort
+	ipgw[1] -> [0]igmpclient
+	//ipgw[1] -> ICMPError($address, parameterproblem) -> output;         // IPGWOptions error poort
 	ttl[1]  -> ICMPError($address, timeexceeded) -> output;             // DecIPTTL error poort
 	frag[1] -> ICMPError($address, unreachable, needfrag) -> output;    // IPFragmenter error poort
-	
+
 	// Incoming Packets
 	input
 		-> HostEtherFilter($address)
