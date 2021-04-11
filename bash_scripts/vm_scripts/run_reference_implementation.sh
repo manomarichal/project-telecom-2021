@@ -9,4 +9,4 @@ cp /home/student/Desktop/project-telecom-2021/bash_scripts/start_scripts/referen
 rm -f /home/student/click-reference/solution/start_click.sh
 cp /home/student/Desktop/project-telecom-2021/bash_scripts/start_scripts/student_scripts/student.sh /home/student/click-reference/solution/start_click.sh
 echo "================= RUNNING CLICK ===================="
-chmod +x /home/student/click-reference/solution/start_click.sh
+/home/student/click-reference/solution/start_click.sh
