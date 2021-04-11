@@ -40,6 +40,7 @@ int IGMPClientSide::configure(Vector<String> &conf, ErrorHandler *errh)
  */
 int IGMPClientSide::client_join(const String &conf, Element *e, void *thunk, ErrorHandler *errh) {
     IGMPClientSide *element = reinterpret_cast<IGMPClientSide *>(e); //convert element to igmpclientside element
+    click_chatter(element->clientIP.unparse().c_str());
     Vector<String> arg_list;
     cp_argvec(conf, arg_list);   //splits up the conf vector into more readable version in the arg_list vector
 
