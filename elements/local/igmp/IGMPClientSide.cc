@@ -161,7 +161,7 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
     // TODO ip otions
 
     // reserve space for a group record
-    igmp_group_record_message *igmp_grp = (struct igmp_group_record_message)(igmp_mr + 1);
+    igmp_group_record_message *igmp_grp = (struct igmp_group_record_message*)(igmp_mr + 1);
 
     for(igmp_group_record record: group_records)
     {
@@ -175,12 +175,12 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
         uint32_t igmp_adr = (uint32_t) (igmp_grp + 1);
         for (IPAddress adress:record.sources)
         {
-            igmp_adr = adress.addr()
+            igmp_adr = adress.addr();
             uint32_t igmp_adr = (uint32_t) (igmp_adr + 1);
         }
 
         // move pointer to add a new info
-        igmp_grp = (struct igmp_group_record_message)(igmp_grp + 1)
+        igmp_grp = (struct igmp_group_record_message*)(igmp_grp + 1);
     }
 
     // finishing up
