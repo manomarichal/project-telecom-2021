@@ -14,10 +14,17 @@ IGMPClientSide::~IGMPClientSide()
 /*
  * configure for clientside object, should set the clientIP to the given clientaddress
  * might need to add some things later like timer variables
+ * CLIENTADDRESS
+ * MULTICASTADDRESS
+ * ALLSYSTEMSMULTICASTADDRESS
+ *
  */
 int IGMPClientSide::configure(Vector<String> &conf, ErrorHandler *errh)
 {
-    if (Args(conf, this, errh).read_m("CLIENTADDRESS", clientIP).complete()<0)
+    if (Args(conf, this, errh).read_m("CLIENTADDRESS", clientIP)
+    .read_m("MULTICASTADDRESS", MC_ADDRESS)
+    .read_m("ALLSYSTEMSMULTICASTADDRESS",ALL_SYSTEMS_MC_ADDRESS)
+    .complete()<0)
         return -1;
 
     return 0;

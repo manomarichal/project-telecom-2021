@@ -35,6 +35,8 @@ private:
     void * igmp_encap(click_ip *p)
     */
     IPAddress clientIP;
+    IPAddress MC_ADDRESS;
+    IPAddress ALL_SYSTEMS_MC_ADDRESS;
 };
 
 CLICK_ENDDECLS
