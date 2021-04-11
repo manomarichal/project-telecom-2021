@@ -5,7 +5,7 @@
 
 elementclass Client {
 	$address, $gateway |
-	igmpclient::IGMPClientSide(CADDR $adress);
+	igmpclient::IGMPClientSide(CADDR $adress, MADDR 224.0.0.22, ASMADDR 224.0.0.1);
 
     igmpclient
         -> FixIPSrc($address)               // sets source adress to parameter

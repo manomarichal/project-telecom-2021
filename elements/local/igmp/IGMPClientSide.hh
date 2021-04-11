@@ -35,8 +35,8 @@ private:
     void * igmp_encap(click_ip *p)
     */
     IPAddress clientIP;
-    IPAddress MC_ADDRESS = IPAddress("224.0.0.22");
-    IPAddress ALL_SYSTEMS_MC_ADDRESS= IPAddress("224.0.0.1");
+    IPAddress MC_ADDRESS;
+    IPAddress ALL_SYSTEMS_MC_ADDRESS;
 };
 
 CLICK_ENDDECLS

@@ -23,8 +23,12 @@ IGMPClientSide::~IGMPClientSide()
 int IGMPClientSide::configure(Vector<String> &conf, ErrorHandler *errh)
 {
     String ipadresstest;
-    if (Args(conf, this, errh).read_mp("CADDR", ipadresstest).complete()<0){click_chatter("failed read, returning 0", ipadresstest); return -1;}
+    String madr;
+    String asmadr;
+    if (Args(conf, this, errh).read_mp("CADDR", ipadresstest).read_mp("MADDR", madr).read_mp("ASMADDR",asmadr).complete()<0){click_chatter("failed read, returning 0", ipadresstest); return -1;}
     clientIP = IPAddress(ipadresstest);
+    MC_ADDRESS = IPAddress(madr);
+    ALL_SYSTEMS_MC_ADDRESS = IPAddress(asmadr);
     return 0;
 }
 
