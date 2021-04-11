@@ -53,7 +53,7 @@ int IGMPClientSide::client_join(const String &conf, Element *e, void *thunk, Err
                 if (element->group_records[i].sources[y] == element->clientIP){
                     //case if the client has already joined the group address
                     //the mc address exists and the client is already a part of it
-                    click_chatter("did not fiend multicast group when executing join");
+                    click_chatter("The group you are trying to join already has this source address");
                     return -1;
                 }
             }
@@ -73,6 +73,8 @@ int IGMPClientSide::client_join(const String &conf, Element *e, void *thunk, Err
         grRecord.sources.push_back(element->clientIP);
         grRecord.mode = exclude;
         element->group_records.push_back(grRecord);
+        click_chatter("making a new group record");
+        grRecord.print_record();
     }
     WritablePacket * p =element->make_mem_report_packet();
     element->output(0).push(p);
@@ -194,16 +196,13 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
             igmp_adr->adress = adress.addr();
             ipadress *igmp_adr = (struct ipadress *) (igmp_grp + 1);
         }
-
         // move pointer to add a new info
         igmp_grp = (struct igmp_group_record_message*)(igmp_grp + 1);
     }
-    igmp_grp->print_message();
     // finishing up
     p->set_dst_ip_anno(IPAddress(("224.0.0.22")));
     p->set_ip_header(nip, sizeof(click_ip));
     p->timestamp_anno().assign_now();
-
 
     return p;
 }
