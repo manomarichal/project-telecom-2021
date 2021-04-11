@@ -21,11 +21,10 @@ IGMPClientSide::~IGMPClientSide()
  */
 int IGMPClientSide::configure(Vector<String> &conf, ErrorHandler *errh)
 {
-    if (Args(conf, this, errh).read_mp("CLIENTADDRESS", clientIP)
-    .read_mp("MULTICASTADDRESS", MC_ADDRESS)
-    .read_mp("ALLSYSTEMSMULTICASTADDRESS",ALL_SYSTEMS_MC_ADDRESS)
-    .complete()<0)
-        click_chatter("completed the read, got", clientIP, MC_ADDRESS, ALL_SYSTEMS_MC_ADDRESS)
+    if (Args(conf, this, errh).read_mp("CADDR", clientIP)
+    .read_mp("MADDR", MC_ADDRESS)
+    .read_mp("ASMADDR",ALL_SYSTEMS_MC_ADDRESS)
+    .complete()<0){click_chatter("failed read"); return -1;}
 
     return 0;
 }
