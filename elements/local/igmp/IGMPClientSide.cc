@@ -184,11 +184,11 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
         igmp_grp->record_type = record.record_type;
 
         // add source adresses on top
-        ipadress igmp_adr = (struct ipadress *) (igmp_grp + 1);
+        ipadress *igmp_adr = (struct ipadress *) (igmp_grp + 1);
         for (IPAddress adress:record.sources)
         {
-            igmp_adr = adress.addr();
-            uint32_t igmp_adr = (struct ipadress *) (igmp_grp + 1);
+            igmp_adr->adress = adress.addr();
+            ipadress *igmp_adr = (struct ipadress *) (igmp_grp + 1);
         }
 
         // move pointer to add a new info
