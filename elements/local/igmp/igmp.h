@@ -16,6 +16,11 @@
 enum filter_mode{include, exclude};
 // struct used to represent a single group record, see RFC3367 page 14
 
+struct ipadress
+{
+    uint32_t adress;
+};
+
 struct igmp_group_record_message
 {
     uint8_t record_type; // see RFC3376 page 16
@@ -58,6 +63,5 @@ struct igmp_mem_query_msg
     // TODO resv & S & QRV
     uint8_t qqic = 0; // queries query interval
     uint16_t number_of_sources;
-    Vector<uint32_t> source_adresses; // no vectors, source adressen one by one
 };
 #endif //PROJECT_TELECOM_IGMP_H
