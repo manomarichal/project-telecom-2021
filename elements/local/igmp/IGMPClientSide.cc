@@ -17,14 +17,12 @@ IGMPClientSide::~IGMPClientSide()
  * CLIENTADDRESS
  * MULTICASTADDRESS
  * ALLSYSTEMSMULTICASTADDRESS
- *
+ *    .read_mp("MADDR", MC_ADDRESS)
+    .read_mp("ASMADDR",ALL_SYSTEMS_MC_ADDRESS)
  */
 int IGMPClientSide::configure(Vector<String> &conf, ErrorHandler *errh)
 {
-    if (Args(conf, this, errh).read_mp("CADDR", clientIP)
-    .read_mp("MADDR", MC_ADDRESS)
-    .read_mp("ASMADDR",ALL_SYSTEMS_MC_ADDRESS)
-    .complete()<0){click_chatter("failed read"); return -1;}
+    if (Args(conf, this, errh).read_mp("CADDR", clientIP).complete()<0){click_chatter("failed read"); return -1;}
 
     return 0;
 }
