@@ -11,12 +11,17 @@ IGMPClientSide::IGMPClientSide()
 IGMPClientSide::~IGMPClientSide()
 {}
 
+/*
+ * configure for clientside object, should set the clientIP to the given clientaddress
+ * might need to add some things later like timer variables
+ */
 int IGMPClientSide::configure(Vector<String> &conf, ErrorHandler *errh)
 {
-//    if (Args(conf, this, errh)
-//    .read_m("CLIENTADDRESS", clientIP).complete() < 0) return -1;
-//    if (maxSize <= 0) return errh->error("maxsize should be larger than 0");
-    return 0;}
+    if (Args(conf, this, errh).read_m("CLIENTADDRESS", clientIP).complete()<0)
+        return -1;
+
+    return 0;
+}
 
 /*
  * handles the client join for the system.
