@@ -46,10 +46,10 @@ int IGMPClientSide::client_join(const String &conf, Element *e, void *thunk, Err
     uint32_t groupaddr = IPAddress(arg_list[0]);
 
     bool exists = false;
-    for(int i = 0; i<= element->group_records.size(); i++){
+    for(int i = 0; i< element->group_records.size(); i++){
         if (element->group_records[i].multicast_adress == groupaddr){
             //check if the client is a part of this group record already
-            for (int y =0; y<=element->group_records[i].sources.size(); y++){
+            for (int y =0; y<element->group_records[i].sources.size(); y++){
                 if (element->group_records[i].sources[y] == element->clientIP){
                     //case if the client has already joined the group address
                     //the mc address exists and the client is already a part of it
@@ -90,13 +90,13 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, void *thunk, Er
     uint32_t groupaddr = IPAddress(arg_list[0]);
     //iterate over the different group records
     bool found_group = false;
-    for(int i = 0; i<= element->group_records.size(); i++){
+    for(int i = 0; i< element->group_records.size(); i++){
         //if the grouprecord has the same address as the input address then go into statement
         if (element->group_records[i].multicast_adress == groupaddr) {
             //The group address exists
             bool found_group = true;
             bool found_client = false;
-            for (int y =0; y<=element->group_records[i].sources.size(); y++){
+            for (int y =0; y<element->group_records[i].sources.size(); y++){
                 if (element->group_records[i].sources[y] == element->clientIP){
                     //the client's address has been found within the group record's source addresses
                     found_client = true;
