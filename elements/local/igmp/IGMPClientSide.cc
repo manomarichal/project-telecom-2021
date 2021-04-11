@@ -26,6 +26,7 @@ int IGMPClientSide::configure(Vector<String> &conf, ErrorHandler *errh)
     String madr;
     String asmadr;
     if (Args(conf, this, errh).read_mp("CADDR", ipadresstest).read_mp("MADDR", madr).read_mp("ASMADDR",asmadr).complete()<0){click_chatter("failed read, returning 0", ipadresstest); return -1;}
+
     clientIP = IPAddress(ipadresstest);
     MC_ADDRESS = IPAddress(madr);
     ALL_SYSTEMS_MC_ADDRESS = IPAddress(asmadr);
@@ -43,6 +44,7 @@ int IGMPClientSide::client_join(const String &conf, Element *e, void *thunk, Err
     cp_argvec(conf, arg_list);   //splits up the conf vector into more readable version in the arg_list vector
 
     uint32_t groupaddr = IPAddress(arg_list[0]);
+
     bool exists = false;
     for(int i = 0; i<= element->group_records.size(); i++){
         if (element->group_records[i].multicast_adress == groupaddr){
@@ -129,8 +131,8 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, void *thunk, Er
 void IGMPClientSide::add_handlers() {
     click_chatter("hallo, adding handlers");
 
-    add_write_handler("client_join", &client_join, 0);
-    add_write_handler("client_leave", &client_leave, 0);
+    add_write_handler("client_join", &client_join, (void*)0);
+    add_write_handler("client_leave", &client_leave, (void*)0);
 }
 
 ////////////////////////
