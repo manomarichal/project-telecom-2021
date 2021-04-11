@@ -161,8 +161,8 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
     nip->ip_id = htons(ip_id); // converts host byte order to network byte order
     nip->ip_p = IP_PROTO_IGMP; // must be 2, check ipadress/clicknet/ip.h, line 56
     nip->ip_ttl = 1; // specified in RFC3376 page 7
-    nip->ip_src = IPAddress(clientIP);
-    nip->ip_dst = IPAddress(("224.0.0.22")); // all multicast routers listen to this adress
+    // nip->ip_src = IPAddress(clientIP);
+    nip->ip_dst = IPAddress((MC_ADDRESS)); // all multicast routers listen to this adress
     nip->ip_sum = click_in_cksum((unsigned char *)nip, sizeof(click_ip)); // TODO misschien gewoon zo laten
 
     // add the membership report info
@@ -184,11 +184,11 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
         igmp_grp->record_type = record.record_type;
 
         // add source adresses on top
-        uintptr_t igmp_adr = (uintptr_t) (igmp_grp + 1);
+        ipadress igmp_adr = (struct ipadress *) (igmp_grp + 1);
         for (IPAddress adress:record.sources)
         {
             igmp_adr = adress.addr();
-            uint32_t igmp_adr = (uint32_t) (igmp_adr + 1);
+            uint32_t igmp_adr = (struct ipadress *) (igmp_grp + 1);
         }
 
         // move pointer to add a new info
