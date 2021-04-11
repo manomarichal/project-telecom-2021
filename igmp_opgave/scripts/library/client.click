@@ -5,14 +5,6 @@
 
 elementclass Client {
 	$address, $gateway |
-	igmpclient::IGMPClientSide($adress, 224.0.0.22, 224.0.0.1);
-
-    igmpclient ->
-        -> FixIPSrc($address)               // sets source adress to parameter
-		-> frag :: IPFragmenter(1500)       // fragments ip packet
-		-> arpq :: ARPQuerier($address)
-		-> [0]output;
-
 
 	ip :: Strip(14)                             // get rid of ethernet header
 		-> CheckIPHeader()                      // check if ip header is correct
