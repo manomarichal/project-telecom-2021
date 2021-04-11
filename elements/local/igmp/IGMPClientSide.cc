@@ -172,7 +172,7 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
         igmp_grp->record_type = record.record_type;
 
         // add source adresses on top
-        uint32_t igmp_adr = (uint32_t) (igmp_grp + 1);
+        uintptr_t igmp_adr = (uintptr_t) (igmp_grp + 1);
         for (IPAddress adress:record.sources)
         {
             igmp_adr = adress.addr();
