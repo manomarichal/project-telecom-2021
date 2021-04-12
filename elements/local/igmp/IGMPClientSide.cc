@@ -40,7 +40,7 @@ int IGMPClientSide::configure(Vector<String> &conf, ErrorHandler *errh)
  * return integer, done throughout other click elements
  *
  */
-int IGMPClientSide::client_join(const String &conf, Element *e, void *thunk, ErrorHandler *errh) {
+int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((unused)) void *thunk, __attribute__((unused)) ErrorHandler *errh) {
     IGMPClientSide *element = reinterpret_cast<IGMPClientSide *>(e); //convert element to igmpclientside element
     click_chatter(element->clientIP.unparse().c_str());
     Vector<String> arg_list;
@@ -91,7 +91,7 @@ int IGMPClientSide::client_join(const String &conf, Element *e, void *thunk, Err
  * handles the client leave, changes the filter mode fo that group record from exclude to include as defined in RFC
  *
  */
-int IGMPClientSide::client_leave(const String &conf, Element *e, void *thunk, ErrorHandler *errh) {
+int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((unused)) void *thunk, __attribute__((unused)) ErrorHandler *errh) {
     IGMPClientSide *element = reinterpret_cast<IGMPClientSide *>(e); //convert element to igmpclientside element
     Vector<String> arg_list;
     cp_argvec(conf, arg_list);   //splits up the conf vector into more readable version in the arg_list vector
@@ -102,7 +102,6 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, void *thunk, Er
         //if the grouprecord has the same address as the input address then go into statement
         if (element->group_records[i].multicast_adress == groupaddr) {
             //The group address exists
-            bool found_group = true;
             bool found_client = false;
             for (int y =0; y<element->group_records[i].sources.size(); y++){
                 if (element->group_records[i].sources[y] == element->clientIP){
@@ -281,13 +280,13 @@ void IGMPClientSide::push(int port, Packet *p)
     const click_ip *iph = p->ip_header();
 
     // IGMP QUERIES
-    if (iph->ip_p == 0)
+    if (port == 0)
     {
         // TODO
         return;
     }
     // UDP MESSAGES
-    else if (iph->ip_p == 1)
+    else if (port == 1)
     {
         if (p->has_network_header() and iph->ip_dst == clientIP)
         {
