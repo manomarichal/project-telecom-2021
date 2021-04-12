@@ -281,13 +281,13 @@ void IGMPClientSide::push(int port, Packet *p)
     const click_ip *iph = p->ip_header();
 
     // IGMP QUERIES
-    if (p == 0)
+    if (port == 0)
     {
         // TODO
         return;
     }
     // UDP QUERIES
-    else if (p == 1)
+    else if (port == 1)
     {
         return;//if (p->has_network_header() -iph->)
     }

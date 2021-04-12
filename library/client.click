@@ -31,7 +31,7 @@ elementclass Client {
 
 	// Incoming Packets
 	input
-	    -> igmpfilter::IPClassifier(ip proto 2);        //proto is protocol from packet, 2 is if statement trying to match protocol nt 2
+	    -> igmpfilter::IPClassifier(ip proto 2);        //proto is protocol from packet, 2 is if statement trying to match protocol nr 2, so igmp messages get sent to port 0
 
 	igmpfilter[0]
 	    -> [0]igmpclient;
