@@ -28,8 +28,21 @@ int IGMPRouterSide::configure(Vector<String> &conf, ErrorHandler *errh)
 void IGMPRouterSide::push(int port, Packet *p){
     const click_ip *iph = p->ip_header();
     click_chatter("router recieved packet type %i in port %i ", iph->ip_p, port);
+
     if(port==0){
-        //input port of the igmp messages
+        /*
+         * input port of the igmp messages
+         * ontbind de igmp header
+         * kijk na of het een v3 membership report is
+         * haal de filter mode uit de igmp header
+         * als filtermode exclude is (en de src list leeg is) voer je join uit
+         *      voeg toe aan group state, zet timer
+         * als filtermode include is (en de src list is leeg) voer je leave uit
+         *      voeg toe aan group state, zet timer
+         * steeds kijken of deze messages geen repeat messages zijn, deze renewed de timers enkel en moet dus niet opnieuw worden geadd
+         *
+         */
+
     }
     if(port==1){
         //input port of the udp messages
