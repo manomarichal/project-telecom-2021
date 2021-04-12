@@ -29,7 +29,7 @@ private:
     uint32_t max_size;
     igmp_mem_report mem_report;
     Vector<igmp_group_record> group_records;
-    void* _add_igmp_data(void *start);
+    void _add_igmp_data(void *start);
     click_ip* _add_ip_header(void* start);
     uint32_t _get_size_of_igmp_data();
     // packet functions

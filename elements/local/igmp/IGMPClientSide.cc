@@ -182,21 +182,19 @@ uint32_t IGMPClientSide::_get_size_of_igmp_data()
             size += sizeof(ipadress);
         }
     }
-    click_chatter("igmp_data size:");
     return size;
 }
 
-void * IGMPClientSide::_add_igmp_data(void *start)
+void IGMPClientSide::_add_igmp_data(void *start)
 {
-    click_chatter("making igmp data for packet");
-
     // add the membership report info
     igmp_mem_report *igmp_mr = reinterpret_cast<igmp_mem_report*>(start);
     igmp_mr->number_of_group_records = group_records.size();
     igmp_mr->checksum = 0; //TODO
 
-    igmp_group_record_message *igmp_grp = (struct igmp_group_record_message*)(igmp_mr + 1);
+    if (group_records.size() == 0) {return;
 
+    igmp_group_record_message *igmp_grp = (struct igmp_group_record_message*)(igmp_mr + 1);
     for(int i=0;i<group_records.size(); i++)
     {
         // set the fields in the reserved space to the correct thing
@@ -204,9 +202,9 @@ void * IGMPClientSide::_add_igmp_data(void *start)
         igmp_grp->mode = group_records[i].mode;
         igmp_grp->number_of_sources = group_records[i].number_of_sources;
         igmp_grp->record_type = group_records[i].record_type;
+
         // add source adresses on top
         ipadress *igmp_adr = (struct ipadress *) (igmp_grp + 1);
-
         for (int j=0;j<group_records[i].sources.size(); j++)
         {
             igmp_adr->adress = group_records[i].sources[j].addr();
@@ -223,13 +221,10 @@ void * IGMPClientSide::_add_igmp_data(void *start)
             igmp_grp = (struct igmp_group_record_message*)(igmp_grp + 1);
         }
     }
-
-    return igmp_mr;
 }
 
 click_ip * IGMPClientSide::_add_ip_header(void *start)
 {
-    click_chatter("creating ip header");
     // based on elements/icmp/icmpsendpings.cc, line 133
     click_ip *nip = reinterpret_cast<click_ip*>(start); // place ip header at data pointer
     nip->ip_v = 4;
@@ -253,7 +248,6 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
 
     //uint32_t size = sizeof(click_ip) + sizeof(igmp_mem_report) + (sizeof(igmp_group_record_message)*group_records.size()); // TODO size of the entire packet
     WritablePacket *p = Packet::make( _get_size_of_igmp_data() + sizeof(click_ip));
-
     memset(p->data(), '\0', p->length()); // erase previous random data on memory requested
 
     click_ip *ip_header = _add_ip_header(p->data());
@@ -263,8 +257,10 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
     p->set_ip_header(ip_header, sizeof(click_ip));
     p->timestamp_anno().assign_now();
 
+    click_chatter("\t igmp data size: %i", _get_size_of_igmp_data());
+    click_chatter("\t size of ip header: %i", sizeof(click_ip));
+    click_chatter("\t total packet length %i", p->length());
     click_chatter("packet finished");
-
     return p;
 }
 
