@@ -7,11 +7,9 @@ elementclass Client {
 	$address, $gateway |
 	igmpclient::IGMPClientSide(CADDR $address, MADDR 224.0.0.22, ASMADDR 224.0.0.1);
 
-    igmpclient
-        -> FixIPSrc($address)               // sets source adress to parameter
-		-> frag :: IPFragmenter(1500)       // fragments ip packet
-		-> arpq :: ARPQuerier($address)
-		-> [0]output;
+	igmpclient[0]
+		-> CheckIPHeader()                      // check if ip header is correct
+        	-> ToDump(/home/student/Desktop/output.pcap)->Discard;
 
 
 	ip :: Strip(14)                             // get rid of ethernet header
@@ -27,8 +25,8 @@ elementclass Client {
 		-> ipgw :: IPGWOptions($address)    // no idea why this is heare
 		-> FixIPSrc($address)               // sets source adress to parameter
 		-> ttl :: DecIPTTL                  // dec time to live
-		-> frag 			    // fragments ip packet
-		-> arpq
+		-> frag :: IPFragmenter(1500)       // fragments ip packet
+		-> arpq :: ARPQuerier($address)
 		-> output;
 
 	ipgw[1] -> [0]igmpclient

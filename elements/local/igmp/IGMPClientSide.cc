@@ -182,7 +182,7 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
     // TODO ip otions
 
     // reserve space for a group record
-    igmp_group_record_message *igmp_grp = (struct igmp_group_record_message*)(igmp_mr + 1);
+    auto *igmp_grp = (struct igmp_group_record_message*)(igmp_mr + 1);
 
     for(igmp_group_record record: group_records)
     {
@@ -193,11 +193,11 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
         igmp_grp->record_type = record.record_type;
 
         // add source adresses on top
-        ipadress *igmp_adr = (struct ipadress *) (igmp_grp + 1);
+        auto *igmp_adr = (struct ipadress *) (igmp_grp + 1);
         for (IPAddress adress:record.sources)
         {
             igmp_adr->adress = adress.addr();
-            ipadress *igmp_adr = (struct ipadress *) (igmp_grp + 1);
+            igmp_adr = (struct ipadress *) (igmp_grp + 1);
         }
         // move pointer to add a new info
         igmp_grp = (struct igmp_group_record_message*)(igmp_grp + 1);
@@ -206,6 +206,8 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
     p->set_dst_ip_anno(IPAddress(("224.0.0.22")));
     p->set_ip_header(nip, sizeof(click_ip));
     p->timestamp_anno().assign_now();
+
+    click_chatter("created packet, returning it");
 
     return p;
 }
