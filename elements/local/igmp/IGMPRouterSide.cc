@@ -25,5 +25,9 @@ int IGMPRouterSide::configure(Vector<String> &conf, ErrorHandler *errh)
     return 0;
 }
 
+void IGMPRouterSide::push(int, Packet *){
+
+}
+
 CLICK_ENDDECLS
 EXPORT_ELEMENT(IGMPRouterSide) // forces to create element within click
