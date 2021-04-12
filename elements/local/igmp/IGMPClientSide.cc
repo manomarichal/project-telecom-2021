@@ -192,7 +192,7 @@ void IGMPClientSide::_add_igmp_data(void *start)
     igmp_mr->number_of_group_records = group_records.size();
     igmp_mr->checksum = 0; //TODO
 
-    if (group_records.size() == 0) {return;
+    if (group_records.size() == 0) {return;};
 
     igmp_group_record_message *igmp_grp = (struct igmp_group_record_message*)(igmp_mr + 1);
     for(int i=0;i<group_records.size(); i++)
