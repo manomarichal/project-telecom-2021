@@ -1,14 +1,25 @@
-//
-// Created by Gebruiker on 7/04/2021.
-//
+#ifndef CLICK_IGMPROUTERSIDE_HH
+#define CLICK_IGMPROUTERSIDE_HH
+#include <click/element.hh>
+#include "igmp.h"
+CLICK_DECLS
 
-#ifndef PROJECT_TELECOM_2021_IGMPROUTERSIDE_HH
-#define PROJECT_TELECOM_2021_IGMPROUTERSIDE_HH
+class IGMPRouterSide : public Element {
+public:
+    IGMPRouterSide();
+    ~IGMPRouterSide();
 
+    const char *class_name() const	{ return "IGMPRouterSide"; }
+    const char *port_count() const	{ return "1/1"; }
+    const char *processing() const	{ return PUSH; }
+    int configure(Vector<String>&, ErrorHandler*);
+    void push(int, Packet *);
 
-class IGMPRouterSide {
-
+private:
+    IPAddress routerIP;
+    Vector<igmp_group_record> group_states;
 };
 
+CLICK_ENDDECLS
+#endif
 
-#endif //PROJECT_TELECOM_2021_IGMPROUTERSIDE_HH
