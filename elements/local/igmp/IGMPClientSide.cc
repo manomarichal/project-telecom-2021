@@ -238,6 +238,15 @@ click_ip * IGMPClientSide::_add_ip_header(void *start)
     nip->ip_dst = IPAddress(MC_ADDRESS); // all multicast routers listen to this adress
     nip->ip_sum = click_in_cksum((unsigned char *)nip, sizeof(click_ip)); // TODO misschien gewoon zo laten
 
+    click_chatter("printing click ip while making report message: ");
+    click_chatter("\t ip_v %d",nip->ip_v);
+    click_chatter("\t ip_hl %d",nip->ip_hl);
+    click_chatter("\t ip_len %d",nip->ip_len);
+    click_chatter("\t ip_id %d",nip->ip_id);
+    click_chatter("\t ip_p %d",nip->ip_p);
+    click_chatter("\t ip_ttl %d",nip->ip_ttl);
+//    click_chatter("\t ip_dst %s",nip->ip_dst.s_addr.c_str());
+    click_chatter("\t ip_sum %d",nip->ip_sum);
     return nip;
 }
 
