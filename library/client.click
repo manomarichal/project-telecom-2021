@@ -31,13 +31,13 @@ elementclass Client {
 
 	// Incoming Packets
 	input
-	    -> igmpfilter::IPClassifier(ip proto 2);
+	    -> igmpfilter::IPClassifier(ip proto 2);        //proto is protocol from packet, 2 is if statement trying to match protocol nt 2
 
 	igmpfilter[0]
 	    -> [0]igmpclient;
 
     igmpfilter[1]
-        -> [0]igmpclient;
+        -> [1]igmpclient;
 
     // packets that go to clients
     igmpclient[1]
