@@ -25,11 +25,13 @@ int IGMPClientSide::configure(Vector<String> &conf, ErrorHandler *errh)
     String ipadresstest;
     String madr;
     String asmadr;
-    if (Args(conf, this, errh).read_mp("CADDR", ipadresstest).read_mp("MADDR", madr).read_mp("ASMADDR",asmadr).complete()<0){click_chatter("failed read, returning 0", ipadresstest); return -1;}
-
-    clientIP = IPAddress(ipadresstest);
-    MC_ADDRESS = IPAddress(madr);
-    ALL_SYSTEMS_MC_ADDRESS = IPAddress(asmadr);
+    if (Args(conf, this, errh).read_mp("CADDR", clientIP).read_mp("MADDR", MC_ADDRESS).read_mp("ASMADDR",ALL_SYSTEMS_MC_ADDRESS).complete()<0){click_chatter("failed read, returning 0", ipadresstest); return -1;}
+    click_chatter("initialising ipaddress %s", clientIP.unparse().c_str());
+    click_chatter("initialising mc address %s", MC_ADDRESS.unparse().c_str());
+    click_chatter("initialising asmc address %s", ALL_SYSTEMS_MC_ADDRESS.unparse().c_str());
+//    clientIP = IPAddress(ipadresstest);
+//    MC_ADDRESS = IPAddress(madr);
+//    ALL_SYSTEMS_MC_ADDRESS = IPAddress(asmadr);
     return 0;
 }
 
