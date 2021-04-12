@@ -21,6 +21,8 @@ public:
     static int client_leave(const String &conf, Element *e, void *thunk, ErrorHandler *errh);
     void add_handlers();
 
+    void print_group_records();
+
 private:
     uint32_t robustness = 1; // TODO not hardcoded
     uint32_t report_interval = 10; // TODO not hardcoded

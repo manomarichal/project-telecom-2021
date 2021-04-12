@@ -77,11 +77,14 @@ int IGMPClientSide::client_join(const String &conf, Element *e, void *thunk, Err
         grRecord.mode = exclude;
         element->group_records.push_back(grRecord);
         click_chatter("making a new group record");
+
+
 //        grRecord.print_record();
     }
     WritablePacket * p =element->make_mem_report_packet();
     element->output(0).push(p);
     click_chatter("completed join");
+    element->print_group_records();
     return 0;
 }
 /*
@@ -139,6 +142,20 @@ void IGMPClientSide::add_handlers() {
     add_write_handler("client_join", &client_join, (void*)0);
     add_write_handler("client_leave", &client_leave, (void*)0);
 }
+
+void IGMPClientSide::print_group_records(){
+    for(int i = 0; i< group_records.size(); i++){
+        click_chatter("group_record %i", i);
+        click_chatter("\t multicast_adress %s", group_records[i].multicast_adress.unparse().c_str());
+        click_chatter("\t record_type %s", group_records[i].record_type);
+        click_chatter("\t number_of_sources %i", group_records[i].number_of_sources);
+        click_chatter("\t mode %d", (int)group_records[i].mode);
+        for(int y =0; y<group_records[i].sources.size(); y++){
+            click_chatter("\t source %i %s",y, group_records[i].sources[y].unparse().c_str());
+        }
+    }
+}
+
 
 ////////////////////////
 /// PACKET FUNCTIONS ///
