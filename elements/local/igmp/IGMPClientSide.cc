@@ -152,62 +152,108 @@ void* IGMPClientSide::igmp_encap(click_ip *p)
 {
 }
 */
-// makes membership v3 packets, based on RFC3376 page 13-14
-WritablePacket * IGMPClientSide::make_mem_report_packet()
+
+uint32_t IGMPClientSide::_get_size_of_igmp_data()
 {
-    click_chatter("creating membership report");
+    int32_t size = 0;
+    size += sizeof(igmp_mem_report);
+    for(int i=0;i<group_records.size(); i++)
+    {
+        size += sizeof(igmp_group_record_message);
+        for (int j=0;j<group_records[i].sources.size(); j++)
+        {
+            size += sizeof(ipadress);
+        }
+    }
+    click_chatter("igmp_data size:", size);
+    return size;
+}
 
-    uint32_t size = sizeof(click_ip); // TODO size of the entire packet
-    WritablePacket *p = Packet::make(size);
-    memset(p->data(), '\0', p->length()); // erase previous random data on memory requested
+void * IGMPClientSide::_add_igmp_data(void *start)
+{
+    click_chatter("making igmp data for packet");
 
+    // add the membership report info
+    igmp_mem_report *igmp_mr = reinterpret_cast<igmp_mem_report*>(start);
+    click_chatter("hi");
+
+    igmp_mr->number_of_group_records = group_records.size();
+    click_chatter("hi");
+
+    igmp_mr->checksum = 0; //TODO
+    click_chatter("hi");
+
+    igmp_group_record_message *igmp_grp = (struct igmp_group_record_message*)(igmp_mr + 1);
+
+    for(int i=0;i<group_records.size(); i++)
+    {
+        click_chatter("making igmp data for packet");
+
+        // set the fields in the reserved space to the correct thing
+        igmp_grp->multicast_adress = group_records[i].multicast_adress.addr();
+        igmp_grp->mode = group_records[i].mode;
+        igmp_grp->number_of_sources = group_records[i].number_of_sources;
+        igmp_grp->record_type = group_records[i].record_type;
+        // add source adresses on top
+        ipadress *igmp_adr = (struct ipadress *) (igmp_grp + 1);
+
+        for (int j=0;j<group_records[i].sources.size(); j++)
+        {
+            igmp_adr->adress = group_records[i].sources[j].addr();
+            // move pointer
+            if (i < group_records.size()-1)
+            {
+                igmp_adr = (struct ipadress *) (igmp_grp + 1);
+            }
+        }
+
+        // move pointer to add a new info
+        if (i < group_records.size()-1)
+        {
+            igmp_grp = (struct igmp_group_record_message*)(igmp_grp + 1);
+        }
+    }
+
+    return igmp_mr;
+}
+
+click_ip * IGMPClientSide::_add_ip_header(void *start)
+{
+    click_chatter("creating ip header");
     // based on elements/icmp/icmpsendpings.cc, line 133
-    click_ip *nip = reinterpret_cast<click_ip *>(p->data()); // place ip header at data pointer
+    click_ip *nip = reinterpret_cast<click_ip*>(start); // place ip header at data pointer
     nip->ip_v = 4;
     nip->ip_hl = (sizeof(click_ip)) >> 2; //TODO ?
-    nip->ip_len = htons(p->length()); // TODO ?
+    nip->ip_len = htons(_get_size_of_igmp_data()); // TODO ?
     uint16_t ip_id = 1; // does not matter
     nip->ip_id = htons(ip_id); // converts host byte order to network byte order
     nip->ip_p = IP_PROTO_IGMP; // must be 2, check ipadress/clicknet/ip.h, line 56
     nip->ip_ttl = 1; // specified in RFC3376 page 7
     // nip->ip_src = IPAddress(clientIP);
-    nip->ip_dst = IPAddress((MC_ADDRESS)); // all multicast routers listen to this adress
+    nip->ip_dst = IPAddress(MC_ADDRESS); // all multicast routers listen to this adress
     nip->ip_sum = click_in_cksum((unsigned char *)nip, sizeof(click_ip)); // TODO misschien gewoon zo laten
 
-    // add the membership report info
-    igmp_mem_report *igmp_mr = (struct igmp_mem_report *) (nip + 1);
-    igmp_mr->number_of_group_records = group_records.size();
-    igmp_mr-> checksum = 0; //TODO
+    return nip;
+}
+
+// makes membership v3 packets, based on RFC3376 page 13-14
+WritablePacket * IGMPClientSide::make_mem_report_packet()
+{
+    click_chatter("creating membership report packed");
+
+    //uint32_t size = sizeof(click_ip) + sizeof(igmp_mem_report) + (sizeof(igmp_group_record_message)*group_records.size()); // TODO size of the entire packet
+    WritablePacket *p = Packet::make( _get_size_of_igmp_data() + sizeof(click_ip));
+
+    memset(p->data(), '\0', p->length()); // erase previous random data on memory requested
+
+    click_ip *ip_header = _add_ip_header(p->data());
+    _add_igmp_data(ip_header+1);
 
     // TODO ip otions
-
-    // reserve space for a group record
-    auto *igmp_grp = (struct igmp_group_record_message*)(igmp_mr + 1);
-
-    for(igmp_group_record record: group_records)
-    {
-        // set the fields in the reserved space to the correct thing
-        igmp_grp->multicast_adress = record.multicast_adress.addr();
-        igmp_grp->mode = record.mode;
-        igmp_grp->number_of_sources = record.number_of_sources;
-        igmp_grp->record_type = record.record_type;
-
-        // add source adresses on top
-        auto *igmp_adr = (struct ipadress *) (igmp_grp + 1);
-        for (IPAddress adress:record.sources)
-        {
-            igmp_adr->adress = adress.addr();
-            igmp_adr = (struct ipadress *) (igmp_grp + 1);
-        }
-        // move pointer to add a new info
-        igmp_grp = (struct igmp_group_record_message*)(igmp_grp + 1);
-    }
-    // finishing up
-    p->set_dst_ip_anno(IPAddress(("224.0.0.22")));
-    p->set_ip_header(nip, sizeof(click_ip));
+    p->set_ip_header(ip_header, sizeof(click_ip));
     p->timestamp_anno().assign_now();
 
-    click_chatter("created packet, returning it");
+    click_chatter("packet finished");
 
     return p;
 }
