@@ -7,11 +7,6 @@ elementclass Client {
 	$address, $gateway |
 	igmpclient::IGMPClientSide(CADDR $address, MADDR 224.0.0.22, ASMADDR 224.0.0.1);
 
-	igmpclient[0]
-		-> CheckIPHeader()                      // check if ip header is correct
-        	-> ToDump(/home/student/Desktop/output.pcap)->Discard;
-
-
 	ip :: Strip(14)                             // get rid of ethernet header
 		-> CheckIPHeader()                      // check if ip header is correct
 		-> rt :: StaticIPLookup(                // generic routing table, idk hoe ge die update
@@ -36,10 +31,25 @@ elementclass Client {
 
 	// Incoming Packets
 	input
-		-> HostEtherFilter($address)
+	    -> igmpfilter::IPClassifier(ip proto 2);
+
+	igmpfilter[0]
+	    -> [0]igmpclient;
+
+    igmpfilter[1]
+        -> [0]igmpclient;
+
+    // packets that go to clients
+    igmpclient[1]
+	    -> HostEtherFilter($address)
 		-> in_cl :: Classifier(12/0806 20/0001, 12/0806 20/0002, 12/0800)
 		-> arp_res :: ARPResponder($address)
 		-> output;
+
+    // packets that go to router
+	igmpclient[0]
+		-> CheckIPHeader()
+        -> ToDump(/home/student/Desktop/output.pcap)->Discard;
 
 	in_cl[1] -> [1]arpq;
 	in_cl[2] -> ip;
