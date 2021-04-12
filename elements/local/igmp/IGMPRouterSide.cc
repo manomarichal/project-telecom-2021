@@ -25,8 +25,14 @@ int IGMPRouterSide::configure(Vector<String> &conf, ErrorHandler *errh)
     return 0;
 }
 
-void IGMPRouterSide::push(int, Packet *){
-
+void IGMPRouterSide::push(int port, Packet *p){
+    const click_ip *iph = p->ip_header();
+    if(port==0){
+        //input port of the igmp messages
+    }
+    if(port==1){
+        //input port of the udp messages
+    }
 }
 
 CLICK_ENDDECLS
