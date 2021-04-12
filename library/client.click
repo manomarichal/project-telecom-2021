@@ -48,8 +48,8 @@ elementclass Client {
 
     // packets that go to router
 	igmpclient[0]
-		-> CheckIPHeader()
-        -> ToDump(/home/student/Desktop/output.pcap)->Discard;
+        -> ToDump(/home/student/Desktop/output.pcap)
+        -> output;
 
 	in_cl[1] -> [1]arpq;
 	in_cl[2] -> ip;

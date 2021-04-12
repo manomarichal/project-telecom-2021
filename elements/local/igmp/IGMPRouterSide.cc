@@ -27,6 +27,7 @@ int IGMPRouterSide::configure(Vector<String> &conf, ErrorHandler *errh)
 
 void IGMPRouterSide::push(int port, Packet *p){
     const click_ip *iph = p->ip_header();
+    click_chatter("router recieved packet type %i in port %i ", iph->ip_p, port);
     if(port==0){
         //input port of the igmp messages
     }

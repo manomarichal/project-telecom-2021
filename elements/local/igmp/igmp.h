@@ -65,7 +65,7 @@ struct igmp_group_record
 // struct used to represent a membership report, see RFC3367 page 13
 struct igmp_mem_report
 {
-    const uint8_t type = IGMP_V3_MEM_RECORD;
+    uint8_t type;
     const uint8_t reserved_1 = 0;
     const uint16_t reserved2 = 0;
     uint16_t number_of_group_records;

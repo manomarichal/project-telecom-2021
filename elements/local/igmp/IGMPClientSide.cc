@@ -189,6 +189,7 @@ void IGMPClientSide::_add_igmp_data(void *start)
     // add the membership report info
     igmp_mem_report *igmp_mr = reinterpret_cast<igmp_mem_report*>(start);
     igmp_mr->number_of_group_records = group_records.size();
+    igmp_mr->type = IGMP_V3_MEM_RECORD;
     igmp_mr->checksum = 0; //TODO
 
     if (group_records.size() == 0) {return;};
@@ -233,8 +234,8 @@ click_ip * IGMPClientSide::_add_ip_header(void *start)
     nip->ip_id = htons(ip_id); // converts host byte order to network byte order
     nip->ip_p = IP_PROTO_IGMP; // must be 2, check ipadress/clicknet/ip.h, line 56
     nip->ip_ttl = 1; // specified in RFC3376 page 7
-    // nip->ip_src = IPAddress(clientIP);
-    nip->ip_dst = IPAddress(MC_ADDRESS); // all multicast routers listen to this adress
+    nip->ip_src = clientIP;
+    nip->ip_dst = MC_ADDRESS; // all multicast routers listen to this adress
     nip->ip_sum = click_in_cksum((unsigned char *)nip, sizeof(click_ip)); // TODO misschien gewoon zo laten
 
     click_chatter("printing click ip while making report message: ");
