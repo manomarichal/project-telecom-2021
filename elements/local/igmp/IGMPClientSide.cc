@@ -182,7 +182,7 @@ uint32_t IGMPClientSide::_get_size_of_igmp_data()
             size += sizeof(ipadress);
         }
     }
-    click_chatter("igmp_data size:", size);
+    click_chatter("igmp_data size:");
     return size;
 }
 
@@ -192,20 +192,13 @@ void * IGMPClientSide::_add_igmp_data(void *start)
 
     // add the membership report info
     igmp_mem_report *igmp_mr = reinterpret_cast<igmp_mem_report*>(start);
-    click_chatter("hi");
-
     igmp_mr->number_of_group_records = group_records.size();
-    click_chatter("hi");
-
     igmp_mr->checksum = 0; //TODO
-    click_chatter("hi");
 
     igmp_group_record_message *igmp_grp = (struct igmp_group_record_message*)(igmp_mr + 1);
 
     for(int i=0;i<group_records.size(); i++)
     {
-        click_chatter("making igmp data for packet");
-
         // set the fields in the reserved space to the correct thing
         igmp_grp->multicast_adress = group_records[i].multicast_adress.addr();
         igmp_grp->mode = group_records[i].mode;
