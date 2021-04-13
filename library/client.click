@@ -49,8 +49,8 @@ elementclass Client {
 
     // packets that go to router
 	igmpclient[0]
-	    -> EtherEncap(0x0800, 00:50:BA:85:84:B2, 00:50:BA:85:84:B1)
-	    -> ToDump(/home/student/Desktop/output.pcap)
+	    -> EtherEncap(0x0800, $address, $gateway)
+        -> ToDump(/home/student/Desktop/output.pcap)
         -> output;
 
 	in_cl[1] -> [1]arpq;
