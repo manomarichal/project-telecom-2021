@@ -13,7 +13,7 @@
 #include <click/ipaddress.hh>
 #include <map>
 
-enum filter_mode{include, exclude};
+enum filter_mode{include, exclude, change_to_include, change_to_exclude};
 
 struct ipadress
 {
@@ -33,7 +33,6 @@ struct igmp_group_record_message
     uint8_t record_type; // see RFC3376 page 16
     const uint8_t aux_data_len = 0; // IGMPv3 does not define any auxiliary data thus length must be zero
     uint16_t number_of_sources;
-    filter_mode mode;
     uint32_t multicast_adress;
 //    void print_message(){
 //        click_chatter("---printing igmp_group_record_message---");
@@ -75,8 +74,9 @@ struct igmp_mem_report
     uint8_t type;
     const uint8_t reserved_1 = 0;
     const uint16_t reserved2 = 0;
-    uint16_t number_of_group_records;
     uint16_t checksum;
+    uint16_t number_of_group_records;
+
 //    void print_report(){
 //        click_chatter("---printing igmp_mem_report---");
 //        click_chatter("type: ", type);
