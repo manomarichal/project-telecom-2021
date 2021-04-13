@@ -20,6 +20,14 @@ struct ipadress
     uint32_t adress;
 };
 
+struct router_alert
+{
+    uint8_t  field_1;
+    uint8_t  field_2;
+    uint8_t octet_1;
+    uint8_t octet_2;
+};
+
 // struct used to represent a single group record, see RFC3367 page 14
 struct igmp_group_record_message
 {

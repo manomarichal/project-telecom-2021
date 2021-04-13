@@ -36,7 +36,9 @@ private:
 
     // packet functions
     void _add_igmp_data(void *start);
-    click_ip* _add_ip_header(void* start);
+    router_alert* _add_router_alert(void *start, uint8_t octet_1=0, uint8_t octet_2=0);
+    click_ip* _add_ip_header(WritablePacket* p, bool verbose=false);
+
     uint32_t _get_size_of_igmp_data();
     WritablePacket* make_mem_report_packet();
 

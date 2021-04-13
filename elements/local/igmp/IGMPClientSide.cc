@@ -223,52 +223,67 @@ void IGMPClientSide::_add_igmp_data(void *start)
     }
 }
 
-click_ip * IGMPClientSide::_add_ip_header(void *start)
+click_ip * IGMPClientSide::_add_ip_header(WritablePacket* p, bool verbose)
 {
     // based on elements/icmp/icmpsendpings.cc, line 133
-    click_ip *nip = reinterpret_cast<click_ip*>(start); // place ip header at data pointer
+    click_ip *nip = reinterpret_cast<click_ip*>(p->data()); // place ip header at data pointer
     nip->ip_v = 4;
-    nip->ip_hl = (sizeof(click_ip)) >> 2; //TODO ?
-    nip->ip_len = htons(_get_size_of_igmp_data()); // TODO ?
+    nip->ip_hl = (sizeof(click_ip) + 4) >> 2; // 4 because of router alert, idk why right shift by 2
+    nip->ip_len = htons(p->length());
     uint16_t ip_id = 1; // does not matter
     nip->ip_id = htons(ip_id); // converts host byte order to network byte order
     nip->ip_p = IP_PROTO_IGMP; // must be 2, check ipadress/clicknet/ip.h, line 56
     nip->ip_ttl = 1; // specified in RFC3376 page 7
-    nip->ip_src = clientIP;
-    nip->ip_dst = MC_ADDRESS; // all multicast routers listen to this adress
-    nip->ip_sum = click_in_cksum((unsigned char *)nip, sizeof(click_ip)); // TODO misschien gewoon zo laten
+    nip->ip_src = clientIP.in_addr();
+    nip->ip_dst = MC_ADDRESS.in_addr(); // all multicast routers listen to this adress
+    nip->ip_sum = click_in_cksum((unsigned char *)nip, sizeof(click_ip)); // copy paste from icmpsendpings.cc
 
-    click_chatter("printing click ip while making report message: ");
-    click_chatter("\t ip_v %d",nip->ip_v);
-    click_chatter("\t ip_hl %d",nip->ip_hl);
-    click_chatter("\t ip_len %d",nip->ip_len);
-    click_chatter("\t ip_id %d",nip->ip_id);
-    click_chatter("\t ip_p %d",nip->ip_p);
-    click_chatter("\t ip_ttl %d",nip->ip_ttl);
-//    click_chatter("\t ip_dst %s",nip->ip_dst.s_addr.c_str());
-    click_chatter("\t ip_sum %d",nip->ip_sum);
+    if (!verbose)
+    {
+        click_chatter("printing click ip while making report message: ");
+        click_chatter("\t ip_src %s",clientIP.unparse().c_str());
+        click_chatter("\t ip_dst %s",MC_ADDRESS.unparse().c_str());
+        click_chatter("\t ip_v %d",nip->ip_v);
+        click_chatter("\t ip_hl %d",nip->ip_hl);
+        click_chatter("\t ip_len %d",nip->ip_len);
+        click_chatter("\t ip_id %d",nip->ip_id);
+        click_chatter("\t ip_p %d",nip->ip_p);
+        click_chatter("\t ip_ttl %d",nip->ip_ttl);
+        click_chatter("\t ip_sum %d",nip->ip_sum);
+    }
+
     return nip;
 }
+router_alert * IGMPClientSide::_add_router_alert(void *start, uint8_t octet_1, uint8_t octet_2)
+{
+    // add ip option
+    router_alert* r_alert = reinterpret_cast<router_alert*>(start);
+    r_alert->field_1 = 0b10010100; // see RFC-2113
+    r_alert->field_1 = 0b00000100; // see RFC-2113
+    r_alert->octet_1 = octet_1;
+    r_alert->octet_2 = octet_2;
 
+    return r_alert;
+}
 // makes membership v3 packets, based on RFC3376 page 13-14
 WritablePacket * IGMPClientSide::make_mem_report_packet()
 {
     click_chatter("creating membership report packed");
 
     //uint32_t size = sizeof(click_ip) + sizeof(igmp_mem_report) + (sizeof(igmp_group_record_message)*group_records.size()); // TODO size of the entire packet
-    WritablePacket *p = Packet::make( _get_size_of_igmp_data() + sizeof(click_ip));
+    WritablePacket *p = Packet::make( _get_size_of_igmp_data() + sizeof(click_ip) + 4);
     memset(p->data(), '\0', p->length()); // erase previous random data on memory requested
 
-    click_ip *ip_header = _add_ip_header(p->data());
-    _add_igmp_data(ip_header+1);
+    click_ip *ip_header = _add_ip_header(p, true);
+    router_alert* r_alert = _add_router_alert(ip_header+1);
+    _add_igmp_data(r_alert+1);
 
-    // TODO ip otions
     p->set_ip_header(ip_header, sizeof(click_ip));
     p->timestamp_anno().assign_now();
+    p->set_dst_ip_anno(IPAddress(MC_ADDRESS));
 
     click_chatter("\t igmp data size: %i", _get_size_of_igmp_data());
-    click_chatter("\t size of ip header: %i", sizeof(click_ip));
-    click_chatter("\t total packet length %i", p->length());
+    click_chatter("\t size of ip header: %i", sizeof(click_ip) + 4);
     click_chatter("packet finished");
     return p;
 }

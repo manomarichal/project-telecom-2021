@@ -17,7 +17,7 @@ elementclass Client {
 
 	rt[1]
 		-> DropBroadcasts                   // drops packets that arrived as link-level broadcast or multicast
-		-> ipgw :: IPGWOptions($address)    // no idea why this is heare
+		-> ipgw :: IPGWOptions($address)    // no idea why this is here
 		-> FixIPSrc($address)               // sets source adress to parameter
 		-> ttl :: DecIPTTL                  // dec time to live
 		-> frag :: IPFragmenter(1500)       // fragments ip packet
@@ -48,6 +48,7 @@ elementclass Client {
 
     // packets that go to router
 	igmpclient[0]
+		-> ipgw2 :: IPGWOptions($address)    // no idea why this is here
         -> ToDump(/home/student/Desktop/output.pcap)
         -> output;
 
