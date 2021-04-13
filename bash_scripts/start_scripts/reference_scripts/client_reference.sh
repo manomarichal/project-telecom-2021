@@ -1,8 +1,9 @@
 #!/bin/sh
 
+cd /home/student/click/scripts/
+../userlevel/click glue.click &
 cd /home/student/click-reference/solution/
 
-/home/student/click/userlevel/click /home/student/click/scripts/glue.click &
 
 sleep 1
 
