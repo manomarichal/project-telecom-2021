@@ -25,6 +25,7 @@ elementclass Client {
 		-> output;
 
 	ipgw[1] -> [0]igmpclient
+
 	//ipgw[1] -> ICMPError($address, parameterproblem) -> output;         // IPGWOptions error poort
 	ttl[1]  -> ICMPError($address, timeexceeded) -> output;             // DecIPTTL error poort
 	frag[1] -> ICMPError($address, unreachable, needfrag) -> output;    // IPFragmenter error poort
@@ -48,7 +49,7 @@ elementclass Client {
 
     // packets that go to router
 	igmpclient[0]
-		-> ipgw2 :: IPGWOptions($address)    // no idea why this is here
+	    -> EtherEncap(0x0800, 00:50:BA:85:84:C1, 00:50:BA:85:84:C1)
         -> ToDump(/home/student/Desktop/output.pcap)
         -> output;
 

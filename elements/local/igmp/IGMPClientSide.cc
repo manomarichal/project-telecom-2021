@@ -191,8 +191,6 @@ void IGMPClientSide::_add_igmp_data(void *start)
     igmp_mem_report *igmp_mr = reinterpret_cast<igmp_mem_report*>(start);
     igmp_mr->number_of_group_records = group_records.size();
     igmp_mr->type = IGMP_V3_MEM_RECORD;
-    igmp_mr->checksum = 0; //TODO
-
     if (group_records.size() == 0) {return;};
 
     igmp_group_record_message *igmp_grp = (struct igmp_group_record_message*)(igmp_mr + 1);
@@ -221,6 +219,8 @@ void IGMPClientSide::_add_igmp_data(void *start)
         {
             igmp_grp = (struct igmp_group_record_message*)(igmp_grp + 1);
         }
+
+       // igmp_mr->checksum = click_in_cksum((unsigned char *)igmp_mr, _get_size_of_igmp_data());
     }
 }
 
@@ -237,7 +237,7 @@ click_ip * IGMPClientSide::_add_ip_header(WritablePacket* p, bool verbose)
     nip->ip_ttl = 1; // specified in RFC3376 page 7
     nip->ip_src = clientIP.in_addr();
     nip->ip_dst = MC_ADDRESS.in_addr(); // all multicast routers listen to this adress
-    nip->ip_sum = click_in_cksum((unsigned char *)nip, sizeof(click_ip)); // copy paste from icmpsendpings.cc
+    nip->ip_sum = click_in_cksum((unsigned char *)nip, sizeof(click_ip) + 4); // copy paste from icmpsendpings.cc
 
     if (!verbose)
     {
