@@ -24,8 +24,7 @@ struct router_alert
 {
     uint8_t field_1;
     uint8_t field_2;
-    uint8_t octet_1;
-    uint8_t octet_2;
+    uint16_t octet;
 };
 
 // struct used to represent a single group record, see RFC3367 page 14

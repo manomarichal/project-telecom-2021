@@ -229,7 +229,7 @@ click_ip * IGMPClientSide::_add_ip_header(WritablePacket* p, bool verbose)
     // based on elements/icmp/icmpsendpings.cc, line 133
     click_ip *nip = reinterpret_cast<click_ip*>(p->data()); // place ip header at data pointer
     nip->ip_v = 4;
-    nip->ip_hl = (sizeof(click_ip)) >> 2; // 4 because of router alert, idk why right shift by 2
+    nip->ip_hl = (sizeof(click_ip) + sizeof(router_alert)) >> 2; // 4 because of router alert, idk why right shift by 2
     nip->ip_len = htons(p->length());
     uint16_t ip_id = 1; // does not matter
     nip->ip_id = htons(ip_id); // converts host byte order to network byte order
@@ -237,7 +237,7 @@ click_ip * IGMPClientSide::_add_ip_header(WritablePacket* p, bool verbose)
     nip->ip_ttl = 1; // specified in RFC3376 page 7
     nip->ip_src = clientIP.in_addr();
     nip->ip_dst = MC_ADDRESS.in_addr(); // all multicast routers listen to this adress
-    nip->ip_sum = click_in_cksum((unsigned char *)nip, sizeof(click_ip)); // copy paste from icmpsendpings.cc
+    nip->ip_sum = click_in_cksum((unsigned char *) nip, sizeof(click_ip) + sizeof(router_alert)); // copy paste from icmpsendpings.cc
 
     if (!verbose)
     {
@@ -260,9 +260,8 @@ router_alert * IGMPClientSide::_add_router_alert(void *start, uint8_t octet_1, u
     // add ip option
     router_alert* r_alert = reinterpret_cast<router_alert*>(start);
     r_alert->field_1 = 0b10010100; // see RFC-2113
-    r_alert->field_1 = 0b00000100; // see RFC-2113
-    r_alert->octet_1 = octet_1;
-    r_alert->octet_2 = octet_2;
+    r_alert->field_2 = 0b00000100; // see RFC-2113
+    r_alert->octet = ((uint16_t)octet_2<< 8) | octet_1;
 
     return r_alert;
 }
@@ -276,8 +275,8 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
     memset(p->data(), '\0', p->length()); // erase previous random data on memory requested
 
     click_ip *ip_header = _add_ip_header(p, true);
-    //router_alert* r_alert = _add_router_alert(ip_header+1);
-    _add_igmp_data(ip_header+1);
+    router_alert* r_alert = _add_router_alert(ip_header+1);
+    _add_igmp_data(r_alert+1);
 
     p->set_ip_header(ip_header, sizeof(click_ip));
     p->timestamp_anno().assign_now();
