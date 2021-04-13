@@ -30,6 +30,10 @@ void IGMPRouterSide::push(int port, Packet *p){
     click_chatter("router recieved packet type %i in port %i ", iph->ip_p, port);
 
     if(port==0){
+        click_chatter("regular packet");
+
+    }
+    if(port==1){
         /*
          * input port of the igmp messages
          * ontbind de igmp header
@@ -40,11 +44,8 @@ void IGMPRouterSide::push(int port, Packet *p){
          * als filtermode include is (en de src list is leeg) voer je leave uit
          *      voeg toe aan group state, zet timer
          * steeds kijken of deze messages geen repeat messages zijn, deze renewed de timers enkel en moet dus niet opnieuw worden geadd
-         *
          */
-
-    }
-    if(port==1){
+        click_chatter("igmp packet");
         //input port of the udp messages
     }
 }
