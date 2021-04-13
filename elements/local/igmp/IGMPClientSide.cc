@@ -27,9 +27,6 @@ int IGMPClientSide::configure(Vector<String> &conf, ErrorHandler *errh)
     click_chatter("initialising ipaddress %s", clientIP.unparse().c_str());
     click_chatter("initialising mc address %s", MC_ADDRESS.unparse().c_str());
     click_chatter("initialising asmc address %s", ALL_SYSTEMS_MC_ADDRESS.unparse().c_str());
-//    clientIP = IPAddress(ipadresstest);
-//    MC_ADDRESS = IPAddress(madr);
-//    ALL_SYSTEMS_MC_ADDRESS = IPAddress(asmadr);
     return 0;
 }
 
@@ -192,15 +189,10 @@ void IGMPClientSide::_add_igmp_data(void *start)
 {
     // add the membership report info
     igmp_mem_report *igmp_mr = reinterpret_cast<igmp_mem_report*>(start);
-    click_chatter("size 3 %d", group_records.size());
-
     igmp_mr->number_of_group_records = htons(group_records.size());
-
     igmp_mr->type = IGMP_V3_MEM_RECORD;
     if (group_records.size() == 0) {return;};
-
     igmp_group_record_message *igmp_grp = (struct igmp_group_record_message*)(igmp_mr + 1);
-    click_chatter("size 3 %d", group_records.size());
     for(int i=0;i<group_records.size(); i++)
     {
         click_chatter("adding igmp data for group %d", i);
