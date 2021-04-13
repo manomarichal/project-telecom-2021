@@ -2,3 +2,4 @@
 -wat exact is er nodig voor de eertse evaluatie
 -IPoptions
 --> in_cl :: Classifier(12/0806 20/0001, 12/0806 20/0002, 12/0800) wat doet dit?
+-manier om clients van reference oplossing een join te laten uitvoeren? anders geen mogelijke optie om router alleen te testen
