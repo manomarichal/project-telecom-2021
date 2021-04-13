@@ -17,8 +17,6 @@ IGMPClientSide::~IGMPClientSide()
  * CLIENTADDRESS
  * MULTICASTADDRESS
  * ALLSYSTEMSMULTICASTADDRESS
- *    .read_mp("MADDR", MC_ADDRESS)
-    .read_mp("ASMADDR",ALL_SYSTEMS_MC_ADDRESS)
  */
 int IGMPClientSide::configure(Vector<String> &conf, ErrorHandler *errh)
 {
@@ -70,11 +68,10 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
         //make new group record if it does not yet exist
         igmp_group_record grRecord;
         //the group record needs to be made
-        grRecord.record_type = 0;
+        grRecord.record_type = change_to_exclude;
         grRecord.multicast_adress = groupaddr;
-        grRecord.number_of_sources = 1;
-        grRecord.sources.push_back(element->clientIP);
-        grRecord.mode = exclude;
+        grRecord.number_of_sources = 0;
+//        grRecord.sources.push_back(element->clientIP);
         element->group_records.push_back(grRecord);
         click_chatter("making a new group record");
 
@@ -103,23 +100,29 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((
         if (element->group_records[i].multicast_adress == groupaddr) {
             //The group address exists
             found_group = true;
-            bool found_client = false;
-            for (int y =0; y<element->group_records[i].sources.size(); y++){
-                if (element->group_records[i].sources[y] == element->clientIP){
-                    //the client's address has been found within the group record's source addresses
-                    found_client = true;
-                    element->group_records[i].mode = include;
-                    WritablePacket * p =element->make_mem_report_packet();
-                    //push the packet to update mode
-                    element->output(0).push(p);
-                    click_chatter("completed leave");
-                }
-            }
-            if(!found_client){
-                //the client does not exist in the group record
-                click_chatter("did not find client when executing leave");
-                return -1;
-            }
+
+            element->group_records[i].mode = change_to_include;
+            WritablePacket * p =element->make_mem_report_packet();
+            //push the packet to update mode
+            element->output(0).push(p);
+            click_chatter("completed leave");
+//            bool found_client = false;
+//            for (int y =0; y<element->group_records[i].sources.size(); y++){
+//                if (element->group_records[i].sources[y] == element->clientIP){
+//                    //the client's address has been found within the group record's source addresses
+//                    found_client = true;
+//                    element->group_records[i].mode = change_to_include;
+//                    WritablePacket * p =element->make_mem_report_packet();
+//                    //push the packet to update mode
+//                    element->output(0).push(p);
+//                    click_chatter("completed leave");
+//                }
+//            }
+//            if(!found_client){
+//                //the client does not exist in the group record
+//                click_chatter("did not find client when executing leave");
+//                return -1;
+//            }
 
         }
     }
@@ -147,7 +150,7 @@ void IGMPClientSide::print_group_records(){
     for(int i = 0; i< group_records.size(); i++){
         click_chatter("group_record %i", i);
         click_chatter("\t multicast_adress %s", group_records[i].multicast_adress.unparse().c_str());
-        click_chatter("\t record_type %s", group_records[i].record_type);
+        click_chatter("\t record_type %d", group_records[i].record_type);
         click_chatter("\t number_of_sources %i", group_records[i].number_of_sources);
         click_chatter("\t mode %d", (int)group_records[i].mode);
         for(int y =0; y<group_records[i].sources.size(); y++){
@@ -189,20 +192,25 @@ void IGMPClientSide::_add_igmp_data(void *start)
 {
     // add the membership report info
     igmp_mem_report *igmp_mr = reinterpret_cast<igmp_mem_report*>(start);
-    igmp_mr->number_of_group_records = group_records.size();
+    click_chatter("size 3 %d", group_records.size());
+
+    igmp_mr->number_of_group_records = htons(group_records.size());
+
     igmp_mr->type = IGMP_V3_MEM_RECORD;
     if (group_records.size() == 0) {return;};
 
     igmp_group_record_message *igmp_grp = (struct igmp_group_record_message*)(igmp_mr + 1);
+    click_chatter("size 3 %d", group_records.size());
     for(int i=0;i<group_records.size(); i++)
     {
+        click_chatter("adding igmp data for group %d", i);
         // set the fields in the reserved space to the correct thing
         igmp_grp->multicast_adress = group_records[i].multicast_adress.addr();
-        igmp_grp->mode = group_records[i].mode;
         igmp_grp->number_of_sources = group_records[i].number_of_sources;
         igmp_grp->record_type = group_records[i].record_type;
 
         // add source adresses on top
+
         ipadress *igmp_adr = (struct ipadress *) (igmp_grp + 1);
         for (int j=0;j<group_records[i].sources.size(); j++)
         {
@@ -272,7 +280,7 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
 
     //uint32_t size = sizeof(click_ip) + sizeof(igmp_mem_report) + (sizeof(igmp_group_record_message)*group_records.size()); // TODO size of the entire packet
     WritablePacket *p = Packet::make( _get_size_of_igmp_data() + sizeof(click_ip) + 4);
-    memset(p->data(), '\0', p->length()); // erase previous random data on memory requested
+    memset(p->data(), 0, p->length()); // erase previous random data on memory requested
 
     click_ip *ip_header = _add_ip_header(p, true);
     router_alert* r_alert = _add_router_alert(ip_header+1);
