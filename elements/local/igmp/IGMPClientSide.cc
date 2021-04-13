@@ -102,6 +102,7 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((
         //if the grouprecord has the same address as the input address then go into statement
         if (element->group_records[i].multicast_adress == groupaddr) {
             //The group address exists
+            found_group = true;
             bool found_client = false;
             for (int y =0; y<element->group_records[i].sources.size(); y++){
                 if (element->group_records[i].sources[y] == element->clientIP){
