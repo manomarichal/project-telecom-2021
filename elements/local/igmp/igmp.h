@@ -22,8 +22,8 @@ struct ipadress
 
 struct router_alert
 {
-    uint8_t  field_1;
-    uint8_t  field_2;
+    uint8_t field_1;
+    uint8_t field_2;
     uint8_t octet_1;
     uint8_t octet_2;
 };
