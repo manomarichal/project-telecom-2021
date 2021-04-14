@@ -37,45 +37,51 @@ int IGMPClientSide::configure(Vector<String> &conf, ErrorHandler *errh)
  *
  */
 int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((unused)) void *thunk, __attribute__((unused)) ErrorHandler *errh) {
+    click_chatter("Entering join handler");
     IGMPClientSide *element = reinterpret_cast<IGMPClientSide *>(e); //convert element to igmpclientside element
     click_chatter(element->clientIP.unparse().c_str());
     Vector<String> arg_list;
     cp_argvec(conf, arg_list);   //splits up the conf vector into more readable version in the arg_list vector
 
-    uint32_t groupaddr = IPAddress(arg_list[0]);
+    uint32_t groupaddr = IPAddress(arg_list[0]).addr();
 
     bool exists = false;
     for(int i = 0; i< element->group_records.size(); i++){
         if (element->group_records[i].multicast_adress == groupaddr){
             //check if the client is a part of this group record already
-            for (int y =0; y<element->group_records[i].sources.size(); y++){
-                if (element->group_records[i].sources[y] == element->clientIP){
-                    //case if the client has already joined the group address
-                    //the mc address exists and the client is already a part of it
-                    click_chatter("The group you are trying to join already has this source address");
-                    return -1;
-                }
-            }
+//            for (int y =0; y<element->group_records[i].sources.size(); y++){
+//                if (element->group_records[i].sources[y] == element->clientIP){
+//                    //case if the client has already joined the group address
+//                    //the mc address exists and the client is already a part of it
+//                    click_chatter("The group you are trying to join already has this source address");
+//                    return -1;
+//                }
+//            }
+
             //if the client is not a part off the group, add it to the group
-            element->group_records[i].sources.push_back(element->clientIP);
-            element->group_records[i].number_of_sources++;
-            exists = true;
+//            element->group_records[i].sources.push_back(element->clientIP);
+//            element->group_records[i].number_of_sources++;
+
+            click_chatter("You have already joined this multicast group");
+            return -1;
         }
     }
-    if(!exists){
+
         //make new group record if it does not yet exist
-        igmp_group_record grRecord;
-        //the group record needs to be made
-        grRecord.record_type = change_to_exclude;
-        grRecord.multicast_adress = groupaddr;
-        grRecord.number_of_sources = 0;
+    igmp_group_record grRecord;
+    //the group record needs to be made
+    grRecord.record_type = change_to_exclude;
+    grRecord.multicast_adress = groupaddr;
+    grRecord.number_of_sources = 0;
 //        grRecord.sources.push_back(element->clientIP);
-        element->group_records.push_back(grRecord);
-        click_chatter("making a new group record");
+    element->group_records.push_back(grRecord);
+    click_chatter("while completing join, the mode is now %d", element->group_records[0].record_type);
+
+    click_chatter("making a new group record");
 
 
 //        grRecord.print_record();
-    }
+
     WritablePacket * p =element->make_mem_report_packet();
     element->output(0).push(p);
     click_chatter("completed join");
@@ -87,10 +93,11 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
  *
  */
 int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((unused)) void *thunk, __attribute__((unused)) ErrorHandler *errh) {
+    click_chatter("Entering leave handler");
     IGMPClientSide *element = reinterpret_cast<IGMPClientSide *>(e); //convert element to igmpclientside element
     Vector<String> arg_list;
     cp_argvec(conf, arg_list);   //splits up the conf vector into more readable version in the arg_list vector
-    uint32_t groupaddr = IPAddress(arg_list[0]);
+    uint32_t groupaddr = IPAddress(arg_list[0]).addr();
     //iterate over the different group records
     bool found_group = false;
     for(int i = 0; i< element->group_records.size(); i++){
@@ -98,8 +105,10 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((
         if (element->group_records[i].multicast_adress == groupaddr) {
             //The group address exists
             found_group = true;
+            click_chatter("while completing leave, the mode is now %d", element->group_records[i].record_type);
+            element->group_records[i].record_type = change_to_include;
+            click_chatter("while completing leave, the mode is after the change %d", element->group_records[i].record_type);
 
-            element->group_records[i].mode = change_to_include;
             WritablePacket * p =element->make_mem_report_packet();
             //push the packet to update mode
             element->output(0).push(p);
@@ -150,7 +159,7 @@ void IGMPClientSide::print_group_records(){
         click_chatter("\t multicast_adress %s", group_records[i].multicast_adress.unparse().c_str());
         click_chatter("\t record_type %d", group_records[i].record_type);
         click_chatter("\t number_of_sources %i", group_records[i].number_of_sources);
-        click_chatter("\t mode %d", (int)group_records[i].mode);
+        click_chatter("\t mode %d", (int)group_records[i].record_type);
         for(int y =0; y<group_records[i].sources.size(); y++){
             click_chatter("\t source %i %s",y, group_records[i].sources[y].unparse().c_str());
         }

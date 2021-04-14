@@ -13,7 +13,7 @@
 #include <click/ipaddress.hh>
 #include <map>
 
-enum filter_mode{include, exclude, change_to_include, change_to_exclude};
+enum filter_mode{include=1, exclude=2, change_to_include=3, change_to_exclude=4};
 
 struct ipadress
 {
@@ -40,9 +40,8 @@ struct igmp_group_record
 {
     IPAddress multicast_adress;
     uint16_t number_of_sources;
-    uint8_t record_type; // see RFC3376 page 16
+    uint8_t record_type =1; // see RFC3376 page 16
     const uint8_t aux_data_len = 0; // IGMPv3 does not define any auxiliary data thus length must be zero
-    filter_mode mode;
     Vector<IPAddress> sources;
 };
 
@@ -74,7 +73,7 @@ struct igmp_mem_query_msg
 struct igmp_group_state
 {
     Vector<IPAddress> clients;
-    filter_mode mode;
+    uint8_t mode;
     IPAddress multicast_adress;
 };
 #endif //PROJECT_TELECOM_IGMP_H
