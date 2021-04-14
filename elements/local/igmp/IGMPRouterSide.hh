@@ -17,7 +17,7 @@ public:
 
 private:
     IPAddress routerIP;
-    Vector<igmp_group_record> group_states;
+    Vector<igmp_group_state> group_states;
 };
 
 CLICK_ENDDECLS

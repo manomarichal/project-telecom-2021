@@ -70,4 +70,11 @@ struct igmp_mem_query_msg
     uint8_t qqic = 0; // queries query interval
     uint16_t number_of_sources;
 };
+
+struct igmp_group_state
+{
+    Vector<IPAddress> clients;
+    filter_mode mode;
+    IPAddress multicast_adress;
+};
 #endif //PROJECT_TELECOM_IGMP_H
