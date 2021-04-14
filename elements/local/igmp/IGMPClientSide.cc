@@ -48,36 +48,39 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
     for(int i = 0; i< element->group_records.size(); i++){
         if (element->group_records[i].multicast_adress == groupaddr){
             //check if the client is a part of this group record already
-            for (int y =0; y<element->group_records[i].sources.size(); y++){
-                if (element->group_records[i].sources[y] == element->clientIP){
-                    //case if the client has already joined the group address
-                    //the mc address exists and the client is already a part of it
-                    click_chatter("The group you are trying to join already has this source address");
-                    return -1;
-                }
-            }
+//            for (int y =0; y<element->group_records[i].sources.size(); y++){
+//                if (element->group_records[i].sources[y] == element->clientIP){
+//                    //case if the client has already joined the group address
+//                    //the mc address exists and the client is already a part of it
+//                    click_chatter("The group you are trying to join already has this source address");
+//                    return -1;
+//                }
+//            }
+
             //if the client is not a part off the group, add it to the group
-            element->group_records[i].sources.push_back(element->clientIP);
-            element->group_records[i].number_of_sources++;
-            exists = true;
+//            element->group_records[i].sources.push_back(element->clientIP);
+//            element->group_records[i].number_of_sources++;
+
+            click_chatter("You have already joined this multicast group");
+            return -1;
         }
     }
-    if(!exists){
-        //make new group record if it does not yet exist
-        igmp_group_record grRecord;
-        //the group record needs to be made
-        grRecord.record_type = change_to_exclude;
-        grRecord.multicast_adress = groupaddr;
-        grRecord.number_of_sources = 0;
-//        grRecord.sources.push_back(element->clientIP);
-        element->group_records.push_back(grRecord);
-        click_chatter("while completing join, the mode is now %d", element->group_records[0].record_type);
 
-        click_chatter("making a new group record");
+        //make new group record if it does not yet exist
+    igmp_group_record grRecord;
+    //the group record needs to be made
+    grRecord.record_type = change_to_exclude;
+    grRecord.multicast_adress = groupaddr;
+    grRecord.number_of_sources = 0;
+//        grRecord.sources.push_back(element->clientIP);
+    element->group_records.push_back(grRecord);
+    click_chatter("while completing join, the mode is now %d", element->group_records[0].record_type);
+
+    click_chatter("making a new group record");
 
 
 //        grRecord.print_record();
-    }
+
     WritablePacket * p =element->make_mem_report_packet();
     element->output(0).push(p);
     click_chatter("completed join");
