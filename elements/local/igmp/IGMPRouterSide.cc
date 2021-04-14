@@ -117,10 +117,8 @@ void IGMPRouterSide::push(int port, Packet *p){
          */
         click_chatter("IGMP PACKET type %i, port %i", ip_header->ip_p, port);
         // unpacking data
-        igmp_mem_report report_info = helper->igmp_unpack_info(p->data());
+        igmp_mem_report report_info = helper->igmp_unpack_info(ip_header+1);
         Vector<igmp_group_record> group_records = helper->igmp_unpack_group_records(reinterpret_cast<const igmp_mem_report*>(p->data()) + 1, report_info.number_of_group_records);
-        click_chatter("hi", ip_header->ip_p, port);
-
         update_group_states(ip_header, group_records);
     }
     else if(ip_header->ip_p == 80)
