@@ -5,6 +5,7 @@
 #include <click/args.hh>
 #include <click/error.hh>
 #include <click/ipaddress.hh>
+#include <clicknet/ip.h>
 #include "IGMPRouterSide.hh"
 
 
@@ -26,14 +27,10 @@ int IGMPRouterSide::configure(Vector<String> &conf, ErrorHandler *errh)
 }
 
 void IGMPRouterSide::push(int port, Packet *p){
-    const click_ip *iph = p->ip_header();
-    click_chatter("router recieved packet type %i in port %i ", iph->ip_p, port);
 
-    if(port==0){
-        click_chatter("regular packet");
+    const click_ip *ip_header = p->ip_header();
 
-    }
-    if(port==1){
+    if(ip_header->ip_p == IP_PROTO_IGMP){
         /*
          * input port of the igmp messages
          * ontbind de igmp header
@@ -45,8 +42,17 @@ void IGMPRouterSide::push(int port, Packet *p){
          *      voeg toe aan group state, zet timer
          * steeds kijken of deze messages geen repeat messages zijn, deze renewed de timers enkel en moet dus niet opnieuw worden geadd
          */
-        click_chatter("igmp packet");
+        click_chatter("IGMP PACKET, %i, %i", ip_header->ip_p, port);
         //input port of the udp messages
+    }
+    else if(ip_header->ip_p == IP_PROTO_UDP)
+    {
+        click_chatter("UDP PACKET, %i, %i", ip_header->ip_p, port);
+        output(port).push(p);
+    }
+    else
+    {
+        click_chatter("UKNOWN PACKET, %i, %i", ip_header->ip_p, port);
     }
 }
 
