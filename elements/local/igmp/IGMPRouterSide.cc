@@ -54,6 +54,7 @@ void IGMPRouterSide::update_group_state(const click_ip *ip_header, igmp_group_st
         state.clients.push_back(ip_header->ip_src);
     }
 
+    /* idk what to do here yet
     // update client mode
     if (record.record_type == IGMP_V3_CHANGE_TO_INCLUDE)
     {
@@ -63,6 +64,7 @@ void IGMPRouterSide::update_group_state(const click_ip *ip_header, igmp_group_st
     {
         state.mode = IGMP_V3_EXCLUDE;
     }
+     */
 }
 
 void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector<igmp_group_record> group_records)
@@ -82,12 +84,14 @@ void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector<igmp_
             }
         }
 
-        if (exists) continue;
-        // no group state exists, make new one
-        igmp_group_state new_state;
-        new_state.mode = record.record_type;
-        new_state.multicast_adress = record.multicast_adress;
-        new_state.clients.push_back(ip_header->ip_src);
+        // if no group state exists for the multicast adress, make new one
+        if (!exists)
+        {
+            igmp_group_state new_state;
+            new_state.mode = record.record_type;
+            new_state.multicast_adress = record.multicast_adress;
+            new_state.clients.push_back(ip_header->ip_src);
+            group_states.push_back(new_state);
             if (VERBOSE)
             {
                 click_chatter("creating new group state");
@@ -95,6 +99,8 @@ void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector<igmp_
                 click_chatter("\t client adress: %s", IPAddress(ip_header->ip_src).unparse().c_str());
                 click_chatter("\t mode: %i", record.record_type);
             }
+        }
+
     }
 }
 
