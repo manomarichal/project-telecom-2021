@@ -183,6 +183,7 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
 
     click_ip *ip_header = helper->add_ip_header(p, clientIP, MC_ADDRESS);
     router_alert* r_alert = helper->add_router_alert(ip_header+1);
+    ip_header->ip_sum = click_in_cksum((unsigned char*) ip_header, sizeof(click_ip) + sizeof(router_alert));
     helper->add_igmp_data(r_alert+1, group_records);
 
     p->set_ip_header(ip_header, sizeof(click_ip));
