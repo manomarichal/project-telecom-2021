@@ -130,12 +130,15 @@ Vector<igmp_group_record>  IGMPV3ReportHelper::igmp_unpack_group_records(const v
     const igmp_group_record_message *group_record = reinterpret_cast<const igmp_group_record_message*>(start);
     for (int i=0;i<number_of_group_records;i++)
     {
+        click_chatter("---in for loop unpacking");
         igmp_group_record new_group_record;
         new_group_record.multicast_adress = group_record->multicast_adress;
         // record.mode = group->mode; what
         new_group_record.record_type = group_record->record_type;
         new_group_record.number_of_sources = group_record->number_of_sources;
-
+        click_chatter("---rec type %d", group_record->record_type);
+        click_chatter("---src nr %d", group_record->number_of_sources);
+        click_chatter("---multicast address %d", group_record->multicast_adress);
         const ipadress *source = (struct ipadress*)(group_record+1);
         for (int j=0;j<new_group_record.number_of_sources;j++)
         {
