@@ -161,7 +161,6 @@ Vector<igmp_group_record>  IGMPV3ReportHelper::igmp_unpack_group_records(const v
 igmp_mem_report IGMPV3ReportHelper::igmp_unpack_info(const void *start)
 {
     click_chatter("unpacking membership info");
-    click_chatter("---number of records: %d");
     igmp_mem_report report;
     const igmp_mem_report *igmp_mr = reinterpret_cast<const igmp_mem_report*>(start);
     report.type = igmp_mr->type;
