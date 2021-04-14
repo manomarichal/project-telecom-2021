@@ -17,6 +17,8 @@ public:
     void push(int, Packet *);
 
 private:
+    void update_group_states(Vector<igmp_group_record> group_records);
+    void multicast_packet(Packet *p);
     IPAddress routerIP;
     Vector<igmp_group_state> group_states;
     IGMPV3ReportHelper* helper = new IGMPV3ReportHelper();

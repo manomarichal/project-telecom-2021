@@ -36,11 +36,16 @@ struct igmp_group_record_message
     uint32_t multicast_adress;
 };
 
+#define IGMP_V3_INCLUDE 1
+#define IGMP_V3_EXCLUDE 2
+#define IGMP_V3_CHANGE_TO_INCLUDE 3
+#define IGMP_V3_CHANGE_TO_EXCLUDE 4
+
 struct igmp_group_record
 {
     IPAddress multicast_adress;
     uint16_t number_of_sources;
-    uint8_t record_type =1; // see RFC3376 page 16
+    uint8_t record_type; // see RFC3376 page 16
     const uint8_t aux_data_len = 0; // IGMPv3 does not define any auxiliary data thus length must be zero
     Vector<IPAddress> sources;
 };

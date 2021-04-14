@@ -173,13 +173,13 @@ void IGMPClientSide::print_group_records(){
 // makes membership v3 packets, based on RFC3376 page 13-14
 WritablePacket * IGMPClientSide::make_mem_report_packet()
 {
-    click_chatter("creating membership report packed");
+    click_chatter("SENDING MEMBERSHIP REPORT FROM %s", clientIP.unparse().c_str());
 
     //uint32_t size = sizeof(click_ip) + sizeof(igmp_mem_report) + (sizeof(igmp_group_record_message)*group_records.size()); // TODO size of the entire packet
     WritablePacket *p = Packet::make(helper->get_size_of_data(group_records) + sizeof(click_ip) + 4);
     memset(p->data(), 0, p->length()); // erase previous random data on memory requested
 
-    click_ip *ip_header = helper->add_ip_header(p, clientIP, MC_ADDRESS, true);
+    click_ip *ip_header = helper->add_ip_header(p, clientIP, MC_ADDRESS, false);
     router_alert* r_alert = helper->add_router_alert(ip_header+1);
     helper->add_igmp_data(r_alert+1, group_records);
 
@@ -187,9 +187,9 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
     p->timestamp_anno().assign_now();
     p->set_dst_ip_anno(IPAddress(MC_ADDRESS));
 
-    click_chatter("\t igmp data size: %i", helper->get_size_of_data(group_records));
-    click_chatter("\t size of ip header: %i", sizeof(click_ip) + 4);
-    click_chatter("packet finished");
+    // click_chatter("\t igmp data size: %i", helper->get_size_of_data(group_records));
+    //click_chatter("\t size of ip header: %i", sizeof(click_ip) + 4);
+    // click_chatter("packet finished");
     return p;
 }
 
