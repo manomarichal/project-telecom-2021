@@ -7,7 +7,7 @@
 #include <click/ipaddress.hh>
 #include <clicknet/ip.h>
 #include "IGMPRouterSide.hh"
-
+#include "./IGMPV3Reports.hh"
 
 CLICK_DECLS
 IGMPRouterSide::IGMPRouterSide()
@@ -43,11 +43,17 @@ void IGMPRouterSide::push(int port, Packet *p){
          * steeds kijken of deze messages geen repeat messages zijn, deze renewed de timers enkel en moet dus niet opnieuw worden geadd
          */
         click_chatter("IGMP PACKET, %i, %i", ip_header->ip_p, port);
+        // unpacking data
+        igmp_mem_report report_info = IGMPV3ReportHelper::igmp_unpack_info(p->data());
+        Vector<igmp_group_record> group_records = IGMPV3ReportHelper::igmp_unpack_group_records(reinterpret_cast<const igmp_mem_report*>(p->data()) + 1, report_info.number_of_group_records);
+
         //input port of the udp messages
     }
     else if(ip_header->ip_p == IP_PROTO_UDP)
     {
         click_chatter("UDP PACKET, %i, %i", ip_header->ip_p, port);
+
+
         output(port).push(p);
     }
     else

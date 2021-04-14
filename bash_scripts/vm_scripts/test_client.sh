@@ -5,7 +5,7 @@ rm -rf /home/student/click/scripts/library
 mkdir /home/student/click/elements/local/igmp
 mkdir /home/student/click/scripts/library
 echo "================= COPYING NEW FILES ===================="
-cp -r /home/student/Desktop/project-telecom-2021/elements/local/igmp /home/student/click/elements/local/igmp
+cp -r /home/student/Desktop/project-telecom-2021/elements/local/igmp /home/student/click/elements/local/
 cp -r /home/student/Desktop/project-telecom-2021/library /home/student/click/scripts
 echo "================= UPDATING START SCRIPTS ===================="
 rm -f /home/student/click-reference/solution/start_click.sh
