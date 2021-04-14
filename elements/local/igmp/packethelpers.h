@@ -116,7 +116,7 @@ namespace igmp_v3_reports{
 
     Vector<igmp_group_record> igmp_unpack_group_records(void *start)
     {
-        Vector<igmp_group_records> records;
+        Vector<igmp_group_record> records;
         igmp_mem_report *igmp_mr = reinterpret_cast<igmp_mem_report*>(start);
     }
 }
