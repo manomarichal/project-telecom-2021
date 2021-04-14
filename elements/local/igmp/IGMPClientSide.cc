@@ -102,16 +102,19 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((
     for(int i = 0; i< element->group_records.size(); i++){
         //if the grouprecord has the same address as the input address then go into statement
         if (element->group_records[i].multicast_adress == groupaddr) {
-            //The group address exists
-            found_group = true;
-            click_chatter("while completing leave, the mode is now %d", element->group_records[i].record_type);
-            element->group_records[i].record_type = change_to_include;
-            click_chatter("while completing leave, the mode is after the change %d", element->group_records[i].record_type);
-
-            WritablePacket * p =element->make_mem_report_packet();
-            //push the packet to update mode
-            element->output(0).push(p);
-            click_chatter("completed leave");
+            if(element->group_records[i].record_type != change_to_include) {
+                //The group address exists
+                found_group = true;
+                element->group_records[i].record_type = change_to_include;
+                WritablePacket *p = element->make_mem_report_packet();
+                //push the packet to update mode
+                element->output(0).push(p);
+                click_chatter("completed leave");
+            }
+            else{
+                click_chatter("this client has already left this group");
+                return -1;
+            }
 //            bool found_client = false;
 //            for (int y =0; y<element->group_records[i].sources.size(); y++){
 //                if (element->group_records[i].sources[y] == element->clientIP){
@@ -129,7 +132,6 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((
 //                click_chatter("did not find client when executing leave");
 //                return -1;
 //            }
-
         }
     }
     if(!found_group){
