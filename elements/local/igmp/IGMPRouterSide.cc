@@ -38,24 +38,64 @@ void IGMPRouterSide::multicast_packet(Packet *p)
     }
 }
 
-void IGMPRouterSide::update_group_states(Vector<igmp_group_record> group_records)
+void IGMPRouterSide::update_group_state(const click_ip *ip_header, igmp_group_state state, igmp_group_record record)
 {
+    // add client to group state if it is not in it
+    bool already_in = false;
+    for (IPAddress client: state.clients)
+    {
+        if (client == ip_header->ip_src)
+        {
+            already_in = true;
+        }
+    }
+    if (!already_in)
+    {
+        state.clients.push_back(ip_header->ip_src);
+    }
+
+    // update client mode
+    if (record.record_type == IGMP_V3_CHANGE_TO_INCLUDE)
+    {
+        state.mode = IGMP_V3_INCLUDE;
+    }
+    else if (record.record_type == IGMP_V3_CHANGE_TO_EXCLUDE)
+    {
+        state.mode = IGMP_V3_EXCLUDE;
+    }
+}
+
+void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector<igmp_group_record> group_records)
+{
+    bool VERBOSE = true;
+
     for (igmp_group_record record:group_records)
     {
+        bool exists = false;
         // should use hashmap here, but click hashmaps are jank, maybe later as optimization
         for (igmp_group_state state:group_states)
         {
             if (record.multicast_adress == state.multicast_adress)
             {
-                if (record.record_type == IGMP_V3_CHANGE_TO_INCLUDE) {state.mode = IGMP_V3_INCLUDE;}
-                if (record.record_type == IGMP_V3_CHANGE_TO_EXCLUDE) {state.mode = IGMP_V3_EXCLUDE;}
+                exists = true;
+                update_group_state(ip_header, state, record);
             }
         }
+
+        if (exists) continue;
         // no group state exists, make new one
         igmp_group_state new_state;
         new_state.mode = record.record_type;
         new_state.multicast_adress = record.multicast_adress;
-        new_state.clients = record.sources;
+        new_state.clients.push_back(ip_header->ip_src);
+
+        if (VERBOSE)
+        {
+            click_chatter("creating new group state");
+            click_chatter("\t multicast adress: %s", IPAddress(record.multicast_adress).unparse().c_str());
+            click_chatter("\t client adress: %s", IPAddress(ip_header->ip_src).unparse().c_str());
+            click_chatter("\t mode: %i", record.record_type);
+        }
     }
 }
 
@@ -75,11 +115,13 @@ void IGMPRouterSide::push(int port, Packet *p){
          *      voeg toe aan group state, zet timer
          * steeds kijken of deze messages geen repeat messages zijn, deze renewed de timers enkel en moet dus niet opnieuw worden geadd
          */
-        click_chatter("IGMP PACKET, %i, %i", ip_header->ip_p, port);
+        click_chatter("IGMP PACKET type %i, port %i", ip_header->ip_p, port);
         // unpacking data
         igmp_mem_report report_info = helper->igmp_unpack_info(p->data());
         Vector<igmp_group_record> group_records = helper->igmp_unpack_group_records(reinterpret_cast<const igmp_mem_report*>(p->data()) + 1, report_info.number_of_group_records);
-        update_group_states(group_records);
+        click_chatter("hi", ip_header->ip_p, port);
+
+        update_group_states(ip_header, group_records);
     }
     else if(ip_header->ip_p == 80)
     {

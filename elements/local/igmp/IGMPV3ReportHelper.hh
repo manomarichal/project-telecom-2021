@@ -23,7 +23,7 @@ public:
     void push(int, Packet *);
 
     uint32_t get_size_of_data(const Vector<igmp_group_record> group_records);
-    click_ip* add_ip_header(WritablePacket* p, IPAddress client_ip, IPAddress multicast_address, bool verbose);
+    click_ip* add_ip_header(WritablePacket* p, IPAddress client_ip, IPAddress multicast_address, bool verbose=false);
     router_alert * add_router_alert(void *start, uint8_t octet_1=0, uint8_t octet_2=0);
     igmp_mem_report* add_igmp_data(void *start, const Vector<igmp_group_record> group_records);
     igmp_mem_report igmp_unpack_info(const void *start);

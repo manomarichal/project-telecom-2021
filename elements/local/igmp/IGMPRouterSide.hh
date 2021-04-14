@@ -17,7 +17,8 @@ public:
     void push(int, Packet *);
 
 private:
-    void update_group_states(Vector<igmp_group_record> group_records);
+    void update_group_states(const click_ip *ip_header, Vector<igmp_group_record> group_records);
+    void update_group_state(const click_ip *ip_header, igmp_group_state state, igmp_group_record record);
     void multicast_packet(Packet *p);
     IPAddress routerIP;
     Vector<igmp_group_state> group_states;

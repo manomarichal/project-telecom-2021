@@ -76,7 +76,7 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
     element->group_records.push_back(grRecord);
     click_chatter("while completing join, the mode is now %d", element->group_records[0].record_type);
 
-    click_chatter("making a new group record");
+    //click_chatter("making a new group record");
 
 
 //        grRecord.print_record();
@@ -146,7 +146,7 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((
  * -client leave which wil let the client leave the reception of a given multicast address /rfc page 4
  */
 void IGMPClientSide::add_handlers() {
-    click_chatter("hallo, adding handlers");
+    //click_chatter("hallo, adding handlers");
 
     add_write_handler("client_join", &client_join, (void*)0);
     add_write_handler("client_leave", &client_leave, (void*)0);
@@ -179,7 +179,7 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
     WritablePacket *p = Packet::make(helper->get_size_of_data(group_records) + sizeof(click_ip) + 4);
     memset(p->data(), 0, p->length()); // erase previous random data on memory requested
 
-    click_ip *ip_header = helper->add_ip_header(p, clientIP, MC_ADDRESS, false);
+    click_ip *ip_header = helper->add_ip_header(p, clientIP, MC_ADDRESS);
     router_alert* r_alert = helper->add_router_alert(ip_header+1);
     helper->add_igmp_data(r_alert+1, group_records);
 

@@ -56,7 +56,7 @@ click_ip* IGMPV3ReportHelper::add_ip_header(WritablePacket* p, IPAddress client_
     nip->ip_dst = multicast_address.in_addr(); // all multicast routers listen to this adress
     nip->ip_sum = click_in_cksum((unsigned char *) nip, sizeof(click_ip) + sizeof(router_alert)); // copy paste from icmpsendpings.cc
 
-    if (!verbose)
+    if (verbose)
     {
         click_chatter("printing click ip while making report message: ");
         click_chatter("\t ip_src %s",client_ip.unparse().c_str());
@@ -82,7 +82,7 @@ igmp_mem_report * IGMPV3ReportHelper::add_igmp_data(void *start, const Vector<ig
     igmp_group_record_message *igmp_grp = (struct igmp_group_record_message*)(igmp_mr + 1);
     for(int i=0;i<group_records.size(); i++)
     {
-        click_chatter("adding igmp data for group %d", i);
+        //click_chatter("adding igmp data for group %d", i);
         // set the fields in the reserved space to the correct thing
         igmp_grp->multicast_adress = group_records[i].multicast_adress.addr();
         igmp_grp->number_of_sources = group_records[i].number_of_sources;
