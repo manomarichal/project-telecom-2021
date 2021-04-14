@@ -126,19 +126,20 @@ router_alert * IGMPV3ReportHelper::add_router_alert(void *start, uint8_t octet_1
 
 Vector<igmp_group_record>  IGMPV3ReportHelper::igmp_unpack_group_records(const void *start, uint16_t number_of_group_records)
 {
+    // click_chatter("unpacking group records");
     Vector<igmp_group_record> records;
     const igmp_group_record_message *group_record = reinterpret_cast<const igmp_group_record_message*>(start);
     for (int i=0;i<number_of_group_records;i++)
     {
-        click_chatter("---in for loop unpacking");
+        // click_chatter("---in for loop unpacking");
         igmp_group_record new_group_record;
         new_group_record.multicast_adress = group_record->multicast_adress;
         // record.mode = group->mode; what
         new_group_record.record_type = group_record->record_type;
         new_group_record.number_of_sources = group_record->number_of_sources;
-        click_chatter("---rec type %d", group_record->record_type);
-        click_chatter("---src nr %d", group_record->number_of_sources);
-        click_chatter("---multicast address %d", group_record->multicast_adress);
+        // click_chatter("---rec type %d", group_record->record_type);
+        // click_chatter("---src nr %d", group_record->number_of_sources);
+        // click_chatter("---multicast address %d", group_record->multicast_adress);
         const ipadress *source = (struct ipadress*)(group_record+1);
         for (int j=0;j<new_group_record.number_of_sources;j++)
         {
@@ -160,14 +161,14 @@ Vector<igmp_group_record>  IGMPV3ReportHelper::igmp_unpack_group_records(const v
 
 igmp_mem_report IGMPV3ReportHelper::igmp_unpack_info(const void *start)
 {
-    click_chatter("unpacking membership info");
+    // click_chatter("unpacking membership info");
     igmp_mem_report report;
     const igmp_mem_report *igmp_mr = reinterpret_cast<const igmp_mem_report*>(start);
     report.type = igmp_mr->type;
     report.checksum = igmp_mr->checksum;
-    report.number_of_group_records = igmp_mr->number_of_group_records;
-    click_chatter("---number of groups: %d", report.number_of_group_records);
-    click_chatter("---type: %d", report.type);
+    report.number_of_group_records = ntohs(igmp_mr->number_of_group_records);
+    // click_chatter("---number of groups: %d", report.number_of_group_records);
+    // click_chatter("---type: %d", report.type);
     return report;
 }
 

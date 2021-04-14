@@ -24,9 +24,9 @@ int IGMPClientSide::configure(Vector<String> &conf, ErrorHandler *errh)
     String madr;
     String asmadr;
     if (Args(conf, this, errh).read_mp("CADDR", clientIP).read_mp("MADDR", MC_ADDRESS).read_mp("ASMADDR",ALL_SYSTEMS_MC_ADDRESS).complete()<0){click_chatter("failed read, returning 0", ipadresstest); return -1;}
-    click_chatter("initialising ipaddress %s", clientIP.unparse().c_str());
-    click_chatter("initialising mc address %s", MC_ADDRESS.unparse().c_str());
-    click_chatter("initialising asmc address %s", ALL_SYSTEMS_MC_ADDRESS.unparse().c_str());
+    //click_chatter("initialising ipaddress %s", clientIP.unparse().c_str());
+    //click_chatter("initialising mc address %s", MC_ADDRESS.unparse().c_str());
+    //click_chatter("initialising asmc address %s", ALL_SYSTEMS_MC_ADDRESS.unparse().c_str());
     return 0;
 }
 
@@ -36,7 +36,7 @@ int IGMPClientSide::configure(Vector<String> &conf, ErrorHandler *errh)
  *
  */
 int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((unused)) void *thunk, __attribute__((unused)) ErrorHandler *errh) {
-    click_chatter("Entering join handler");
+    //click_chatter("Entering join handler");
     IGMPClientSide *element = reinterpret_cast<IGMPClientSide *>(e); //convert element to igmpclientside element
     click_chatter(element->clientIP.unparse().c_str());
     Vector<String> arg_list;
@@ -74,7 +74,7 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
     grRecord.number_of_sources = 0;
 //        grRecord.sources.push_back(element->clientIP);
     element->group_records.push_back(grRecord);
-    click_chatter("while completing join, the mode is now %d", element->group_records[0].record_type);
+    //click_chatter("while completing join, the mode is now %d", element->group_records[0].record_type);
 
     //click_chatter("making a new group record");
 
@@ -84,7 +84,7 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
     WritablePacket * p =element->make_mem_report_packet();
     element->output(0).push(p);
     click_chatter("completed join");
-    element->print_group_records();
+    //element->print_group_records();
     return 0;
 }
 /*
@@ -92,7 +92,7 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
  *
  */
 int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((unused)) void *thunk, __attribute__((unused)) ErrorHandler *errh) {
-    click_chatter("Entering leave handler");
+    //click_chatter("Entering leave handler");
     IGMPClientSide *element = reinterpret_cast<IGMPClientSide *>(e); //convert element to igmpclientside element
     Vector<String> arg_list;
     cp_argvec(conf, arg_list);   //splits up the conf vector into more readable version in the arg_list vector
@@ -175,7 +175,7 @@ void IGMPClientSide::print_group_records(){
 // makes membership v3 packets, based on RFC3376 page 13-14
 WritablePacket * IGMPClientSide::make_mem_report_packet()
 {
-    click_chatter("SENDING MEMBERSHIP REPORT FROM %s", clientIP.unparse().c_str());
+    click_chatter("creating membership report for %s", clientIP.unparse().c_str());
 
     //uint32_t size = sizeof(click_ip) + sizeof(igmp_mem_report) + (sizeof(igmp_group_record_message)*group_records.size()); // TODO size of the entire packet
     WritablePacket *p = Packet::make(helper->get_size_of_data(group_records) + sizeof(click_ip) + 4);
@@ -199,7 +199,7 @@ void IGMPClientSide::push(int port, Packet *p)
 {
     // TODO needs to accept and process queries (also something about udp)
     // unpacking data, based on elements/icmp/icmpsendpings.cc, line 194
-    click_chatter("IGMP CLIENT %s recieved a packet in port %i ", clientIP.unparse().c_str(), port);
+    // click_chatter("IGMP CLIENT %s recieved a packet in port %i ", clientIP.unparse().c_str(), port);
     const click_ip *iph = p->ip_header();
 
     // IGMP QUERIES

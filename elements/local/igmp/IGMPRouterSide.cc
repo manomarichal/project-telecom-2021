@@ -88,14 +88,13 @@ void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector<igmp_
         new_state.mode = record.record_type;
         new_state.multicast_adress = record.multicast_adress;
         new_state.clients.push_back(ip_header->ip_src);
-
-        if (VERBOSE)
-        {
-            click_chatter("creating new group state");
-            click_chatter("\t multicast adress: %s", IPAddress(record.multicast_adress).unparse().c_str());
-            click_chatter("\t client adress: %s", IPAddress(ip_header->ip_src).unparse().c_str());
-            click_chatter("\t mode: %i", record.record_type);
-        }
+            if (VERBOSE)
+            {
+                click_chatter("creating new group state");
+                click_chatter("\t multicast adress: %s", IPAddress(record.multicast_adress).unparse().c_str());
+                click_chatter("\t client adress: %s", IPAddress(ip_header->ip_src).unparse().c_str());
+                click_chatter("\t mode: %i", record.record_type);
+            }
     }
 }
 
@@ -117,8 +116,12 @@ void IGMPRouterSide::push(int port, Packet *p){
          */
         click_chatter("IGMP PACKET type %i, port %i", ip_header->ip_p, port);
         // unpacking data
-        igmp_mem_report report_info = helper->igmp_unpack_info(ip_header+1);
-        Vector<igmp_group_record> group_records = helper->igmp_unpack_group_records(reinterpret_cast<const igmp_mem_report*>(p->data()) + 1, report_info.number_of_group_records);
+        const router_alert* alert_ptr = reinterpret_cast<const router_alert*>(ip_header+1);
+        const igmp_mem_report* info_ptr = reinterpret_cast<const igmp_mem_report*>(alert_ptr+1);
+        const igmp_group_record_message *records_ptr = reinterpret_cast<const igmp_group_record_message*>(info_ptr+1);
+
+        igmp_mem_report report_info = helper->igmp_unpack_info(info_ptr);
+        Vector<igmp_group_record> group_records = helper->igmp_unpack_group_records(records_ptr, report_info.number_of_group_records);
         update_group_states(ip_header, group_records);
     }
     else if(ip_header->ip_p == 80)
