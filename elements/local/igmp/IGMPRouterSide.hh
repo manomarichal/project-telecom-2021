@@ -1,6 +1,7 @@
 #ifndef CLICK_IGMPROUTERSIDE_HH
 #define CLICK_IGMPROUTERSIDE_HH
 #include <click/element.hh>
+#include "IGMPV3ReportHelper.hh"
 #include "igmp.h"
 CLICK_DECLS
 
@@ -18,6 +19,7 @@ public:
 private:
     IPAddress routerIP;
     Vector<igmp_group_state> group_states;
+    IGMPV3ReportHelper* helper = new IGMPV3ReportHelper();
 };
 
 CLICK_ENDDECLS

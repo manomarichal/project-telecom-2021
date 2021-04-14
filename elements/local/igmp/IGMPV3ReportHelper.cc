@@ -2,16 +2,12 @@
 // Created
 // by student on 4/14/21.
 //
-
-#ifndef CLICK_IGMPV3REPORTS_CC
-#define CLICK_IGMPV3REPORTS_CC
-
-#include "IGMPV3Reports.hh"
 #include <click/config.h>
 #include <click/args.hh>
 #include <click/error.hh>
 #include <click/ipaddress.hh>
 #include <clicknet/ip.h>
+#include "IGMPV3ReportHelper.hh"
 
 CLICK_DECLS
 IGMPV3ReportHelper::IGMPV3ReportHelper()
@@ -20,7 +16,17 @@ IGMPV3ReportHelper::IGMPV3ReportHelper()
 IGMPV3ReportHelper::~IGMPV3ReportHelper()
 {}
 
-uint32_t IGMPV3ReportHelper::get_size_of_data(const int group_records)
+int IGMPV3ReportHelper::configure(Vector<String> &conf, ErrorHandler *errh)
+{
+    return 0;
+}
+
+void IGMPV3ReportHelper::push(int port, Packet *p)
+{
+
+}
+
+uint32_t IGMPV3ReportHelper::get_size_of_data(const Vector<igmp_group_record> group_records)
 {
     int32_t size = 0;
     size += sizeof(igmp_mem_report);
@@ -35,7 +41,7 @@ uint32_t IGMPV3ReportHelper::get_size_of_data(const int group_records)
     return size;
 }
 
-int * IGMPV3ReportHelper::add_ip_header(int *p, int client_ip, int multicast_address, bool verbose)
+click_ip* IGMPV3ReportHelper::add_ip_header(WritablePacket* p, IPAddress client_ip, IPAddress multicast_address, bool verbose)
 {
     // based on elements/icmp/icmpsendpings.cc, line 133
     click_ip *nip = reinterpret_cast<click_ip*>(p->data()); // place ip header at data pointer
@@ -66,7 +72,7 @@ int * IGMPV3ReportHelper::add_ip_header(int *p, int client_ip, int multicast_add
     return nip;
 }
 
-igmp_mem_report * IGMPV3ReportHelper::add_igmp_data(void *start, const int group_records)
+igmp_mem_report * IGMPV3ReportHelper::add_igmp_data(void *start, const Vector<igmp_group_record> group_records)
 {
     // add the membership report info
     igmp_mem_report *igmp_mr = reinterpret_cast<igmp_mem_report*>(start);
@@ -118,7 +124,7 @@ router_alert * IGMPV3ReportHelper::add_router_alert(void *start, uint8_t octet_1
     }
 }
 
-int IGMPV3ReportHelper::igmp_unpack_group_records(const void *start, uint16_t number_of_group_records)
+Vector<igmp_group_record>  IGMPV3ReportHelper::igmp_unpack_group_records(const void *start, uint16_t number_of_group_records)
 {
     Vector<igmp_group_record> records;
     const igmp_group_record_message *group_record = reinterpret_cast<const igmp_group_record_message*>(start);
@@ -160,4 +166,4 @@ igmp_mem_report IGMPV3ReportHelper::igmp_unpack_info(const void *start)
 }
 
 CLICK_ENDDECLS
-#endif
+EXPORT_ELEMENT(IGMPV3ReportHelper) // forces to create element within click

@@ -3,7 +3,6 @@
 #include <click/error.hh>
 #include <click/ipaddress.hh>
 #include "IGMPClientSide.hh"
-#include "IGMPV3Reports.hh"
 
 CLICK_DECLS
 IGMPClientSide::IGMPClientSide()
@@ -177,18 +176,18 @@ WritablePacket * IGMPClientSide::make_mem_report_packet()
     click_chatter("creating membership report packed");
 
     //uint32_t size = sizeof(click_ip) + sizeof(igmp_mem_report) + (sizeof(igmp_group_record_message)*group_records.size()); // TODO size of the entire packet
-    WritablePacket *p = Packet::make(IGMPV3ReportHelper::get_size_of_data(group_records) + sizeof(click_ip) + 4);
+    WritablePacket *p = Packet::make(helper->get_size_of_data(group_records) + sizeof(click_ip) + 4);
     memset(p->data(), 0, p->length()); // erase previous random data on memory requested
 
-    click_ip *ip_header = IGMPV3ReportHelper::add_ip_header(p, clientIP, MC_ADDRESS, true);
-    router_alert* r_alert = IGMPV3ReportHelper::add_router_alert(ip_header+1);
-    IGMPV3ReportHelper::add_igmp_data(r_alert+1, group_records);
+    click_ip *ip_header = helper->add_ip_header(p, clientIP, MC_ADDRESS, true);
+    router_alert* r_alert = helper->add_router_alert(ip_header+1);
+    helper->add_igmp_data(r_alert+1, group_records);
 
     p->set_ip_header(ip_header, sizeof(click_ip));
     p->timestamp_anno().assign_now();
     p->set_dst_ip_anno(IPAddress(MC_ADDRESS));
 
-    click_chatter("\t igmp data size: %i", IGMPV3ReportHelper::get_size_of_data(group_records));
+    click_chatter("\t igmp data size: %i", helper->get_size_of_data(group_records));
     click_chatter("\t size of ip header: %i", sizeof(click_ip) + 4);
     click_chatter("packet finished");
     return p;

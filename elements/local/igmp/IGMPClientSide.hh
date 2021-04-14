@@ -2,6 +2,8 @@
 #define CLICK_IGMPCLIENTSIDE_HH
 #include <click/element.hh>
 #include "igmp.h"
+#include "IGMPV3ReportHelper.hh"
+
 CLICK_DECLS
 
 class IGMPClientSide : public Element {
@@ -33,6 +35,7 @@ private:
     IPAddress clientIP;
     IPAddress MC_ADDRESS;
     IPAddress ALL_SYSTEMS_MC_ADDRESS;
+    IGMPV3ReportHelper* helper = new IGMPV3ReportHelper();
 
     uint32_t _get_size_of_igmp_data();
     WritablePacket* make_mem_report_packet();
