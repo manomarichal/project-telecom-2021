@@ -42,7 +42,6 @@ struct igmp_group_record
     uint16_t number_of_sources;
     uint8_t record_type =1; // see RFC3376 page 16
     const uint8_t aux_data_len = 0; // IGMPv3 does not define any auxiliary data thus length must be zero
-    filter_mode mode;
     Vector<IPAddress> sources;
 };
 
@@ -74,7 +73,7 @@ struct igmp_mem_query_msg
 struct igmp_group_state
 {
     Vector<IPAddress> clients;
-    filter_mode mode;
+    uint8_t mode;
     IPAddress multicast_adress;
 };
 #endif //PROJECT_TELECOM_IGMP_H

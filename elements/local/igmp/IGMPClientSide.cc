@@ -67,12 +67,11 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
         igmp_group_record grRecord;
         //the group record needs to be made
         grRecord.record_type = change_to_exclude;
-        grRecord.mode = change_to_exclude;
         grRecord.multicast_adress = groupaddr;
         grRecord.number_of_sources = 0;
 //        grRecord.sources.push_back(element->clientIP);
         element->group_records.push_back(grRecord);
-        click_chatter("while completing join, the mode is now %d", element->group_records[0].mode);
+        click_chatter("while completing join, the mode is now %d", element->group_records[0].record_type);
 
         click_chatter("making a new group record");
 
@@ -102,10 +101,9 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((
         if (element->group_records[i].multicast_adress == groupaddr) {
             //The group address exists
             found_group = true;
-            click_chatter("while completing leave, the mode is now %d", element->group_records[i].mode);
-            element->group_records[i].mode = change_to_include;
+            click_chatter("while completing leave, the mode is now %d", element->group_records[i].record_type);
             element->group_records[i].record_type = change_to_include;
-            click_chatter("while completing leave, the mode is after the change %d", element->group_records[i].mode);
+            click_chatter("while completing leave, the mode is after the change %d", element->group_records[i].record_type);
 
             WritablePacket * p =element->make_mem_report_packet();
             //push the packet to update mode
@@ -157,7 +155,7 @@ void IGMPClientSide::print_group_records(){
         click_chatter("\t multicast_adress %s", group_records[i].multicast_adress.unparse().c_str());
         click_chatter("\t record_type %d", group_records[i].record_type);
         click_chatter("\t number_of_sources %i", group_records[i].number_of_sources);
-        click_chatter("\t mode %d", (int)group_records[i].mode);
+        click_chatter("\t mode %d", (int)group_records[i].record_type);
         for(int y =0; y<group_records[i].sources.size(); y++){
             click_chatter("\t source %i %s",y, group_records[i].sources[y].unparse().c_str());
         }
