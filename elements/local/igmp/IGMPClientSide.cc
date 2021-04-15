@@ -200,7 +200,7 @@ void IGMPClientSide::push(int port, Packet *p)
 {
     // TODO needs to accept and process queries (also something about udp)
     // unpacking data, based on elements/icmp/icmpsendpings.cc, line 194
-    // click_chatter("IGMP CLIENT %s recieved a packet in port %i ", clientIP.unparse().c_str(), port);
+    click_chatter("IGMP CLIENT %s recieved a packet in port %i ", clientIP.unparse().c_str(), port);
     const click_ip *iph = p->ip_header();
 
     // IGMP QUERIES

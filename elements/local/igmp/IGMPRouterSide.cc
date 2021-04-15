@@ -31,18 +31,19 @@ void IGMPRouterSide::multicast_packet(Packet *p, int port)
 
     for (igmp_group_state group: group_states)
     {
-        click_chatter("checking %s vs %s ", IPAddress(group.multicast_adress).unparse().c_str(), IPAddress(ip_header->ip_dst).unparse().c_str());
+        //click_chatter("checking %s vs %s ", IPAddress(group.multicast_adress).unparse().c_str(), IPAddress(ip_header->ip_dst).unparse().c_str());
         if (group.multicast_adress == ip_header->ip_dst)
         {
             click_chatter("multicasting in group %s", IPAddress(group.multicast_adress).unparse().c_str());
             for (IPAddress client: group.clients)
             {
+                click_chatter("multicasted to %s", client.unparse().c_str());
                 WritablePacket *new_packet = p->uniqueify();
                 click_ip *new_ip_header = new_packet->ip_header();
-                new_ip_header->ip_dst = group.multicast_adress.in_addr();
-                new_ip_header->ip_src = client.in_addr();
+                new_ip_header->ip_src = group.multicast_adress.in_addr();
+                new_ip_header->ip_dst = client.in_addr();
                 new_ip_header->ip_sum = click_in_cksum((unsigned char*) new_ip_header, sizeof(click_ip));
-                new_packet->set_ip_header(ip_header, sizeof(click_ip));
+                new_packet->set_ip_header(new_ip_header, sizeof(click_ip));
                 new_packet->timestamp_anno().assign_now();
                 new_packet->set_dst_ip_anno(IPAddress(client));
                 output(port).push(new_packet);
@@ -134,7 +135,7 @@ void IGMPRouterSide::push(int port, Packet *p){
          *      voeg toe aan group state, zet timer
          * steeds kijken of deze messages geen repeat messages zijn, deze renewed de timers enkel en moet dus niet opnieuw worden geadd
          */
-        click_chatter("IGMP PACKET type %i, port %i", ip_header->ip_p, port);
+        //click_chatter("IGMP PACKET type %i, port %i", ip_header->ip_p, port);
         // unpacking data
         const router_alert* alert_ptr = reinterpret_cast<const router_alert*>(ip_header+1);
         const igmp_mem_report* info_ptr = reinterpret_cast<const igmp_mem_report*>(alert_ptr+1);
