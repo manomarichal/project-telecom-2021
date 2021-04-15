@@ -31,9 +31,14 @@ void IGMPRouterSide::multicast_packet(Packet *p)
 
     for (igmp_group_state group: group_states)
     {
+        click_chatter("checking %s vs %s ", IPAddress(group.multicast_adress).unparse().c_str(), IPAddress(ip_header->ip_dst).unparse().c_str());
         if (group.multicast_adress == ip_header->ip_dst)
         {
-            click_chatter("MULTICASTING FROM %s", IPAddress(group.multicast_adress).unparse().c_str());
+            click_chatter("multicasting in group %s", IPAddress(group.multicast_adress).unparse().c_str());
+            for (IPAddress client: group.clients)
+            {
+
+            }
         }
     }
 }
@@ -107,6 +112,7 @@ void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector<igmp_
 void IGMPRouterSide::push(int port, Packet *p){
 
     const click_ip *ip_header = p->ip_header();
+    click_chatter("PACKET, %i, %i", ip_header->ip_p, port);
 
     if(ip_header->ip_p == IP_PROTO_IGMP){
         /*
@@ -130,14 +136,14 @@ void IGMPRouterSide::push(int port, Packet *p){
         Vector<igmp_group_record> group_records = helper->igmp_unpack_group_records(records_ptr, report_info.number_of_group_records);
         update_group_states(ip_header, group_records);
     }
-    else if(ip_header->ip_p == 80)
+    else if(ip_header->ip_p == 17)
     {
-        click_chatter("UDP PACKET, %i, %i", ip_header->ip_p, port);
+        //click_chatter("UDP PACKET, %i, %i", ip_header->ip_p, port);
         multicast_packet(p);
     }
     else
     {
-        click_chatter("UKNOWN PACKET, %i, %i", ip_header->ip_p, port);
+        output(port).push(p);
     }
 }
 
