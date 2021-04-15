@@ -25,7 +25,7 @@ int IGMPRouterSide::configure(Vector<String> &conf, ErrorHandler *errh)
     return 0;
 }
 
-void IGMPRouterSide::multicast_packet(Packet *p)
+void IGMPRouterSide::multicast_packet(Packet *p, int port)
 {
     const click_ip *ip_header = p->ip_header();
 
@@ -37,7 +37,15 @@ void IGMPRouterSide::multicast_packet(Packet *p)
             click_chatter("multicasting in group %s", IPAddress(group.multicast_adress).unparse().c_str());
             for (IPAddress client: group.clients)
             {
-
+                WritablePacket *new_packet = p->uniqueify();
+                click_ip *new_ip_header = new_packet->ip_header();
+                new_ip_header->ip_dst = group.multicast_adress.in_addr();
+                new_ip_header->ip_src = client.in_addr();
+                new_ip_header->ip_sum = click_in_cksum((unsigned char*) new_ip_header, sizeof(click_ip));
+                new_packet->set_ip_header(ip_header, sizeof(click_ip));
+                new_packet->timestamp_anno().assign_now();
+                new_packet->set_dst_ip_anno(IPAddress(client));
+                output(port).push(new_packet);
             }
         }
     }
@@ -112,7 +120,7 @@ void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector<igmp_
 void IGMPRouterSide::push(int port, Packet *p){
 
     const click_ip *ip_header = p->ip_header();
-    click_chatter("PACKET, %i, %i", ip_header->ip_p, port);
+    //click_chatter("PACKET, %i, %i", ip_header->ip_p, port);
 
     if(ip_header->ip_p == IP_PROTO_IGMP){
         /*
@@ -139,7 +147,7 @@ void IGMPRouterSide::push(int port, Packet *p){
     else if(ip_header->ip_p == 17)
     {
         //click_chatter("UDP PACKET, %i, %i", ip_header->ip_p, port);
-        multicast_packet(p);
+        multicast_packet(p, port);
     }
     else
     {
