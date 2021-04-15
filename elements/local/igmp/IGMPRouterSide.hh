@@ -23,6 +23,7 @@ private:
     IPAddress routerIP;
     Vector<igmp_group_state> group_states;
     IGMPV3ReportHelper* helper = new IGMPV3ReportHelper();
+    Vector<IPAddress> receivers;
 };
 
 CLICK_ENDDECLS
