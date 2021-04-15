@@ -214,8 +214,8 @@ void IGMPClientSide::push(int port, Packet *p)
     {
         if (p->has_network_header())
         {
-            for(int i = 0; i< element->group_records.size(); i++) {
-                if (element->group_records[i].multicast_adress == iph->ip_dst) {
+            for(int i = 0; i< group_records.size(); i++) {
+                if (group_records[i].multicast_adress == iph->ip_dst and group_records[i].record_type == 4) {
                     output(1).push(p);
                 }
             }
