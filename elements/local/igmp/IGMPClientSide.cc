@@ -212,9 +212,13 @@ void IGMPClientSide::push(int port, Packet *p)
     // UDP MESSAGES
     else if (port == 1)
     {
-        if (p->has_network_header() and iph->ip_dst == clientIP)
+        if (p->has_network_header())
         {
-            output(1).push(p);
+            for(int i = 0; i< group_records.size(); i++) {
+                if (group_records[i].multicast_adress == iph->ip_dst and group_records[i].record_type == 4) {
+                    output(1).push(p);
+                }
+            }
         }
         else
         {

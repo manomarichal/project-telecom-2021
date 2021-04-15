@@ -46,7 +46,7 @@ void IGMPRouterSide::multicast_packet(Packet *p, int port)
     for (igmp_group_state group: group_states)
     {
         //click_chatter("checking %s vs %s ", IPAddress(group.multicast_adress).unparse().c_str(), IPAddress(ip_header->ip_dst).unparse().c_str());
-        if (group.multicast_adress == ip_header->ip_dst)
+        if (group.multicast_adress == ip_header->ip_dst and group.mode == 4)
         {
             click_chatter("multicasting in group %s with %i members", IPAddress(group.multicast_adress).unparse().c_str(), group.clients.size());
             for (IPAddress client: group.clients)
@@ -107,14 +107,28 @@ void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector<igmp_
 
     for (igmp_group_record record:group_records)
     {
+        click_chatter("in group records for loop");
         bool exists = false;
         // should use hashmap here, but click hashmaps are jank, maybe later as optimization
         for (igmp_group_state state:group_states)
         {
+            click_chatter("in group states for loop");
             if (record.multicast_adress == state.multicast_adress)
             {
-                exists = true;
-                update_group_state(ip_header, state, record);
+                click_chatter("if statement adding address");
+                bool already_in = false;
+                for (IPAddress client: state.clients)
+                {
+                    if (client == ip_header->ip_src)
+                    {
+                        already_in = true;
+                    }
+                }
+                if (!already_in)
+                {
+                    click_chatter("adding %s to group %s", IPAddress(ip_header->ip_src).unparse().c_str(), state.multicast_adress.unparse().c_str());
+                    state.clients.push_back(IPAddress(ip_header->ip_src));
+                }
             }
         }
 
@@ -163,6 +177,19 @@ void IGMPRouterSide::push(int port, Packet *p){
 
         igmp_mem_report report_info = helper->igmp_unpack_info(info_ptr);
         Vector<igmp_group_record> group_records = helper->igmp_unpack_group_records(records_ptr, report_info.number_of_group_records);
+        //receivers will have joined an not yet left
+        for(int i = 0; i<group_records.size(); i++){
+            if(group_records[i].record_type == IGMP_V3_EXCLUDE or group_records[i].record_type == IGMP_V3_CHANGE_TO_EXCLUDE){
+                receivers.push_back(ip_header->ip_src);
+            }
+            if(group_records[i].record_type == IGMP_V3_INCLUDE or group_records[i].record_type == IGMP_V3_CHANGE_TO_INCLUDE){
+                for(int y=0; y< receivers.size(); y++){
+                    if(receivers[y] == ip_header->ip_src){
+                        receivers.erase (receivers.begin(),receivers.begin()+y);
+                    }
+                }
+            }
+        }
         update_group_states(ip_header, group_records);
     }
     else if(ip_header->ip_p == 17)
