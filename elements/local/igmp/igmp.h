@@ -75,9 +75,15 @@ struct igmp_mem_query_msg
     uint16_t number_of_sources;
 };
 
+struct igmp_source_record
+{
+    IPAddress source_address;
+    uint32_t source_timer;
+};
+
 struct igmp_group_state
 {
-    Vector<IPAddress> clients;
+    Vector<igmp_source_record> source_records;
     uint8_t mode;
     IPAddress multicast_adress;
 };
