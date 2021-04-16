@@ -13,23 +13,22 @@
 #include <click/ipaddress.hh>
 #include <map>
 
-enum filter_mode{include=1, exclude=2, change_to_include=3, change_to_exclude=4};
+enum filter_mode {
+    include = 1, exclude = 2, change_to_include = 3, change_to_exclude = 4
+};
 
-struct ipadress
-{
+struct ipadress {
     uint32_t adress;
 };
 
-struct router_alert
-{
+struct router_alert {
     uint8_t field_1;
     uint8_t field_2;
     uint16_t octet;
 };
 
 // struct used to represent a single group record, see RFC3367 page 14
-struct igmp_group_record_message
-{
+struct igmp_group_record_message {
     uint8_t record_type; // see RFC3376 page 16
     const uint8_t aux_data_len = 0; // IGMPv3 does not define any auxiliary data thus length must be zero
     uint16_t number_of_sources;
@@ -41,21 +40,19 @@ struct igmp_group_record_message
 #define IGMP_V3_CHANGE_TO_INCLUDE 3
 #define IGMP_V3_CHANGE_TO_EXCLUDE 4
 
-struct igmp_group_record
-{
+struct igmp_group_record {
     IPAddress multicast_adress;
     uint16_t number_of_sources;
     uint8_t record_type; // see RFC3376 page 16
     const uint8_t aux_data_len = 0; // IGMPv3 does not define any auxiliary data thus length must be zero
-    Vector<IPAddress> sources;
+    Vector <IPAddress> sources;
 };
 
 #define IGMP_V3_MEM_RECORD 0x22
 #define IGMP_MEM_QUERY 0x11
 
 // struct used to represent a membership report, see RFC3367 page 13
-struct igmp_mem_report
-{
+struct igmp_mem_report {
     uint8_t type;
     const uint8_t reserved_1 = 0;
     const uint16_t reserved2 = 0;
@@ -64,8 +61,7 @@ struct igmp_mem_report
 };
 
 // struct used to represent a membership query, see RFC3367 page 9
-struct igmp_mem_query_msg
-{
+struct igmp_mem_query_msg {
     const uint8_t type = IGMP_MEM_QUERY; // indicate its a membership query
     uint8_t max_resp_code; // max amount of time allowed to respond
     uint16_t checksum;
@@ -75,15 +71,13 @@ struct igmp_mem_query_msg
     uint16_t number_of_sources;
 };
 
-struct igmp_source_record
-{
+struct igmp_source_record {
     IPAddress source_address;
     uint32_t source_timer;
 };
 
-struct igmp_group_state
-{
-    Vector<igmp_source_record> source_records;
+struct igmp_group_state {
+    Vector <igmp_source_record> source_records;
     uint8_t mode;
     IPAddress multicast_adress;
 };
