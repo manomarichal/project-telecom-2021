@@ -15,7 +15,7 @@ public:
 
     const char *class_name() const { return "IGMPRouterSide"; }
 
-    const char *port_count() const { return "3/3"; }
+    const char *port_count() const { return "3/6"; }
 
     const char *processing() const { return PUSH; }
 

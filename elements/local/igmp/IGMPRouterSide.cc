@@ -35,19 +35,19 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
 
 
 /**
- * function to actually multicast the UDP packages to the clients that want to receive it
- * right now just pushes to all ports
+ * forward packets to interfacest that are interested
  * @param p the packet to multicast
  * @param port the input port
  */
 void IGMPRouterSide::multicast_packet(Packet *p, int port) {
     const click_ip *ip_header = p->ip_header();
 
+    //click_chatter("hlen, %i", length);
     for (int i=0; i<interface_states.size(); i++) {
         for (igmp_group_state state: interface_states[i]) {
             if (state.multicast_adress == ip_header->ip_dst) {
-                click_chatter("multicasting on interface %i", i);
-                output(i).push(p);
+                click_chatter("multicasting on interface %i, port %i", i, i+3);
+                output(i+3).push(p);
             }
         }
     }
@@ -172,7 +172,7 @@ void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector <igmp
 void IGMPRouterSide::push(int port, Packet *p) {
 
     const click_ip *ip_header = p->ip_header();
-    click_chatter("PACKET, %i, %i", ip_header->ip_p, port);
+    //click_chatter("PACKET, %i, %i", ip_header->ip_p, port);
 
     if (ip_header->ip_p == IP_PROTO_IGMP) {
         /*
