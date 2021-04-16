@@ -5,7 +5,7 @@
 
 elementclass Client {
 	$address, $gateway |
-	igmpclient::IGMPClientSide(CADDR $address, MADDR 224.0.0.22, ASMADDR 224.0.0.1);
+	igmp::IGMPClientSide(CADDR $address, MADDR 224.0.0.22, ASMADDR 224.0.0.1);
 
 	ip :: Strip(14)                             // get rid of ethernet header
 		-> CheckIPHeader()                      // check if ip header is correct
@@ -35,20 +35,20 @@ elementclass Client {
 	    -> igmpfilter::IPClassifier(ip proto 2, ip proto 17);        //proto is protocol from packet, 2 is if statement trying to match protocol nt 2
 
 	igmpfilter[0]
-	    -> [0]igmpclient;
+	    -> [0]igmp;
 
     igmpfilter[1]
-        -> [1]igmpclient;
+        -> [1]igmp;
 
     // packets that go to clients
-    igmpclient[1]
+    igmp[1]
 	    -> HostEtherFilter($address)
 		-> in_cl :: Classifier(12/0806 20/0001, 12/0806 20/0002, 12/0800)
 		-> arp_res :: ARPResponder($address)
 		-> output;
 
     // packets that go to router
-	igmpclient[0]
+	igmp[0]
 	    -> EtherEncap(0x0800, $address, $gateway)
         -> ToDump(/home/student/Desktop/output.pcap)
         -> output;
