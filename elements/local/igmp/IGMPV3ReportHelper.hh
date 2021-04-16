@@ -10,7 +10,9 @@
 
 CLICK_DECLS
 
-// using namespace makes click mad, so class with static functions it is
+/**
+ * helper class which does anything v3 packet related like adding data and unpacking data into the igmp structs
+ */
 class IGMPV3ReportHelper : public Element {
 public:
     IGMPV3ReportHelper();

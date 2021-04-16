@@ -14,14 +14,30 @@ IGMPV3ReportHelper::IGMPV3ReportHelper() {}
 
 IGMPV3ReportHelper::~IGMPV3ReportHelper() {}
 
+/**
+ * needs to be here to be considered an element
+ * @param conf
+ * @param errh
+ * @return
+ */
 int IGMPV3ReportHelper::configure(Vector <String> &conf, ErrorHandler *errh) {
     return 0;
 }
 
+/**
+ * needs to be here to be considered an element
+ * @param port
+ * @param p
+ */
 void IGMPV3ReportHelper::push(int port, Packet *p) {
 
 }
 
+/**
+ * returns the size of the data, helpfull for checksums
+ * @param group_records all the group records
+ * @return uint32_t containing the size
+ */
 uint32_t IGMPV3ReportHelper::get_size_of_data(const Vector <igmp_group_record> group_records) {
     int32_t size = 0;
     size += sizeof(igmp_mem_report);
@@ -34,6 +50,14 @@ uint32_t IGMPV3ReportHelper::get_size_of_data(const Vector <igmp_group_record> g
     return size;
 }
 
+/**
+ * adds ip header, thus kind of initialisation
+ * @param p the packet that needs ipheader
+ * @param client_ip clients ip address
+ * @param multicast_address the multicast address
+ * @param verbose if you want cmd outputs or not
+ * @return a click_ip object
+ */
 click_ip *
 IGMPV3ReportHelper::add_ip_header(WritablePacket *p, IPAddress client_ip, IPAddress multicast_address, bool verbose) {
     // based on elements/icmp/icmpsendpings.cc, line 133
@@ -64,6 +88,12 @@ IGMPV3ReportHelper::add_ip_header(WritablePacket *p, IPAddress client_ip, IPAddr
     return nip;
 }
 
+/**
+ * adds igmp data to a membership report
+ * @param start pointer to look for in memory
+ * @param group_records vector containing group records
+ * @return membership report struct
+ */
 igmp_mem_report *IGMPV3ReportHelper::add_igmp_data(void *start, const Vector <igmp_group_record> group_records) {
     // add the membership report info
     igmp_mem_report *igmp_mr = reinterpret_cast<igmp_mem_report *>(start);
@@ -99,6 +129,13 @@ igmp_mem_report *IGMPV3ReportHelper::add_igmp_data(void *start, const Vector <ig
     return igmp_mr;
 }
 
+/**
+ * adds the router allert to the ip header
+ * @param start pointer to look for in memory
+ * @param octet_1
+ * @param octet_2
+ * @return router alert struct
+ */
 router_alert *IGMPV3ReportHelper::add_router_alert(void *start, uint8_t octet_1, uint8_t octet_2) {
     {
         // add ip option
@@ -111,6 +148,12 @@ router_alert *IGMPV3ReportHelper::add_router_alert(void *start, uint8_t octet_1,
     }
 }
 
+/**
+ * unpacks the igmp info into a vector of group records
+ * @param start pointer to look for in memory
+ * @param number_of_group_records amount of group records
+ * @return a vector containing all group records from memory
+ */
 Vector <igmp_group_record>
 IGMPV3ReportHelper::igmp_unpack_group_records(const void *start, uint16_t number_of_group_records) {
     // click_chatter("unpacking group records");
@@ -142,6 +185,11 @@ IGMPV3ReportHelper::igmp_unpack_group_records(const void *start, uint16_t number
     return records;
 }
 
+/**
+ * unpacks the igmp info into a membership report object
+ * @param start start pointer to look for in memory
+ * @return returns the report
+ */
 igmp_mem_report IGMPV3ReportHelper::igmp_unpack_info(const void *start) {
     // click_chatter("unpacking membership info");
     igmp_mem_report report;

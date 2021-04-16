@@ -24,7 +24,7 @@ elementclass Client {
 		-> arpq :: ARPQuerier($address)
 		-> output;
 
-	ipgw[1] -> [0]igmpclient
+	ipgw[1] -> [0]igmp
 
 	//ipgw[1] -> ICMPError($address, parameterproblem) -> output;         // IPGWOptions error poort
 	ttl[1]  -> ICMPError($address, timeexceeded) -> output;             // DecIPTTL error poort
