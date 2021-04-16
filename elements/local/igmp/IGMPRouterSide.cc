@@ -43,41 +43,14 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
 void IGMPRouterSide::multicast_packet(Packet *p, int port) {
     const click_ip *ip_header = p->ip_header();
 
-    /*
-    for (igmp_group_state group: group_states) {
-        if (group.multicast_adress == ip_header->ip_dst) {
-            int ports = (int) port_count()[2] - 48;
-            click_chatter("multicasting to %i ports", ports);
-
-            for (int i = 0; i < ports; i++) {
+    for (int i=0; i<interface_states.size(); i++) {
+        for (igmp_group_state state: interface_states[i]) {
+            if (state.multicast_adress == ip_header->ip_dst) {
+                click_chatter("multicasting on interface %i", i);
                 output(i).push(p);
             }
         }
     }
-    */
-    /*
-    for (igmp_group_state group: group_states)
-    {
-        //click_chatter("checking %s vs %s ", IPAddress(group.multicast_adress).unparse().c_str(), IPAddress(ip_header->ip_dst).unparse().c_str());
-        if (group.multicast_adress == ip_header->ip_dst and group.mode == 4)
-        {
-            click_chatter("multicasting in group %s with %i members", IPAddress(group.multicast_adress).unparse().c_str(), group.clients.size());
-            for (IPAddress client: group.clients)
-            {
-                click_chatter("\tmulticasted to %s", client.unparse().c_str());
-                WritablePacket *new_packet = p->uniqueify();
-                click_ip *new_ip_header = new_packet->ip_header();
-                new_ip_header->ip_src = group.multicast_adress.in_addr();
-                new_ip_header->ip_dst = client.in_addr();
-                new_ip_header->ip_sum = click_in_cksum((unsigned char*) new_ip_header, sizeof(click_ip));
-                new_packet->set_ip_header(new_ip_header, sizeof(click_ip));
-                new_packet->timestamp_anno().assign_now();
-                new_packet->set_dst_ip_anno(IPAddress(client));
-                output(port).push(new_packet);
-            }
-        }
-    }
-     */
 }
 
 
@@ -87,11 +60,12 @@ void IGMPRouterSide::multicast_packet(Packet *p, int port) {
  * @param state group state
  * @param record group record
  */
+/*
 void IGMPRouterSide::update_group_state(const click_ip *ip_header, igmp_group_state state, igmp_group_record record) {
     // add client to group state if it is not in it
     //click_chatter("updating groupstate %s", state.multicast_adress.unparse().c_str());
 
-    /*
+
     bool already_in = false;
     for (IPAddress client: state.clients)
     {
@@ -117,9 +91,9 @@ void IGMPRouterSide::update_group_state(const click_ip *ip_header, igmp_group_st
     {
         state.mode = IGMP_V3_EXCLUDE;
     }
-     */
-}
 
+}
+*/
 /**
  * function to update group states when receiving new igmp message, not fully implemented like the RFC
  * this is still TODO:

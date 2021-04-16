@@ -26,7 +26,7 @@ public:
 private:
     void update_group_states(const click_ip *ip_header, Vector <igmp_group_record> group_records,  int port);
 
-    void update_group_state(const click_ip *ip_header, igmp_group_state state, igmp_group_record record);
+    //void update_group_state(const click_ip *ip_header, igmp_group_state state, igmp_group_record record);
 
     void multicast_packet(Packet *p, int port);
 
