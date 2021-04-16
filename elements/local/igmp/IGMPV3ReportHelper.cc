@@ -108,6 +108,7 @@ igmp_mem_report *IGMPV3ReportHelper::add_igmp_data(void *start, const Vector <ig
         igmp_grp->multicast_adress = group_records[i].multicast_adress.addr();
         igmp_grp->number_of_sources = group_records[i].number_of_sources;
         igmp_grp->record_type = group_records[i].record_type;
+//        click_chatter("%d type when leaving", igmp_grp->record_type);
 
         // add source adresses on top
         ipadress *igmp_adr = (struct ipadress *) (igmp_grp + 1);

@@ -22,7 +22,7 @@ echo "==connecting to localhost 10006 and executing join on 225.1.1.1 (client32)
 
 echo "write client32/igmp.join 225.1.1.1" | telnet localhost 10006
 
-sleep 30
+sleep 4
 
 echo "======LEAVES======"
 

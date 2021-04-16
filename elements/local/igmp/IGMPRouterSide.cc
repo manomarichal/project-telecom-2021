@@ -107,17 +107,30 @@ void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector <igmp
     {
         click_chatter("updating group states in interface %i", port);
     }
-
     for (igmp_group_record record:group_records) {
         bool exists = false;
         // should use hashmap here, but click hashmaps are jank, maybe later as optimization
-        for (igmp_group_state state:interface_states[port]) {
-            if (record.multicast_adress == state.multicast_adress) {
+//        for (igmp_group_state state:interface_states[port]) {
+//            click_chatter("====state %d", state.mode);
+//
+//            if (record.multicast_adress == state.multicast_adress) {
+//                state.mode = record.record_type;
+//                click_chatter("====state========= %d", state.mode);
+//                exists = true;
+//            }
+//        }
+//        click_chatter("size in for loop %d ", interface_states[port].size());
+
+        for (int i = 0; i<interface_states[port].size();i++) {
+            if (record.multicast_adress == interface_states[port][i].multicast_adress) {
+                interface_states[port][i].mode = record.record_type;
+//                click_chatter("====state========= %d", interface_states[port][i].mode);
                 exists = true;
             }
         }
 
-        // if no group state exists for the multicast adress, make new one
+
+            // if no group state exists for the multicast adress, make new one
         if (!exists) {
             igmp_group_state new_state;
             new_state.mode = record.record_type;
@@ -130,7 +143,22 @@ void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector <igmp
             }
         }
     }
-}
+//    click_chatter("checking if all interface %d still want to accept packages", port);
+//    for (int i = 0; i<interface_states[port].size();i++) {
+//        click_chatter("mode of port: %i", interface_states[port][i].mode);
+//        if (4 == interface_states[port][i].mode or 2 == interface_states[port][i].mode) {
+//            click_chatter("port %d still in use", port);
+//            continue;
+//        }
+//        else{
+//            click_chatter("removing interface form port %d", port);
+//
+//            interface_states[port].erase(interface_states[port].begin()+i);
+//            click_chatter("size is nw %d ", interface_states[port].size());
+//        }
+//    }
+
+    }
 
 /**
  * router push function, router can get mulitple types of packets, right now we only look at UDP and igmp v3 membership reports
@@ -168,6 +196,7 @@ void IGMPRouterSide::push(int port, Packet *p) {
         igmp_mem_report report_info = helper->igmp_unpack_info(info_ptr);
         Vector <igmp_group_record> group_records = helper->igmp_unpack_group_records(records_ptr,
                                                                                      report_info.number_of_group_records);
+        click_chatter("when receiving packet, mode is %d", group_records[0].record_type);
         /*
         //receivers will have joined an not yet left
         for (int i = 0; i < group_records.size(); i++) {
@@ -186,6 +215,7 @@ void IGMPRouterSide::push(int port, Packet *p) {
         }
          */
         update_group_states(ip_header, group_records, port);
+
     } else if (ip_header->ip_p == 17) {
         //click_chatter("UDP PACKET, %i, %i", ip_header->ip_p, port);
         multicast_packet(p, port);

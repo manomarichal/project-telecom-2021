@@ -63,6 +63,7 @@ elementclass Router {
 		-> HostEtherFilter($client2_address)
 		-> client2_class :: Classifier(12/0806 20/0001, 12/0806 20/0002, -)
 		-> ARPResponder($client2_address)
+
 		-> [2]output;
 
 	client2_arpq :: ARPQuerier($client2_address) -> [2]output;
@@ -75,6 +76,7 @@ elementclass Router {
 	
 	// Forwarding paths per interface
 	rt[1]
+
 		-> DropBroadcasts
 		-> server_paint :: PaintTee(1)
 		-> server_ipgw :: IPGWOptions($server_address)
