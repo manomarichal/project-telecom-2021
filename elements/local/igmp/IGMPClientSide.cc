@@ -207,25 +207,28 @@ WritablePacket *IGMPClientSide::make_mem_report_packet() {
 void IGMPClientSide::push(int port, Packet *p) {
     // TODO needs to accept and process queries (also something about udp)
     // unpacking data, based on elements/icmp/icmpsendpings.cc, line 194
-    const click_ip *iph = p->ip_header();
 
+    const click_ip *ip_header = p->ip_header();
+    if (ip_header->ip_p == IP_PROTO_IGMP) {
     // IGMP QUERIES
-    if (port == 0) {
-        // TODO
         return;
     }
     // UDP MESSAGES
-    else if (port == 1) {
+    else if (ip_header->ip_p == 17) {
         if (p->has_network_header()) {
             for (int i = 0; i < group_records.size(); i++) {
-                if (group_records[i].multicast_adress == iph->ip_dst and group_records[i].record_type == 4) {
-                    click_chatter("client %s recieved their packet", clientIP.unparse().c_str());
+                if (group_records[i].multicast_adress == ip_header->ip_dst and group_records[i].record_type == 4) {
+                    //click_chatter("client %s recieved their packet", clientIP.unparse().c_str());
                     output(1).push(p);
                 }
             }
         } else {
             p->kill();
         }
+    }
+    else
+    {
+        output(port).push(p);
     }
 }
 

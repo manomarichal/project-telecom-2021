@@ -40,15 +40,23 @@ elementclass Client {
     igmpfilter[1]
         -> [1]igmp;
 
-    // packets that go to clients
-    igmp[1]
-		-> [0]output;
-
     // packets that go to router
 	igmp[0]
 	    -> EtherEncap(0x0800, $address, $gateway)
         -> ToDump(/home/student/Desktop/output.pcap)
         -> output;
+
+    // packets that go to clients
+    igmp[1]
+		-> [1]output;
+
+    // others
+    igmp[2]
+		-> HostEtherFilter($address)
+		-> in_cl :: Classifier(12/0806 20/0001, 12/0806 20/0002, 12/0800)
+		-> arp_res :: ARPResponder($address)
+		-> output;
+
 
 	in_cl[1] -> [1]arpq;
 	in_cl[2] -> ip;
