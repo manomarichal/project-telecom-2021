@@ -1,4 +1,4 @@
-# Project Telecom 2020 (Mano Marichal & Joren Van Borm)
+# Project Telecom 2020 (Mano Marichal & Robbe Van de Velde)
 
 This is our implementation of the IGMPv3 protocol in click. The IGMPv3 protocol is described in RFC 3776.
 
