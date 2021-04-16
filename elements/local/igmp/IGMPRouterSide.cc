@@ -25,7 +25,7 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
         click_chatter("failed read when initialising router, returning 0");
         return -1;
     }
-    click_chatter("initialising routeraddress %s", routerIP.unparse().c_str());
+   // click_chatter("initialising routeraddress %s", routerIP.unparse().c_str());
     for (int i=0; i < port_count()[2] - 48; i++)
     {
         interface_states.push_back(Vector<igmp_group_state>());
@@ -46,7 +46,7 @@ void IGMPRouterSide::multicast_packet(Packet *p, int port) {
     for (int i=0; i<interface_states.size(); i++) {
         for (igmp_group_state state: interface_states[i]) {
             if (state.multicast_adress == ip_header->ip_dst) {
-                click_chatter("multicasting on interface %i, port %i", i, i+3);
+                //click_chatter("multicasting on interface %i, port %i", i, i+3);
                 output(i+3).push(p);
             }
         }
@@ -101,7 +101,7 @@ void IGMPRouterSide::update_group_state(const click_ip *ip_header, igmp_group_st
  * @param group_records vector containing group records of the message
  */
 void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector <igmp_group_record> group_records, int port) {
-    bool VERBOSE = true;
+    bool VERBOSE = false;
 
     if (VERBOSE)
     {
@@ -196,7 +196,7 @@ void IGMPRouterSide::push(int port, Packet *p) {
         igmp_mem_report report_info = helper->igmp_unpack_info(info_ptr);
         Vector <igmp_group_record> group_records = helper->igmp_unpack_group_records(records_ptr,
                                                                                      report_info.number_of_group_records);
-        click_chatter("when receiving packet, mode is %d", group_records[0].record_type);
+        //click_chatter("when receiving packet, mode is %d", group_records[0].record_type);
         /*
         //receivers will have joined an not yet left
         for (int i = 0; i < group_records.size(); i++) {
