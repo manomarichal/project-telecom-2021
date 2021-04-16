@@ -3,3 +3,6 @@
 --> in_cl :: Classifier(12/0806 20/0001, 12/0806 20/0002, 12/0800) wat doet dit?
 -manier om clients van reference oplossing een join te laten uitvoeren? anders geen mogelijke optie om router alleen te testen
 -reports worden naar .22 gestuurt, komen dan deze automatisch bij de router terecht
+
+-router.click etherencap 0x008 voor udp??
+-moeten element write client21/igmp.join 225.1.1.1 gecalled worden of mag anders?

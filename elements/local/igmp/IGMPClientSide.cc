@@ -10,11 +10,17 @@ IGMPClientSide::IGMPClientSide() {}
 IGMPClientSide::~IGMPClientSide() {}
 
 /*
- * configure for clientside object, should set the clientIP to the given clientaddress
- * might need to add some things later like timer variables
+
  * CLIENTADDRESS
  * MULTICASTADDRESS
  * ALLSYSTEMSMULTICASTADDRESS
+ */
+/**
+ * configure for clientside object, should set the clientIP to the given clientaddress
+ * might need to add some things later like timer variables
+ * @param conf standard configure parameter, click practice
+ * @param errh standard configure parameter, click practice
+ * @return returns -1 on failed read and 0 on completed read
  */
 int IGMPClientSide::configure(Vector <String> &conf, ErrorHandler *errh) {
     String ipadresstest;
@@ -23,19 +29,24 @@ int IGMPClientSide::configure(Vector <String> &conf, ErrorHandler *errh) {
     if (Args(conf, this, errh).read_mp("CADDR", clientIP).read_mp("MADDR", MC_ADDRESS).read_mp("ASMADDR",
                                                                                                ALL_SYSTEMS_MC_ADDRESS).complete() <
         0) {
-        click_chatter("failed read, returning 0", ipadresstest);
+        click_chatter("failed read, returning -1", ipadresstest);
         return -1;
     }
+    //uncomment these if there is an error while configuring the clientside element
     //click_chatter("initialising ipaddress %s", clientIP.unparse().c_str());
     //click_chatter("initialising mc address %s", MC_ADDRESS.unparse().c_str());
     //click_chatter("initialising asmc address %s", ALL_SYSTEMS_MC_ADDRESS.unparse().c_str());
     return 0;
 }
 
-/*
+/**
  * handles the client join for the system.
  * return integer, done throughout other click elements
- *
+ * @param conf standard handler parameter, click practice
+ * @param e standard handler parameter, click practice
+ * @param thunk standard handler parameter, click practice
+ * @param errh standard handler parameter, click practice
+ * @return returns integer -1 if the join failed or 0 if the join was completed
  */
 int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((unused)) void *thunk,
                                 __attribute__((unused)) ErrorHandler *errh) {
@@ -50,7 +61,7 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
     bool exists = false;
     for (int i = 0; i < element->group_records.size(); i++) {
         if (element->group_records[i].multicast_adress == groupaddr) {
-            //check if the client is a part of this group record already
+            //check if the client is a part of this group record already, might be helpful later
 //            for (int y =0; y<element->group_records[i].sources.size(); y++){
 //                if (element->group_records[i].sources[y] == element->clientIP){
 //                    //case if the client has already joined the group address
@@ -60,7 +71,7 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
 //                }
 //            }
 
-            //if the client is not a part off the group, add it to the group
+            //if the client is not a part off the group, add it to the group, might be helpful later
 //            element->group_records[i].sources.push_back(element->clientIP);
 //            element->group_records[i].number_of_sources++;
 
@@ -75,25 +86,23 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
     grRecord.record_type = change_to_exclude;
     grRecord.multicast_adress = groupaddr;
     grRecord.number_of_sources = 0;
-//        grRecord.sources.push_back(element->clientIP);
     element->group_records.push_back(grRecord);
-    //click_chatter("while completing join, the mode is now %d", element->group_records[0].record_type);
-
-    //click_chatter("making a new group record");
-
-
-//        grRecord.print_record();
-
     WritablePacket *p = element->make_mem_report_packet();
     element->output(0).push(p);
     click_chatter("completed join");
+    //uncomment if you would like more information about the group records
     //element->print_group_records();
     return 0;
 }
 
-/*
+
+/**
  * handles the client leave, changes the filter mode fo that group record from exclude to include as defined in RFC
- *
+ * @param conf standard handler parameter, click practice
+ * @param e standard handler parameter, click practice
+ * @param thunk standard handler parameter, click practice
+ * @param errh standard handler parameter, click practice
+ * @return returns integer -1 if the join failed or 0 if the join was completed
  */
 int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((unused)) void *thunk,
                                  __attribute__((unused)) ErrorHandler *errh) {
@@ -119,23 +128,6 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((
                 click_chatter("this client has already left this group");
                 return -1;
             }
-//            bool found_client = false;
-//            for (int y =0; y<element->group_records[i].sources.size(); y++){
-//                if (element->group_records[i].sources[y] == element->clientIP){
-//                    //the client's address has been found within the group record's source addresses
-//                    found_client = true;
-//                    element->group_records[i].mode = change_to_include;
-//                    WritablePacket * p =element->make_mem_report_packet();
-//                    //push the packet to update mode
-//                    element->output(0).push(p);
-//                    click_chatter("completed leave");
-//                }
-//            }
-//            if(!found_client){
-//                //the client does not exist in the group record
-//                click_chatter("did not find client when executing leave");
-//                return -1;
-//            }
         }
     }
     if (!found_group) {
@@ -146,7 +138,8 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((
     return 0;
 }
 
-/*
+
+/**
  * function which initialises the handlers, current handlers contain:
  * -client_join which will let the client join the reception of a given multicast address /rfc page 4
  * -client leave which wil let the client leave the reception of a given multicast address /rfc page 4
@@ -158,6 +151,9 @@ void IGMPClientSide::add_handlers() {
     add_write_handler("client_leave", &client_leave, (void *) 0);
 }
 
+/**
+ * prints the group records, nice for debugging
+ */
 void IGMPClientSide::print_group_records() {
     for (int i = 0; i < group_records.size(); i++) {
         click_chatter("group_record %i", i);
@@ -176,7 +172,10 @@ void IGMPClientSide::print_group_records() {
 /// PACKET FUNCTIONS ///
 ////////////////////////
 
-// makes membership v3 packets, based on RFC3376 page 13-14
+/**
+ * makes membership v3 packets, based on RFC3376 page 13-14
+ * @return a writablepacket object which will be the IGMPV3 membership report
+ */
 WritablePacket *IGMPClientSide::make_mem_report_packet() {
     click_chatter("creating membership report for %s", clientIP.unparse().c_str());
 
@@ -192,13 +191,19 @@ WritablePacket *IGMPClientSide::make_mem_report_packet() {
     p->set_ip_header(ip_header, sizeof(click_ip));
     p->timestamp_anno().assign_now();
     p->set_dst_ip_anno(IPAddress(MC_ADDRESS));
-
-    // click_chatter("\t igmp data size: %i", helper->get_size_of_data(group_records));
-    //click_chatter("\t size of ip header: %i", sizeof(click_ip) + 4);
-    // click_chatter("packet finished");
     return p;
 }
 
+/**
+ * push function will get the packages and asses what needs to be done with them based on the port they entered
+ * Port 0 will be IGMP Queries, these have not yet been implemented for deadline 1
+ * Port 1 will be UDP messages, these are the messages multicasted by the router and accepted by the client if they have joined the
+ * multicast group, we will also check whether the multicast group has the right filter mode so that the client only accepts
+ * packets from the multicast group it has joined.
+ * If the package is not an IGMP query or an UDP message, it is killed (RIP)
+ * @param port the portnumber the packet has entered in
+ * @param p The packet itself
+ */
 void IGMPClientSide::push(int port, Packet *p) {
     // TODO needs to accept and process queries (also something about udp)
     // unpacking data, based on elements/icmp/icmpsendpings.cc, line 194
@@ -210,7 +215,7 @@ void IGMPClientSide::push(int port, Packet *p) {
         // TODO
         return;
     }
-        // UDP MESSAGES
+    // UDP MESSAGES
     else if (port == 1) {
         if (p->has_network_header()) {
             for (int i = 0; i < group_records.size(); i++) {
