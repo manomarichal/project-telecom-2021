@@ -52,7 +52,7 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
                                 __attribute__((unused)) ErrorHandler *errh) {
     //click_chatter("Entering join handler");
     IGMPClientSide *element = reinterpret_cast<IGMPClientSide *>(e); //convert element to igmpclientside element
-    click_chatter(element->clientIP.unparse().c_str());
+    //click_chatter(element->clientIP.unparse().c_str());
     Vector <String> arg_list;
     cp_argvec(conf, arg_list);   //splits up the conf vector into more readable version in the arg_list vector
 
@@ -177,7 +177,7 @@ void IGMPClientSide::print_group_records() {
  * @return a writablepacket object which will be the IGMPV3 membership report
  */
 WritablePacket *IGMPClientSide::make_mem_report_packet() {
-    click_chatter("creating membership report for %s", clientIP.unparse().c_str());
+    //click_chatter("creating membership report for %s", clientIP.unparse().c_str());
 
     //uint32_t size = sizeof(click_ip) + sizeof(igmp_mem_report) + (sizeof(igmp_group_record_message)*group_records.size()); // TODO size of the entire packet
     WritablePacket *p = Packet::make(helper->get_size_of_data(group_records) + sizeof(click_ip) + 4);
@@ -207,7 +207,6 @@ WritablePacket *IGMPClientSide::make_mem_report_packet() {
 void IGMPClientSide::push(int port, Packet *p) {
     // TODO needs to accept and process queries (also something about udp)
     // unpacking data, based on elements/icmp/icmpsendpings.cc, line 194
-    click_chatter("IGMP CLIENT %s recieved a packet in port %i ", clientIP.unparse().c_str(), port);
     const click_ip *iph = p->ip_header();
 
     // IGMP QUERIES
@@ -220,6 +219,7 @@ void IGMPClientSide::push(int port, Packet *p) {
         if (p->has_network_header()) {
             for (int i = 0; i < group_records.size(); i++) {
                 if (group_records[i].multicast_adress == iph->ip_dst and group_records[i].record_type == 4) {
+                    click_chatter("client %s recieved their packet", clientIP.unparse().c_str());
                     output(1).push(p);
                 }
             }

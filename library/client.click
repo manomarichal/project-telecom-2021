@@ -42,10 +42,7 @@ elementclass Client {
 
     // packets that go to clients
     igmp[1]
-	    -> HostEtherFilter($address)
-		-> in_cl :: Classifier(12/0806 20/0001, 12/0806 20/0002, 12/0800)
-		-> arp_res :: ARPResponder($address)
-		-> output;
+		-> [0]output;
 
     // packets that go to router
 	igmp[0]
