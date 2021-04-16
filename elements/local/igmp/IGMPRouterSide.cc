@@ -9,7 +9,7 @@
 #include "IGMPRouterSide.hh"
 
 CLICK_DECLS
-IGMPRouterSide::IGMPRouterSide() {}
+IGMPRouterSide::IGMPRouterSide(){}
 
 IGMPRouterSide::~IGMPRouterSide() {}
 
@@ -26,6 +26,10 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
         return -1;
     }
     click_chatter("initialising routeraddress %s", routerIP.unparse().c_str());
+    for (int i=0; i < port_count()[2] - 48; i++)
+    {
+        interface_states.push_back(Vector<igmp_group_state>());
+    }
     return 0;
 }
 
@@ -39,6 +43,7 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
 void IGMPRouterSide::multicast_packet(Packet *p, int port) {
     const click_ip *ip_header = p->ip_header();
 
+    /*
     for (igmp_group_state group: group_states) {
         if (group.multicast_adress == ip_header->ip_dst) {
             int ports = (int) port_count()[2] - 48;
@@ -49,7 +54,7 @@ void IGMPRouterSide::multicast_packet(Packet *p, int port) {
             }
         }
     }
-
+    */
     /*
     for (igmp_group_state group: group_states)
     {
@@ -121,29 +126,20 @@ void IGMPRouterSide::update_group_state(const click_ip *ip_header, igmp_group_st
  * @param ip_header click ip struct of the obtained message
  * @param group_records vector containing group records of the message
  */
-void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector <igmp_group_record> group_records) {
+void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector <igmp_group_record> group_records, int port) {
     bool VERBOSE = true;
 
+    if (VERBOSE)
+    {
+        click_chatter("updating group states in interface %i", port);
+    }
+
     for (igmp_group_record record:group_records) {
-        click_chatter("in group records for loop");
         bool exists = false;
         // should use hashmap here, but click hashmaps are jank, maybe later as optimization
-        for (igmp_group_state state:group_states) {
-            click_chatter("in group states for loop");
+        for (igmp_group_state state:interface_states[port]) {
             if (record.multicast_adress == state.multicast_adress) {
-                click_chatter("if statement adding address");
                 exists = true;
-//                bool already_in = false;
-//                for (IPAddress client: state.clients) {
-//                    if (client == ip_header->ip_src) {
-//                        already_in = true;
-//                    }
-//                }
-//                if (!already_in) {
-//                    click_chatter("adding %s to group %s", IPAddress(ip_header->ip_src).unparse().c_str(),
-//                                  state.multicast_adress.unparse().c_str());
-//                    state.clients.push_back(IPAddress(ip_header->ip_src));
-//                }
             }
         }
 
@@ -152,12 +148,10 @@ void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector <igmp
             igmp_group_state new_state;
             new_state.mode = record.record_type;
             new_state.multicast_adress = record.multicast_adress;
-            // new_state.clients.push_back(ip_header->ip_src);
-            group_states.push_back(new_state);
+            interface_states[port].push_back(new_state);
             if (VERBOSE) {
-                click_chatter("CREATING NEW GROUP STATE");
+                click_chatter("creating new group state for interface %i", port);
                 click_chatter("\t multicast adress: %s", IPAddress(record.multicast_adress).unparse().c_str());
-                // click_chatter("\t client adress: %s", IPAddress(ip_header->ip_src).unparse().c_str());
                 click_chatter("\t mode: %i", record.record_type);
             }
         }
@@ -200,6 +194,7 @@ void IGMPRouterSide::push(int port, Packet *p) {
         igmp_mem_report report_info = helper->igmp_unpack_info(info_ptr);
         Vector <igmp_group_record> group_records = helper->igmp_unpack_group_records(records_ptr,
                                                                                      report_info.number_of_group_records);
+        /*
         //receivers will have joined an not yet left
         for (int i = 0; i < group_records.size(); i++) {
             if (group_records[i].record_type == IGMP_V3_EXCLUDE or
@@ -215,7 +210,8 @@ void IGMPRouterSide::push(int port, Packet *p) {
                 }
             }
         }
-        update_group_states(ip_header, group_records);
+         */
+        update_group_states(ip_header, group_records, port);
     } else if (ip_header->ip_p == 17) {
         //click_chatter("UDP PACKET, %i, %i", ip_header->ip_p, port);
         multicast_packet(p, port);

@@ -9,3 +9,6 @@ chmod +x ./bash_scripts/vm_scripts/join_test.sh
 chmod +x ./bash_scripts/vm_scripts/join_test_2.sh
 chmod +x ./bash_scripts/vm_scripts/complete_test.sh
 chmod +x ./bash_scripts/vm_scripts/leave_test.sh
+chmod +x ./bash_scripts/vm_scripts/join_test_2.sh
+chmod +x ./bash_scripts/vm_scripts/complete_test.sh
+chmod +x ./bash_scripts/vm_scripts/leave_test.sh
