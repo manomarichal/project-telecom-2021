@@ -13,8 +13,12 @@ IGMPRouterSide::IGMPRouterSide() {}
 
 IGMPRouterSide::~IGMPRouterSide() {}
 
-/*
- * configure for routerside object, only takes therouterip or interface as input
+
+/**
+ * configures the routerside object, only takes therouter ip or interface as input
+ * @param conf standard configure parameter, click practice
+ * @param errh standard configure parameter, click practice
+ * @return returns -1 on failed read and 0 on completed read
  */
 int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
     if (Args(conf, this, errh).read_mp("ROUTERADDRESS", routerIP).complete() < 0) {
@@ -25,6 +29,13 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
     return 0;
 }
 
+
+/**
+ * function to actually multicast the UDP packages to the clients that want to receive it
+ * right now just pushes to all ports
+ * @param p the packet to multicast
+ * @param port the input port
+ */
 void IGMPRouterSide::multicast_packet(Packet *p, int port) {
     const click_ip *ip_header = p->ip_header();
 
@@ -64,6 +75,13 @@ void IGMPRouterSide::multicast_packet(Packet *p, int port) {
      */
 }
 
+
+/**
+ * TODO: implemet this
+ * @param ip_header click ip struct of the obtained message
+ * @param state group state
+ * @param record group record
+ */
 void IGMPRouterSide::update_group_state(const click_ip *ip_header, igmp_group_state state, igmp_group_record record) {
     // add client to group state if it is not in it
     //click_chatter("updating groupstate %s", state.multicast_adress.unparse().c_str());
@@ -97,6 +115,12 @@ void IGMPRouterSide::update_group_state(const click_ip *ip_header, igmp_group_st
      */
 }
 
+/**
+ * function to update group states when receiving new igmp message, not fully implemented like the RFC
+ * this is still TODO:
+ * @param ip_header click ip struct of the obtained message
+ * @param group_records vector containing group records of the message
+ */
 void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector <igmp_group_record> group_records) {
     bool VERBOSE = true;
 
@@ -140,6 +164,15 @@ void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector <igmp
     }
 }
 
+/**
+ * router push function, router can get mulitple types of packets, right now we only look at UDP and igmp v3 membership reports
+ * when obtaining an igmp message, the router will add this client to its group state if it was not there already, the packet will be unpacked
+ * based on the packets content the router will see if the client want to join or leave. Router will alter group state accordingly
+ * if the router gets an UDP packet, it will multicast this to all clients interested.
+ * Other messages get pushed to another output port
+ * @param port input port of the packet
+ * @param p the packet itself
+ */
 void IGMPRouterSide::push(int port, Packet *p) {
 
     const click_ip *ip_header = p->ip_header();
