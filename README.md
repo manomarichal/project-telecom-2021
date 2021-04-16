@@ -10,7 +10,7 @@ Clone the repository in `/home/student/Desktop/project-telecom-2021`, the provid
 
 	git clone https://github.com/manomarichal/project-telecom-2021.git /home/student/Desktop/project-telecom-2021
 
-then navigate to `cd /home/student/Desktop/project-telecom-2021/bash_scripts/vm_scripts`
+then navigate to the scripts folder
 	
 	 cd /home/student/Desktop/project-telecom-2021/bash_scripts/vm_scripts
  
