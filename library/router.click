@@ -30,8 +30,8 @@ elementclass Router {
 
 	// Input and output paths for interface 0
 	input[0]
+	    -> ToDump(/home/student/Desktop/project-telecom-2021/pcap/router_interface_0.pcap)
 	    -> [0]igmprouter::IGMPRouterSide(ROUTERADDRESS $server_address)[0]
-        -> ToDump(/home/student/Desktop/output.pcap)
 		-> HostEtherFilter($server_address)
 		-> server_class :: Classifier(12/0806 20/0001, 12/0806 20/0002, -)
 		-> ARPResponder($server_address)
@@ -45,7 +45,8 @@ elementclass Router {
 	// Input and output paths for interface 1
 	input[1]
 	    ->[1]igmprouter[1]
-        -> ToDump(/home/student/Desktop/output.pcap)
+	    -> eth::EtherRewrite($client1_address, 01:00:5e:01:01:01)
+        -> ToDump(/home/student/Desktop/project-telecom-2021/pcap/router_interface_1.pcap)
 		-> HostEtherFilter($client1_address)
 		-> client1_class :: Classifier(12/0806 20/0001, 12/0806 20/0002, -)
 		-> ARPResponder($client1_address)
@@ -59,7 +60,7 @@ elementclass Router {
 	// Input and output paths for interface 2
 	input[2]
 		->[2]igmprouter[2]
-        -> ToDump(/home/student/Desktop/output.pcap)
+        -> ToDump(/home/student/Desktop/project-telecom-2021/pcap/router_interface_2.pcap)
 		-> HostEtherFilter($client2_address)
 		-> client2_class :: Classifier(12/0806 20/0001, 12/0806 20/0002, -)
 		-> ARPResponder($client2_address)
