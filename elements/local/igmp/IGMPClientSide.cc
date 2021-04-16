@@ -147,8 +147,8 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((
 void IGMPClientSide::add_handlers() {
     //click_chatter("hallo, adding handlers");
 
-    add_write_handler("client_join", &client_join, (void *) 0);
-    add_write_handler("client_leave", &client_leave, (void *) 0);
+    add_write_handler("join", &client_join, (void *) 0);
+    add_write_handler("leave", &client_leave, (void *) 0);
 }
 
 /**
