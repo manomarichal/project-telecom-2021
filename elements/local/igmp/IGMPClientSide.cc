@@ -89,7 +89,7 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
     element->group_records.push_back(grRecord);
     WritablePacket *p = element->make_mem_report_packet();
     element->output(0).push(p);
-    click_chatter("completed join");
+    click_chatter("client %s joined multicast group %s", element->clientIP.unparse().c_str(), IPAddress(groupaddr).unparse().c_str());
     //uncomment if you would like more information about the group records
     //element->print_group_records();
     return 0;
@@ -123,7 +123,7 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((
                 WritablePacket *p = element->make_mem_report_packet();
                 //push the packet to update mode
                 element->output(0).push(p);
-                click_chatter("completed leave");
+                click_chatter("client %s joined multicast group %s", element->clientIP.unparse().c_str(), IPAddress(groupaddr).unparse().c_str());
             } else {
                 click_chatter("this client has already left this group");
                 return -1;
