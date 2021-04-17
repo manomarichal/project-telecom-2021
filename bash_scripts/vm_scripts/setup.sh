@@ -1,4 +1,5 @@
 set -e
+chmod +x /home/student/click/scripts/setup.sh
 sudo /home/student/click/scripts/setup.sh
 chmod +x ./bash_scripts/vm_scripts/run_reference_implementation.sh
 chmod +x ./bash_scripts/vm_scripts/run_student_implementation.sh
