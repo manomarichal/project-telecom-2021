@@ -41,13 +41,13 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
  */
 void IGMPRouterSide::multicast_packet(Packet *p, int port) {
     const click_ip *ip_header = p->ip_header();
-
     //click_chatter("hlen, %i", length);
     for (int i=0; i<interface_states.size(); i++) {
         for (igmp_group_state state: interface_states[i]) {
             if (state.multicast_adress == ip_header->ip_dst) {
                 click_chatter("multicasting on interface %i, port %i", i, i+3);
-                output(i+3).push(p);
+                Packet * package = p->clone();
+                output(i+3).push(package);
             }
         }
     }
