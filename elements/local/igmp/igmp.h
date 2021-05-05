@@ -71,8 +71,8 @@ struct igmp_group_record {
 struct igmp_mem_report {
     uint8_t type;
     const uint8_t reserved_1 = 0;
-    const uint16_t reserved2 = 0;
     uint16_t checksum;
+    const uint16_t reserved2 = 0;
     uint16_t number_of_group_records;
 };
 
