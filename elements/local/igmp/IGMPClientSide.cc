@@ -214,6 +214,23 @@ void IGMPClientSide::push(int port, Packet *p) {
     const click_ip *ip_header = p->ip_header();
     if (ip_header->ip_p == IP_PROTO_IGMP) {
     // IGMP QUERIES
+        click_chatter("the client has received a igmp query");
+        //ontleed de query, check van waar ze komt.
+        for (int i = 0; i<group_records.size(); i++){
+            //als group record mc adr overeenkomt met src van query, stuur v3 als join
+            if(group_records[i].record_type == 4 or group_records[i].record_type == 2){
+                group_records[i].record_type = 2;
+//                igmp_group_record grRecord;
+//                //the group record needs to be made
+//                grRecord.record_type = change_to_exclude;
+//                grRecord.multicast_adress = groupaddr;
+//                grRecord.number_of_sources = 0;
+
+                WritablePacket *p = make_mem_report_packet();
+                output(0).push(p);
+
+            }
+        }
         return;
     }
     // UDP MESSAGES
