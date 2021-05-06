@@ -42,6 +42,9 @@ private:
     unsigned int max_response_time;
     int _count;
     Timer _timer;
+    IPAddress ASMC_ADDRESS= IPAddress("224.0.0.1");
+    IPAddress MC_ADDRESS= IPAddress("224.0.0.22");
+
 
 };
 
