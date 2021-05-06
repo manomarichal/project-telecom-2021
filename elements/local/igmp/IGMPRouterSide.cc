@@ -32,6 +32,8 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
     {
         interface_states.push_back(Vector<igmp_group_state>());
     }
+    _timer.initialize(this);
+    _timer.reschedule_after_sec(query_interval);
     return 0;
 }
 
@@ -225,6 +227,17 @@ void IGMPRouterSide::push(int port, Packet *p) {
     } else {
         output(port).push(p);
     }
+}
+
+void IGMPRouterSide::run_timer(Timer *)
+{
+    click_chatter("++++++++++++++++==============+++++++++++++++++==========");
+
+//    Packet *q = make_packet(0);
+//    output(0).push(q);
+    _count++;
+    _timer.reschedule_after_sec(query_interval);
+
 }
 
 CLICK_ENDDECLS

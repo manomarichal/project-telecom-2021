@@ -2,6 +2,7 @@
 #define CLICK_IGMPROUTERSIDE_HH
 
 #include <click/element.hh>
+#include <click/timer.hh>
 #include "IGMPV3ReportHelper.hh"
 #include "igmp.h"
 
@@ -21,6 +22,8 @@ public:
 
     int configure(Vector <String> &, ErrorHandler *);
 
+    void run_timer(Timer *);
+
     void push(int, Packet *);
 
 private:
@@ -37,6 +40,9 @@ private:
     unsigned int robustness_variable;
     unsigned int query_interval;
     unsigned int max_response_time;
+    int _count;
+    Timer _timer;
+
 };
 
 CLICK_ENDDECLS
