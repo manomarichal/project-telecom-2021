@@ -36,18 +36,17 @@ void IGMPV3QueryHelper::push(int port, Packet *p) {
 }
 
 click_ip *IGMPV3QueryHelper::add_ip_header(WritablePacket *p, IPAddress source, IPAddress destination, bool verbose) {
-    // based on elements/icmp/icmpsendpings.cc, line 133
-    click_ip *nip = reinterpret_cast<click_ip *>(p->data()); // place ip header at data pointer
+    click_ip *nip = reinterpret_cast<click_ip *>(p->data());
     nip->ip_v = 4;
-    nip->ip_hl = (sizeof(click_ip) + sizeof(router_alert)) >> 2; // 4 because of router alert, idk why right shift by 2
+    nip->ip_hl = (sizeof(click_ip) + sizeof(router_alert)) >> 2;
     nip->ip_len = htons(p->length());
-    uint16_t ip_id = 1; // does not matter
-    nip->ip_id = htons(ip_id); // converts host byte order to network byte order
-    nip->ip_p = IP_PROTO_IGMP; // must be 2, check ipadress/clicknet/ip.h, line 56
-    nip->ip_ttl = 1; // specified in RFC3376 page 7
+    uint16_t ip_id = 1;
+    nip->ip_id = htons(ip_id);
+    nip->ip_p = IP_PROTO_IGMP;
+    nip->ip_ttl = 1;
     nip->ip_src = source.in_addr();
-    nip->ip_dst = destination.in_addr(); // all multicast routers listen to this adress
-//    nip->ip_sum = click_in_cksum((unsigned char *) nip, sizeof(click_ip) + sizeof(router_alert)); // copy paste from icmpsendpings.cc
+    nip->ip_dst = destination.in_addr();
+    //nip->ip_sum = click_in_cksum((unsigned char *) nip, sizeof(click_ip) + sizeof(router_alert)); // copy paste from icmpsendpings.cc
 
     if (verbose) {
         click_chatter("printing click ip while making report message: ");

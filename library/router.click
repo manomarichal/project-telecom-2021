@@ -120,7 +120,7 @@ elementclass Router {
 	client2_frag[1]  -> ICMPError($client2_address, unreachable, needfrag) -> rt;
 
     igmprouter[3]
-    	    -> eth0::EtherRewrite($client1_address, 01:00:5e:01:01:01)
+	        -> EtherEncap(0x0800, 01:00:5e:01:01:01, 01:00:5e:00:00:01)
             -> ToDump(/home/student/Desktop/project-telecom-2021/pcap/router_interface_0.pcap)
             -> Discard;
 

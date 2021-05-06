@@ -218,8 +218,8 @@ void IGMPRouterSide::push(int port, Packet *p) {
 void IGMPRouterSide::run_timer(Timer *)
 {
     Packet *q = make_general_query_packet();
-//    multicast_packet(q,0);
-    output(4).push(q);
+//    //multicast_packet(q,0);
+    output(3).push(q);
     _timer.reschedule_after_sec(query_interval);
 
 }
