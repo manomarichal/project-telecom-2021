@@ -125,7 +125,7 @@ elementclass Router {
             -> Discard;
 
     igmprouter[4]
-    	    -> eth1::EtherRewrite($client1_address, 01:00:5e:01:01:01)
+    	    -> EtherEncap(0x0800, $client1_address, 01:00:5e:00:00:01)
             -> ToDump(/home/student/Desktop/project-telecom-2021/pcap/router_interface_1.pcap)
             -> [1]output;
 
