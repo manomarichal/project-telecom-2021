@@ -80,13 +80,11 @@ struct igmp_mem_report {
  * struct used to represent a membership query, see RFC3367 page 9
  */
 struct igmp_mem_query_msg {
-    const uint8_t type = IGMP_MEM_QUERY; // indicate its a membership query
+    uint8_t type = IGMP_MEM_QUERY; // indicate its a membership query
     uint8_t max_resp_code; // max amount of time allowed to respond
     uint16_t checksum;
     uint32_t group_adress;
-    unsigned int resv:4;
-    unsigned int s:1;
-    unsigned int qrv:3;
+    uint8_t resv_s_qrv;
     uint8_t qqic = 0; // queries query interval
     uint16_t number_of_sources;
 };
@@ -107,4 +105,6 @@ struct igmp_group_state {
     uint8_t mode;
     IPAddress multicast_adress;
 };
+
+
 #endif //PROJECT_TELECOM_IGMP_H

@@ -114,18 +114,6 @@ void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector <igmp
     }
     for (igmp_group_record record:group_records) {
         bool exists = false;
-        // should use hashmap here, but click hashmaps are jank, maybe later as optimization
-//        for (igmp_group_state state:interface_states[port]) {
-//            click_chatter("====state %d", state.mode);
-//
-//            if (record.multicast_adress == state.multicast_adress) {
-//                state.mode = record.record_type;
-//                click_chatter("====state========= %d", state.mode);
-//                exists = true;
-//            }
-//        }
-//        click_chatter("size in for loop %d ", interface_states[port].size());
-
         for (int i = 0; i<interface_states[port].size();i++) {
             if (record.multicast_adress == interface_states[port][i].multicast_adress) {
                 interface_states[port][i].mode = record.record_type;
@@ -133,7 +121,6 @@ void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector <igmp
                 exists = true;
             }
         }
-
 
             // if no group state exists for the multicast adress, make new one
         if (!exists) {
@@ -198,8 +185,8 @@ void IGMPRouterSide::push(int port, Packet *p) {
         const igmp_group_record_message *records_ptr = reinterpret_cast<const igmp_group_record_message *>(info_ptr +
                                                                                                            1);
 
-        igmp_mem_report report_info = helper->igmp_unpack_info(info_ptr);
-        Vector <igmp_group_record> group_records = helper->igmp_unpack_group_records(records_ptr,
+        igmp_mem_report report_info = report_helper->igmp_unpack_info(info_ptr);
+        Vector <igmp_group_record> group_records = report_helper->igmp_unpack_group_records(records_ptr,
                                                                                      report_info.number_of_group_records);
         //click_chatter("when receiving packet, mode is %d", group_records[0].record_type);
         /*
@@ -240,5 +227,21 @@ void IGMPRouterSide::run_timer(Timer *)
 
 }
 
+WritablePacket * IGMPRouterSide::make_general_query_packet()
+{
+
+    WritablePacket *p = Packet::make(query_helper->get_size_of_data(0) + sizeof(click_ip) + 4);
+    memset(p->data(), 0, p->length()); // erase previous random data on memory requested
+
+    click_ip *ip_header = query_helper->add_ip_header(p, routerIP, ASMC_ADDRESS,true);
+    router_alert *r_alert = query_helper->add_router_alert(ip_header + 1);
+    ip_header->ip_sum = click_in_cksum((unsigned char *) ip_header, sizeof(click_ip) + sizeof(router_alert));
+    query_helper->add_igmp_data(r_alert + 1, Vector <IPAddress>(), IPAddress("0.0.0.0"));
+
+    p->set_ip_header(ip_header, sizeof(click_ip));
+    p->timestamp_anno().assign_now();
+    p->set_dst_ip_anno(IPAddress(ASMC_ADDRESS));
+    return p;
+}
 CLICK_ENDDECLS
 EXPORT_ELEMENT(IGMPRouterSide) // forces to create element within click

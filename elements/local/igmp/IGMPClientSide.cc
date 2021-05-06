@@ -7,7 +7,10 @@
 CLICK_DECLS
 IGMPClientSide::IGMPClientSide() {}
 
-IGMPClientSide::~IGMPClientSide() {}
+IGMPClientSide::~IGMPClientSide()
+{
+    delete helper;
+}
 
 /*
 

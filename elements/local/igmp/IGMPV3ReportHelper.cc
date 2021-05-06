@@ -58,8 +58,7 @@ uint32_t IGMPV3ReportHelper::get_size_of_data(const Vector <igmp_group_record> g
  * @param verbose if you want cmd outputs or not
  * @return a click_ip object
  */
-click_ip *
-IGMPV3ReportHelper::add_ip_header(WritablePacket *p, IPAddress client_ip, IPAddress multicast_address, bool verbose) {
+click_ip *IGMPV3ReportHelper::add_ip_header(WritablePacket *p, IPAddress client_ip, IPAddress multicast_address, bool verbose) {
     // based on elements/icmp/icmpsendpings.cc, line 133
     click_ip *nip = reinterpret_cast<click_ip *>(p->data()); // place ip header at data pointer
     nip->ip_v = 4;
@@ -125,8 +124,8 @@ igmp_mem_report *IGMPV3ReportHelper::add_igmp_data(void *start, const Vector <ig
             igmp_grp = (struct igmp_group_record_message *) (igmp_adr + 1);
         }
         //per group record there is a report and a message struct
-        igmp_mr->checksum = click_in_cksum((unsigned char *) igmp_mr, get_size_of_data(group_records));
     }
+    igmp_mr->checksum = click_in_cksum((unsigned char *) igmp_mr, get_size_of_data(group_records));
     return igmp_mr;
 }
 

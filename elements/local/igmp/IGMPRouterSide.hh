@@ -3,7 +3,8 @@
 
 #include <click/element.hh>
 #include <click/timer.hh>
-#include "IGMPV3ReportHelper.hh"
+#include "./IGMPV3QueryHelper.hh"
+#include "./IGMPV3ReportHelper.hh"
 #include "igmp.h"
 
 CLICK_DECLS
@@ -32,10 +33,12 @@ private:
     //void update_group_state(const click_ip *ip_header, igmp_group_state state, igmp_group_record record);
 
     void multicast_packet(Packet *p, int port);
+    WritablePacket *make_general_query_packet();
+    IGMPV3QueryHelper *query_helper = new IGMPV3QueryHelper();
+    IGMPV3ReportHelper *report_helper = new IGMPV3ReportHelper();
 
     IPAddress routerIP;
     Vector <Vector<igmp_group_state>> interface_states;
-    IGMPV3ReportHelper *helper = new IGMPV3ReportHelper();
     Vector <IPAddress> receivers;
     unsigned int robustness_variable;
     unsigned int query_interval;
