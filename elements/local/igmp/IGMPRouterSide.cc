@@ -45,7 +45,6 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
  */
 void IGMPRouterSide::multicast_packet(Packet *p, int port) {
     const click_ip *ip_header = p->ip_header();
-
     //click_chatter("hlen, %i", length);
     for (int i=0; i<interface_states.size(); i++) {
         for (igmp_group_state state: interface_states[i]) {
@@ -219,8 +218,8 @@ void IGMPRouterSide::push(int port, Packet *p) {
 void IGMPRouterSide::run_timer(Timer *)
 {
     Packet *q = make_general_query_packet();
-    output(0).push(q);
-    _count++;
+//    multicast_packet(q,0);
+    output(4).push(q);
     _timer.reschedule_after_sec(query_interval);
 
 }
