@@ -31,7 +31,7 @@ elementclass Router {
 	// Input and output paths for interface 0
 	input[0]
 	    -> ToDump(/home/student/Desktop/project-telecom-2021/pcap/router_interface_0.pcap)
-	    -> [0]igmprouter::IGMPRouterSide(ROUTERADDRESS $server_address)[0]
+	    -> [0]igmprouter::IGMPRouterSide(ROUTERADDRESS $server_address, RV 2, QI 125, MRT 10)[0]
 		-> HostEtherFilter($server_address)
 		-> server_class :: Classifier(12/0806 20/0001, 12/0806 20/0002, -)
 		-> ARPResponder($server_address)

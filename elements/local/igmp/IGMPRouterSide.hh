@@ -34,6 +34,9 @@ private:
     Vector <Vector<igmp_group_state>> interface_states;
     IGMPV3ReportHelper *helper = new IGMPV3ReportHelper();
     Vector <IPAddress> receivers;
+    unsigned int robustness_variable;
+    unsigned int query_interval;
+    unsigned int max_response_time;
 };
 
 CLICK_ENDDECLS

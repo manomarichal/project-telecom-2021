@@ -21,7 +21,9 @@ IGMPRouterSide::~IGMPRouterSide() {}
  * @return returns -1 on failed read and 0 on completed read
  */
 int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
-    if (Args(conf, this, errh).read_mp("ROUTERADDRESS", routerIP).complete() < 0) {
+    //cunfugure like RFC 8.14
+    if (Args(conf, this, errh).read_mp("ROUTERADDRESS", routerIP).read_mp("RV", robustness_variable)
+                .read_mp("QI", query_interval).read_mp("MRT", max_response_time).complete() < 0) {
         click_chatter("failed read when initialising router, returning 0");
         return -1;
     }
