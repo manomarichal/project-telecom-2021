@@ -9,7 +9,7 @@
 #include "IGMPRouterSide.hh"
 
 CLICK_DECLS
-IGMPRouterSide::IGMPRouterSide(){}
+IGMPRouterSide::IGMPRouterSide() : _timer(this){}
 
 IGMPRouterSide::~IGMPRouterSide() {}
 
@@ -218,10 +218,8 @@ void IGMPRouterSide::push(int port, Packet *p) {
 
 void IGMPRouterSide::run_timer(Timer *)
 {
-    click_chatter("++++++++++++++++==============+++++++++++++++++==========");
-
-//    Packet *q = make_packet(0);
-//    output(0).push(q);
+    Packet *q = make_general_query_packet();
+    output(0).push(q);
     _count++;
     _timer.reschedule_after_sec(query_interval);
 

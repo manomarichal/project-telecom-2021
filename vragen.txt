@@ -1,1 +1,5 @@
 -- Moeten wij als gebruikers iets anders met de clients kunnen doen (changing interface state, bv ene source adress excluden)
+
+-moeten element write client21/igmp.join 225.1.1.1 gecalled worden of mag anders?
+
+general query 0.0.0.0?? moet niet anders??
