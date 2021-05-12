@@ -102,6 +102,17 @@ igmp_mem_query_msg *IGMPV3QueryHelper::add_igmp_data(void *start, const Vector <
     return query;
 }
 
+igmp_mem_query_msg IGMPV3QueryHelper::unpack_query_data(void *start) {
+    igmp_mem_query_msg query;
+    const igmp_mem_query_msg *igmp_query = reinterpret_cast<const igmp_mem_query_msg *>(start);
+    query.type = igmp_query->type;
+    query.max_resp_code = igmp_query->max_resp_code;
+    query.checksum = igmp_query->checksum;
+    query.group_adress = igmp_query->group_adress;
+    query.resv_s_qrv = igmp_query->resv_s_qrv;
+    query.qqic = igmp_query->qqic;
+    return query;
+}
 
 CLICK_ENDDECLS
 EXPORT_ELEMENT(IGMPV3ReportHelper) // forces to create element within click
