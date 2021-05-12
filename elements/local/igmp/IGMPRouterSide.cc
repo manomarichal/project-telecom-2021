@@ -43,18 +43,19 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
  * @param p the packet to multicast
  * @param port the input port
  */
-void IGMPRouterSide::multicast_packet(Packet *p, int port) {
+void IGMPRouterSide::multicast_udp_packet(Packet *p, int port) {
     const click_ip *ip_header = p->ip_header();
     //click_chatter("hlen, %i", length);
-    for (int i=0; i<interface_states.size(); i++) {
+    for (int i = 0; i < interface_states.size(); i++) {
         for (igmp_group_state state: interface_states[i]) {
             if (state.multicast_adress == ip_header->ip_dst) {
-                //click_chatter("multicasting on interface %i, port %i", i, i+3);
-                Packet * package = p->clone();
-                output(i+3).push(package);
+                click_chatter("multicasting on interface %i, port %i", i, i+3);
+                Packet *package = p->clone();
+                output(i + 3).push(package);
             }
         }
     }
+
 }
 
 
@@ -209,7 +210,7 @@ void IGMPRouterSide::push(int port, Packet *p) {
 
     } else if (ip_header->ip_p == 17) {
         //click_chatter("UDP PACKET, %i, %i", ip_header->ip_p, port);
-        multicast_packet(p, port);
+        multicast_udp_packet(p, port);
     } else {
         output(port).push(p);
     }

@@ -17,7 +17,7 @@ public:
 
     const char *class_name() const { return "IGMPRouterSide"; }
 
-    const char *port_count() const { return "3/6"; }
+    const char *port_count() const { return "3/9"; }
 
     const char *processing() const { return PUSH; }
 
@@ -32,7 +32,7 @@ private:
 
     //void update_group_state(const click_ip *ip_header, igmp_group_state state, igmp_group_record record);
 
-    void multicast_packet(Packet *p, int port);
+    void multicast_udp_packet(Packet *p, int port);
     WritablePacket *make_general_query_packet();
     IGMPV3QueryHelper *query_helper = new IGMPV3QueryHelper();
     IGMPV3ReportHelper *report_helper = new IGMPV3ReportHelper();
