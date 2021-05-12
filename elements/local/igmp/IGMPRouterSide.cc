@@ -219,6 +219,7 @@ void IGMPRouterSide::push(int port, Packet *p) {
 void IGMPRouterSide::run_timer(Timer *)
 {
     Packet *q = make_general_query_packet();
+//    Packet *q = make_group_specific_query_packet();
 //    //multicast_packet(q,0);
     for(int i = 6; i<9;i++){
         Packet *package = q->clone();
@@ -245,5 +246,37 @@ WritablePacket * IGMPRouterSide::make_general_query_packet()
     p->set_dst_ip_anno(IPAddress(ASMC_ADDRESS));
     return p;
 }
+
+
+/*
+ * makes group specific query, make sure that the groups have been initialised before making one of these
+ */
+WritablePacket * IGMPRouterSide::make_group_specific_query_packet()
+{
+
+    WritablePacket *p = Packet::make(query_helper->get_size_of_data(0) + sizeof(click_ip) + 4);
+    memset(p->data(), 0, p->length()); // erase previous random data on memory requested
+
+    click_ip *ip_header = query_helper->add_ip_header(p, routerIP, ASMC_ADDRESS,true);
+    router_alert *r_alert = query_helper->add_router_alert(ip_header + 1);
+    ip_header->ip_sum = click_in_cksum((unsigned char *) ip_header, sizeof(click_ip) + sizeof(router_alert));
+
+    for (int i = 0; i < interface_states.size(); i++) {
+        for (igmp_group_state state: interface_states[i]) {
+            if (state.multicast_adress){
+                query_helper->add_igmp_data(r_alert + 1, Vector <IPAddress>(), state.multicast_adress);
+            }
+            else{
+                click_chatter("sending a group specific address when there are no groups yet :(");
+                return NULL;
+            }
+        }
+    }
+    p->set_ip_header(ip_header, sizeof(click_ip));
+    p->timestamp_anno().assign_now();
+    p->set_dst_ip_anno(IPAddress(ASMC_ADDRESS));
+    return p;
+}
+
 CLICK_ENDDECLS
 EXPORT_ELEMENT(IGMPRouterSide) // forces to create element within click

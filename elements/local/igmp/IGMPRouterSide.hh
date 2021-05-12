@@ -34,6 +34,7 @@ private:
 
     void multicast_udp_packet(Packet *p, int port);
     WritablePacket *make_general_query_packet();
+    WritablePacket *make_group_specific_query_packet();
     IGMPV3QueryHelper *query_helper = new IGMPV3QueryHelper();
     IGMPV3ReportHelper *report_helper = new IGMPV3ReportHelper();
 
