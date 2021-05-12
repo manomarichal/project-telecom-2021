@@ -88,12 +88,12 @@ igmp_mem_query_msg *IGMPV3QueryHelper::add_igmp_data(void *start, const Vector <
     query->group_adress = group_address.addr();
     query->resv = 0;
     click_chatter("%d", qrv);
-    if(!general){
-        query->s = 1;
-    }
-    else{
-        query->s = 0;
-    }
+//    if(!general){
+//        query->s = 1;
+//    }
+//    else{
+//        query->s = 0;
+//    }
     query->qrv = qrv;
     query->qqic = qqic; // queries query interval
     query->number_of_sources = source_addresses.size();
@@ -107,6 +107,7 @@ igmp_mem_query_msg *IGMPV3QueryHelper::add_igmp_data(void *start, const Vector <
             igmp_adr = (struct ipadress *) (igmp_adr + 1);
         }
     }
+    click_chatter("%d", click_in_cksum((unsigned char *) query, get_size_of_data(source_addresses.size())));
     query->checksum = click_in_cksum((unsigned char *) query, get_size_of_data(source_addresses.size()));
     return query;
 }

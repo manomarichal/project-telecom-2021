@@ -274,29 +274,35 @@ WritablePacket * IGMPRouterSide::make_general_query_packet()
  */
 WritablePacket * IGMPRouterSide::make_group_specific_query_packet()
 {
-
+    click_chatter("=======adding group specific data");
     WritablePacket *p = Packet::make(query_helper->get_size_of_data(0) + sizeof(click_ip) + 4);
     memset(p->data(), 0, p->length()); // erase previous random data on memory requested
 
     click_ip *ip_header = query_helper->add_ip_header(p, routerIP, ASMC_ADDRESS,true);
     router_alert *r_alert = query_helper->add_router_alert(ip_header + 1);
     ip_header->ip_sum = click_in_cksum((unsigned char *) ip_header, sizeof(click_ip) + sizeof(router_alert));
-
+    bool found = false;
     for (int i = 0; i < interface_states.size(); i++) {
         for (igmp_group_state state: interface_states[i]) {
-            if (state.multicast_adress){
-                query_helper->add_igmp_data(r_alert + 1, Vector <IPAddress>(), state.multicast_adress, true,
-                                            robustness_variable, query_interval, max_response_time);
-            }
-            else{
-                click_chatter("sending a group specific address when there are no groups yet :(");
-                return NULL;
+            if(!found) {
+                if (state.multicast_adress) {
+                    click_chatter("-+-+-+");
+
+                    query_helper->add_igmp_data(r_alert + 1, Vector<IPAddress>(), state.multicast_adress, true,
+                                                robustness_variable, query_interval, max_response_time);
+                    found = true;
+                } else {
+                    click_chatter("sending a group specific address when there are no groups yet :(");
+                    return NULL;
+                }
             }
         }
     }
     p->set_ip_header(ip_header, sizeof(click_ip));
     p->timestamp_anno().assign_now();
     p->set_dst_ip_anno(IPAddress(ASMC_ADDRESS));
+    click_chatter("---------done with group specific data");
+
     return p;
 }
 
