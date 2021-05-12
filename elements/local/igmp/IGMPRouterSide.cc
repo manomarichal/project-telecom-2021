@@ -188,6 +188,17 @@ void IGMPRouterSide::push(int port, Packet *p) {
         igmp_mem_report report_info = report_helper->igmp_unpack_info(info_ptr);
         Vector <igmp_group_record> group_records = report_helper->igmp_unpack_group_records(records_ptr,
                                                                                      report_info.number_of_group_records);
+
+        //if the client leaves, a group specific query is sent to the group to check whether there are still listeners
+        for (int i = 0; i < group_records.size(); i++) {
+            if (group_records[i].record_type == 3){
+                Packet *q = make_group_specific_query_packet();
+                for(int i = 6; i<9;i++){
+                    Packet *package = q->clone();
+                    output(i).push(package);
+                }
+            }
+        }
         //click_chatter("when receiving packet, mode is %d", group_records[0].record_type);
         /*
         //receivers will have joined an not yet left
