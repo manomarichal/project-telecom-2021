@@ -84,8 +84,12 @@ struct igmp_mem_query_msg {
     uint8_t max_resp_code; // max amount of time allowed to respond
     uint16_t checksum;
     uint32_t group_adress;
-    uint8_t resv_s_qrv;
-    uint8_t qqic = 0; // queries query interval
+    //RV in router
+    unsigned qrv:3;
+    unsigned s:1;
+    unsigned resv:4;
+    //QI in router
+    uint8_t qqic; // queries query interval
     uint16_t number_of_sources;
 };
 

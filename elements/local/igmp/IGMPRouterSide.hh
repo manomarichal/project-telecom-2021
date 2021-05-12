@@ -41,9 +41,9 @@ private:
     IPAddress routerIP;
     Vector <Vector<igmp_group_state>> interface_states;
     Vector <IPAddress> receivers;
-    unsigned int robustness_variable;
-    unsigned int query_interval;
-    unsigned int max_response_time;
+    unsigned robustness_variable;
+    unsigned query_interval;
+    unsigned max_response_time;
     int _count;
     Timer _timer;
     IPAddress ASMC_ADDRESS= IPAddress("224.0.0.1");

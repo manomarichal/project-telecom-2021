@@ -35,7 +35,8 @@ public:
 
     router_alert *add_router_alert(void *start, uint8_t octet_1 = 0, uint8_t octet_2 = 0);
 
-    igmp_mem_query_msg *add_igmp_data(void *start, const Vector <IPAddress> source_addresses, IPAddress group_address);
+    igmp_mem_query_msg *add_igmp_data(void *start, const Vector <IPAddress> source_addresses, IPAddress group_address,
+                                      bool general, unsigned qrv, unsigned qqic, uint8_t max_resp_code);
 
     igmp_mem_query_msg unpack_query_data(void *start);
 //    igmp_mem_report igmp_unpack_info(const void *start);

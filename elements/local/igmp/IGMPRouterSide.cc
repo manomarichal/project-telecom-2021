@@ -25,6 +25,9 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
     if (Args(conf, this, errh).read_mp("ROUTERADDRESS", routerIP).read_mp("RV", robustness_variable)
                 .read_mp("QI", query_interval).read_mp("MRT", max_response_time).complete() < 0) {
         click_chatter("failed read when initialising router, returning 0");
+        if(0<robustness_variable<7){
+            return  -1;
+        }
         return -1;
     }
    // click_chatter("initialising routeraddress %s", routerIP.unparse().c_str());
@@ -256,7 +259,8 @@ WritablePacket * IGMPRouterSide::make_general_query_packet()
     click_ip *ip_header = query_helper->add_ip_header(p, routerIP, ASMC_ADDRESS,false);
     router_alert *r_alert = query_helper->add_router_alert(ip_header + 1);
     ip_header->ip_sum = click_in_cksum((unsigned char *) ip_header, sizeof(click_ip) + sizeof(router_alert));
-    query_helper->add_igmp_data(r_alert + 1, Vector <IPAddress>(), IPAddress("0.0.0.0"));
+    query_helper->add_igmp_data(r_alert + 1, Vector <IPAddress>(), IPAddress("0.0.0.0"), false,
+                                robustness_variable, query_interval, max_response_time);
 
     p->set_ip_header(ip_header, sizeof(click_ip));
     p->timestamp_anno().assign_now();
@@ -281,7 +285,8 @@ WritablePacket * IGMPRouterSide::make_group_specific_query_packet()
     for (int i = 0; i < interface_states.size(); i++) {
         for (igmp_group_state state: interface_states[i]) {
             if (state.multicast_adress){
-                query_helper->add_igmp_data(r_alert + 1, Vector <IPAddress>(), state.multicast_adress);
+                query_helper->add_igmp_data(r_alert + 1, Vector <IPAddress>(), state.multicast_adress, true,
+                                            robustness_variable, query_interval, max_response_time);
             }
             else{
                 click_chatter("sending a group specific address when there are no groups yet :(");

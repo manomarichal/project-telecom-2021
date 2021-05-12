@@ -79,14 +79,23 @@ router_alert *IGMPV3QueryHelper::add_router_alert(void *start, uint8_t octet_1, 
     }
 }
 
-igmp_mem_query_msg *IGMPV3QueryHelper::add_igmp_data(void *start, const Vector <IPAddress> source_addresses, IPAddress group_address) {
+igmp_mem_query_msg *IGMPV3QueryHelper::add_igmp_data(void *start, const Vector <IPAddress> source_addresses, IPAddress group_address, bool general
+        , unsigned qrv, unsigned qqic, uint8_t max_resp_code) {
     // add the membership report info
     igmp_mem_query_msg *query = reinterpret_cast<igmp_mem_query_msg *>(start);
-    query->max_resp_code = 0;
+    query->max_resp_code = max_resp_code;
     query->type = IGMP_MEM_QUERY;
     query->group_adress = group_address.addr();
-    query->resv_s_qrv = 0;
-    query->qqic = 0; // queries query interval
+    query->resv = 0;
+    click_chatter("%d", qrv);
+    if(!general){
+        query->s = 1;
+    }
+    else{
+        query->s = 0;
+    }
+    query->qrv = qrv;
+    query->qqic = qqic; // queries query interval
     query->number_of_sources = source_addresses.size();
 
     // add source adresses on top
@@ -109,7 +118,9 @@ igmp_mem_query_msg IGMPV3QueryHelper::unpack_query_data(void *start) {
     query.max_resp_code = igmp_query->max_resp_code;
     query.checksum = igmp_query->checksum;
     query.group_adress = igmp_query->group_adress;
-    query.resv_s_qrv = igmp_query->resv_s_qrv;
+    query.resv = igmp_query->resv;
+    query.s = igmp_query->s;
+    query.qrv = igmp_query->qrv;
     query.qqic = igmp_query->qqic;
     return query;
 }
