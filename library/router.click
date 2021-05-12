@@ -120,12 +120,12 @@ elementclass Router {
 	client2_frag[1]  -> ICMPError($client2_address, unreachable, needfrag) -> rt;
 
     igmprouter[3]
-	        -> EtherRewrite(01:00:5e:01:01:01, 01:00:5e:00:00:01)
+	        -> eth0::EtherRewrite($client1_address, 01:00:5e:01:01:01)
             -> ToDump(/home/student/Desktop/project-telecom-2021/pcap/router_interface_0.pcap)
             -> Discard;
 
     igmprouter[4]
-    	    -> eth1::EtherRewrite($client1_address, 01:00:5e:00:00:01)
+    	    -> eth1::EtherRewrite($client1_address, 01:00:5e:01:01:01)
             -> ToDump(/home/student/Desktop/project-telecom-2021/pcap/router_interface_1.pcap)
             -> [1]output;
 
@@ -135,18 +135,18 @@ elementclass Router {
             -> [2]output;
 
     igmprouter[6]
-	        -> EtherEncap(0x0800, 01:00:5e:01:01:01, 01:00:5e:00:00:01)
-            -> ToDump(/home/student/Desktop/project-telecom-2021/pcap/router_interface_0.pcap)
+	        -> EtherEncap(0x0800, $client1_address, 01:00:5e:00:00:01)
+            -> ToDump(/home/student/Desktop/project-telecom-2021/pcap/router_interface_00.pcap)
             -> Discard;
 
     igmprouter[7]
     	    -> EtherEncap(0x0800, $client1_address, 01:00:5e:00:00:01)
-            -> ToDump(/home/student/Desktop/project-telecom-2021/pcap/router_interface_1.pcap)
+            -> ToDump(/home/student/Desktop/project-telecom-2021/pcap/router_interface_01.pcap)
             -> [1]output;
 
     igmprouter[8]
-    	    -> EtherEncap(0x0800, $client2_address, 01:00:5e:01:01:01)
-            -> ToDump(/home/student/Desktop/project-telecom-2021/pcap/router_interface_2.pcap)
+    	    -> EtherEncap(0x0800, $client2_address, 01:00:5e:00:00:01)
+            -> ToDump(/home/student/Desktop/project-telecom-2021/pcap/router_interface_02.pcap)
             -> [2]output;
 
 }

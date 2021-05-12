@@ -212,10 +212,12 @@ void IGMPClientSide::push(int port, Packet *p) {
     // unpacking data, based on elements/icmp/icmpsendpings.cc, line 194
 
     const click_ip *ip_header = p->ip_header();
+    click_chatter("received a package with protocol number %d", ip_header->ip_p);
     if (ip_header->ip_p == IP_PROTO_IGMP) {
     // IGMP QUERIES
         click_chatter("the client has received a igmp query");
         //ontleed de query, check van waar ze komt.
+//        igmp_mem_query_msg* query = (igmp_mem_query_msg*) ()
         for (int i = 0; i<group_records.size(); i++){
             //als group record mc adr overeenkomt met src van query, stuur v3 als join
             if(group_records[i].record_type == 4 or group_records[i].record_type == 2){
@@ -227,6 +229,7 @@ void IGMPClientSide::push(int port, Packet *p) {
 //                grRecord.number_of_sources = 0;
 
                 WritablePacket *p = make_mem_report_packet();
+                click_chatter("Sending a package back to the router filter mode exclude");
                 output(0).push(p);
 
             }
