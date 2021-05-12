@@ -5,7 +5,8 @@
 #include "IGMPClientSide.hh"
 
 CLICK_DECLS
-IGMPClientSide::IGMPClientSide() {}
+
+IGMPClientSide::IGMPClientSide() : _timer(this){}
 
 IGMPClientSide::~IGMPClientSide()
 {
@@ -35,10 +36,8 @@ int IGMPClientSide::configure(Vector <String> &conf, ErrorHandler *errh) {
         click_chatter("failed read, returning -1", ipadresstest);
         return -1;
     }
-    //uncomment these if there is an error while configuring the clientside element
-    //click_chatter("initialising ipaddress %s", clientIP.unparse().c_str());
-    //click_chatter("initialising mc address %s", MC_ADDRESS.unparse().c_str());
-    //click_chatter("initialising asmc address %s", ALL_SYSTEMS_MC_ADDRESS.unparse().c_str());
+    _timer.initialize(this);
+    _timer.reschedule_after_sec(7);
     return 0;
 }
 
@@ -253,6 +252,19 @@ void IGMPClientSide::push(int port, Packet *p) {
     {
         output(port).push(p);
     }
+}
+
+/**
+ * run timer will be triggered after the _timer gets scheduled
+ * the timer gets scheduled by using _timer.schedule_after_sec(time)
+ * you can check whether the timer is set by using _timer.scheduled()
+ */
+void IGMPClientSide::run_timer(Timer * timer)
+{
+    assert(timer == &_timer);
+    click_chatter("the clientisde timer was just triggered");
+    _timer.reschedule_after_sec(10);
+
 }
 
 CLICK_ENDDECLS

@@ -4,6 +4,7 @@
 #include <click/element.hh>
 #include "igmp.h"
 #include "IGMPV3ReportHelper.hh"
+#include <click/timer.hh>
 
 CLICK_DECLS
 
@@ -33,6 +34,9 @@ public:
 
     void print_group_records();
 
+    void run_timer(Timer *);
+
+
 private:
     uint32_t robustness = 1; // TODO not hardcoded
     uint32_t report_interval = 10; // TODO not hardcoded
@@ -48,6 +52,9 @@ private:
     uint32_t _get_size_of_igmp_data();
 
     WritablePacket *make_mem_report_packet();
+
+    Timer _timer;
+
 
 };
 

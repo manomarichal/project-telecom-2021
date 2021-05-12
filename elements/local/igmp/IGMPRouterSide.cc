@@ -216,8 +216,14 @@ void IGMPRouterSide::push(int port, Packet *p) {
     }
 }
 
-void IGMPRouterSide::run_timer(Timer *)
+/**
+ * run timer will be triggered after the _timer gets scheduled
+ * the timer gets scheduled by using _timer.schedule_after_sec(time)
+ * you can check whether the timer is set by using _timer.scheduled()
+ */
+void IGMPRouterSide::run_timer(Timer * timer)
 {
+    assert(timer == &_timer);
     Packet *q = make_general_query_packet();
 //    Packet *q = make_group_specific_query_packet();
 //    //multicast_packet(q,0);
