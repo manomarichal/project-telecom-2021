@@ -220,8 +220,11 @@ void IGMPRouterSide::run_timer(Timer *)
 {
     Packet *q = make_general_query_packet();
 //    //multicast_packet(q,0);
+    for(int i = 6; i<9;i++){
+        Packet *package = q->clone();
+        output(i).push(package);
+    }
 
-    output(6).push(q);
     _timer.reschedule_after_sec(query_interval);
 
 }
