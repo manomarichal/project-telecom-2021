@@ -110,5 +110,12 @@ struct igmp_group_state {
     IPAddress multicast_adress;
 };
 
+struct URI_packages{
+    WritablePacket *p;
+    Vector <int> timings;
+    int _URI_timer;
+
+};
+
 
 #endif //PROJECT_TELECOM_IGMP_H

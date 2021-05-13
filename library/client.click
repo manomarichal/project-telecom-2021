@@ -5,7 +5,7 @@
 
 elementclass Client {
 	$address, $gateway |
-	igmp::IGMPClientSide(CADDR $address, MADDR 224.0.0.22, ASMADDR 224.0.0.1);
+	igmp::IGMPClientSide(CADDR $address, MADDR 224.0.0.22, ASMADDR 224.0.0.1, URI 1, RV 2);
 
 	ip :: Strip(14)                             // get rid of ethernet header
 		-> CheckIPHeader()                      // check if ip header is correct
