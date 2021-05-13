@@ -76,53 +76,13 @@ void IGMPRouterSide::multicast_udp_packet(Packet *p, int port) {
 
 
 /**
- * TODO: implemet this
- * @param ip_header click ip struct of the obtained message
- * @param state group state
- * @param record group record
- */
-/*
-void IGMPRouterSide::update_group_state(const click_ip *ip_header, igmp_group_state state, igmp_group_record record) {
-    // add client to group state if it is not in it
-    //click_chatter("updating groupstate %s", state.multicast_adress.unparse().c_str());
-
-
-    bool already_in = false;
-    for (IPAddress client: state.clients)
-    {
-        if (client == ip_header->ip_src)
-        {
-            already_in = true;
-        }
-    }
-    if (!already_in)
-    {
-        click_chatter("adding %s to group %s", IPAddress(ip_header->ip_src).unparse().c_str(), state.multicast_adress.unparse().c_str());
-        state.clients.push_back(IPAddress(ip_header->ip_src));
-    }
-     */
-
-    /* idk what to do here yet
-    // update client mode
-    if (record.record_type == IGMP_V3_CHANGE_TO_INCLUDE)
-    {
-        state.mode = IGMP_V3_INCLUDE;
-    }
-    else if (record.record_type == IGMP_V3_CHANGE_TO_EXCLUDE)
-    {
-        state.mode = IGMP_V3_EXCLUDE;
-    }
-
-}
-*/
-/**
  * function to update group states when receiving new igmp message, not fully implemented like the RFC
  * this is still TODO:
  * @param ip_header click ip struct of the obtained message
  * @param group_records vector containing group records of the message
  */
 void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector <igmp_group_record> group_records, int port) {
-    bool VERBOSE = false;
+    bool VERBOSE = true;
 
     if (VERBOSE)
     {
@@ -142,6 +102,7 @@ void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector <igmp
         if (!exists) {
             igmp_group_state new_state;
             new_state.mode = record.record_type;
+            new_state.group_timer = 10;
             new_state.multicast_adress = record.multicast_adress;
             interface_states[port].push_back(new_state);
             new_state.source_records = Vector<igmp_source_record>();
@@ -152,22 +113,11 @@ void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector <igmp
             }
         }
     }
-//    click_chatter("checking if all interface %d still want to accept packages", port);
-//    for (int i = 0; i<interface_states[port].size();i++) {
-//        click_chatter("mode of port: %i", interface_states[port][i].mode);
-//        if (4 == interface_states[port][i].mode or 2 == interface_states[port][i].mode) {
-//            click_chatter("port %d still in use", port);
-//            continue;
-//        }
-//        else{
-//            click_chatter("removing interface form port %d", port);
-//
-//            interface_states[port].erase(interface_states[port].begin()+i);
-//            click_chatter("size is nw %d ", interface_states[port].size());
-//        }
-//    }
-
-    }
+}
+void IGMPRouterSide::process_filter_mode_change_report(const igmp_group_record *record)
+{
+    return;
+}
 
 void IGMPRouterSide::process_current_state_report(const igmp_group_record *record)
 {
@@ -228,72 +178,6 @@ void IGMPRouterSide::process_current_state_report(const igmp_group_record *recor
     }
 }
 
-/**
- * router push function, router can get mulitple types of packets, right now we only look at UDP and igmp v3 membership reports
- * when obtaining an igmp message, the router will add this client to its group state if it was not there already, the packet will be unpacked
- * based on the packets content the router will see if the client want to join or leave. Router will alter group state accordingly
- * if the router gets an UDP packet, it will multicast this to all clients interested.
- * Other messages get pushed to another output port
- * @param port input port of the packet
- * @param p the packet itself
- */
-void IGMPRouterSide::push(int port, Packet *p) {
-
-    const click_ip *ip_header = p->ip_header();
-    //click_chatter("PACKET, %i, %i", ip_header->ip_p, port);
-
-    if (ip_header->ip_p == IP_PROTO_IGMP) {
-        /*
-         * input port of the igmp messages
-         * ontbind de igmp header
-         * kijk na of het een v3 membership report is
-         * haal de filter mode uit de igmp header
-         * als filtermode exclude is (en de src list leeg is) voer je join uit
-         *      voeg toe aan group state, zet timer
-         * als filtermode include is (en de src list is leeg) voer je leave uit
-         *      voeg toe aan group state, zet timer
-         * steeds kijken of deze messages geen repeat messages zijn, deze renewed de timers enkel en moet dus niet opnieuw worden geadd
-         */
-        //click_chatter("IGMP PACKET type %i, port %i", ip_header->ip_p, port);
-        // unpacking data
-        const router_alert *alert_ptr = reinterpret_cast<const router_alert *>(ip_header + 1);
-        const igmp_mem_report *info_ptr = reinterpret_cast<const igmp_mem_report *>(alert_ptr + 1);
-        const igmp_group_record_message *records_ptr = reinterpret_cast<const igmp_group_record_message *>(info_ptr +
-                                                                                                           1);
-
-        igmp_mem_report report_info = report_helper->igmp_unpack_info(info_ptr);
-        Vector <igmp_group_record> group_records = report_helper->igmp_unpack_group_records(records_ptr,
-                                                                                     report_info.number_of_group_records);
-
-
-        for (int i = 0; i < group_records.size(); i++) {
-            uint8_t record_type = group_records[i].record_type;
-
-            // current state reports
-            if (record_type == IGMP_V3_INCLUDE or record_type == IGMP_V3_EXCLUDE) {
-                process_current_state_report(&group_records[i]);
-            }
-
-            // filter mode change reports
-            else if (group_records[i].record_type == IGMP_V3_CHANGE_TO_INCLUDE){
-                Packet *q = make_group_specific_query_packet();
-                for(int i = 6; i<9;i++){
-                    Packet *package = q->clone();
-                    output(i).push(package);
-                }
-            }
-        }
-        update_group_states(ip_header, group_records, port);
-
-    } else if (ip_header->ip_p == 17) {
-        //click_chatter("UDP PACKET, %i, %i", ip_header->ip_p, port);
-        multicast_udp_packet(p, port);
-    } else {
-        output(port).push(p);
-    }
-}
-
-
 void IGMPRouterSide::group_timer_ran_out(igmp_group_state *state)
 {
     state->mode = IGMP_V3_INCLUDE;
@@ -301,7 +185,7 @@ void IGMPRouterSide::group_timer_ran_out(igmp_group_state *state)
 /**
  * run timer will be triggered after the _timer gets scheduled
  * the timer gets scheduled by using _timer.schedule_after_sec(time)
- * you can check whether the timer is set by using _timer.scheduled()
+ * you can chec k whether the timer is set by using _timer.scheduled()
  */
 void IGMPRouterSide::run_timer(Timer * timer)
 {
@@ -319,15 +203,19 @@ void IGMPRouterSide::run_timer(Timer * timer)
     }
 
 
-    for (auto interface: interface_states)
+    for (auto &interface: interface_states)
     {
         // update group timers
-        for (igmp_group_state state: interface)
+        for (igmp_group_state &state: interface)
         {
-            state.group_timer -= 1;
-            if (state.group_timer <= 0)
+            click_chatter("group timer = %i", state.group_timer);
+            if (state.group_timer < 1)
             {
                 group_timer_ran_out(&state);
+            }
+            else
+            {
+                state.group_timer -= 1;
             }
         }
     }
@@ -382,6 +270,69 @@ WritablePacket * IGMPRouterSide::make_group_specific_query_packet()
     p->set_dst_ip_anno(IPAddress(ASMC_ADDRESS));
 
     return p;
+}
+
+/**
+ * router push function, router can get mulitple types of packets, right now we only look at UDP and igmp v3 membership reports
+ * when obtaining an igmp message, the router will add this client to its group state if it was not there already, the packet will be unpacked
+ * based on the packets content the router will see if the client want to join or leave. Router will alter group state accordingly
+ * if the router gets an UDP packet, it will multicast this to all clients interested.
+ * Other messages get pushed to another output port
+ * @param port input port of the packet
+ * @param p the packet itself
+ */
+void IGMPRouterSide::push(int port, Packet *p) {
+
+    const click_ip *ip_header = p->ip_header();
+    if (ip_header->ip_p == IP_PROTO_IGMP) {
+        /*
+         * input port of the igmp messages
+         * ontbind de igmp header
+         * kijk na of het een v3 membership report is
+         * haal de filter mode uit de igmp header
+         * als filtermode exclude is (en de src list leeg is) voer je join uit
+         *      voeg toe aan group state, zet timer
+         * als filtermode include is (en de src list is leeg) voer je leave uit
+         *      voeg toe aan group state, zet timer
+         * steeds kijken of deze messages geen repeat messages zijn, deze renewed de timers enkel en moet dus niet opnieuw worden geadd
+         */
+        //click_chatter("IGMP PACKET type %i, port %i", ip_header->ip_p, port);
+        // unpacking data
+        const router_alert *alert_ptr = reinterpret_cast<const router_alert *>(ip_header + 1);
+        const igmp_mem_report *info_ptr = reinterpret_cast<const igmp_mem_report *>(alert_ptr + 1);
+        const igmp_group_record_message *records_ptr = reinterpret_cast<const igmp_group_record_message *>(info_ptr +
+                                                                                                           1);
+
+        igmp_mem_report report_info = report_helper->igmp_unpack_info(info_ptr);
+        Vector <igmp_group_record> group_records = report_helper->igmp_unpack_group_records(records_ptr,
+                                                                                            report_info.number_of_group_records);
+
+
+        for (int i = 0; i < group_records.size(); i++) {
+            uint8_t record_type = group_records[i].record_type;
+
+            // current state reports
+            if (record_type == IGMP_V3_INCLUDE or record_type == IGMP_V3_EXCLUDE) {
+                process_current_state_report(&group_records[i]);
+            }
+
+                // filter mode change reports
+            else if (group_records[i].record_type == IGMP_V3_CHANGE_TO_INCLUDE){
+                Packet *q = make_group_specific_query_packet();
+                for(int i = 6; i<9;i++){
+                    Packet *package = q->clone();
+                    output(i).push(package);
+                }
+            }
+        }
+        update_group_states(ip_header, group_records, port);
+
+    } else if (ip_header->ip_p == 17) {
+        //click_chatter("UDP PACKET, %i, %i", ip_header->ip_p, port);
+        multicast_udp_packet(p, port);
+    } else {
+        output(port).push(p);
+    }
 }
 
 CLICK_ENDDECLS

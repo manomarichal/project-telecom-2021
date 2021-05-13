@@ -1,7 +1,7 @@
--- Moeten wij als gebruikers iets anders met de clients kunnen doen (changing interface state, bv ene source adress excluden)
+Moeten wij als gebruikers iets anders met de clients kunnen doen (changing interface state, bv ene source adress excluden)
 
 general query 0.0.0.0?? moet niet anders??
 
 rfc dingen niet van toepassing ook implementen : source records in router
 
-meerdere timers??
+wat officieel te doen op join/leave (staat niet in de tabellen)
