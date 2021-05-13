@@ -50,11 +50,24 @@ void IGMPRouterSide::multicast_udp_packet(Packet *p, int port) {
     const click_ip *ip_header = p->ip_header();
     //click_chatter("hlen, %i", length);
     for (int i = 0; i < interface_states.size(); i++) {
-        for (igmp_group_state state: interface_states[i]) {
+        for (const igmp_group_state &state: interface_states[i]) {
             if (state.multicast_adress == ip_header->ip_dst) {
-                //click_chatter("multicasting on interface %i, port %i", i, i+3);
-                Packet *package = p->clone();
-                output(i + 3).push(package);
+                // check if the source adress is in the source records
+                bool check = false;
+                for (const igmp_source_record &source_record: state.source_records)
+                {
+                    if (source_record.source_address == ip_header->ip_src)
+                    {
+                        check = true;
+                    }
+                }
+
+                // send the packet if the group state is include and it is in the source records, or the reverse for exclude
+                if ((IGMP_V3_INCLUDE == state.mode) == check)
+                {
+                    Packet *package = p->clone();
+                    output(i + 3).push(package);
+                }
             }
         }
     }
@@ -131,6 +144,7 @@ void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector <igmp
             new_state.mode = record.record_type;
             new_state.multicast_adress = record.multicast_adress;
             interface_states[port].push_back(new_state);
+            new_state.source_records = Vector<igmp_source_record>();
             if (VERBOSE) {
                 click_chatter("creating new group state for interface %i", port);
                 click_chatter("\t multicast adress: %s", IPAddress(record.multicast_adress).unparse().c_str());
@@ -154,6 +168,65 @@ void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector <igmp
 //    }
 
     }
+
+void IGMPRouterSide::process_current_state_report(const igmp_group_record *record)
+{
+    for (auto &interface: interface_states)
+    {
+        for (igmp_group_state &state: interface)
+        {
+            if (state.multicast_adress == record->multicast_adress)
+            {
+                if (state.mode == IGMP_V3_INCLUDE)
+                {
+                    if (record->record_type == IGMP_V3_INCLUDE)
+                    {
+                        // new state = INCLUDE (A+B), actions: (B)=GMI
+                        /* TODO uitzoeken of source records nodig zijn
+                        for (const auto &source_address: record->sources)
+                        {
+                            bool already_in = false;
+                            for (const igmp_source_record &source_record: state.source_records)
+                            {
+                                if (source_record.source_address == source_address)
+                                {
+                                    already_in = true;
+                                }
+                            }
+                            if (!already_in)
+                            {
+                                // TODO GMI
+                                igmp_source_record new_source_record = igmp_source_record();
+                                new_source_record.source_address = source_address;
+                                new_source_record.source_timer = 10;
+                                state.source_records.push_back(new_source_record);
+                            }
+                        }
+                         */
+                        return;
+                    }
+
+                    else
+                    {
+                        // new state = EXCLUDE (A*B,B-A) actions = (B-A)=0, Delete (A-B), Group Timer=GMI
+                        state.group_timer = 10;
+                    }
+                }
+                else
+                {
+                    if (record->record_type == IGMP_V3_INCLUDE)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        state.group_timer = 10;
+                    }
+                }
+            }
+        }
+    }
+}
 
 /**
  * router push function, router can get mulitple types of packets, right now we only look at UDP and igmp v3 membership reports
@@ -192,9 +265,17 @@ void IGMPRouterSide::push(int port, Packet *p) {
         Vector <igmp_group_record> group_records = report_helper->igmp_unpack_group_records(records_ptr,
                                                                                      report_info.number_of_group_records);
 
-        //if the client leaves, a group specific query is sent to the group to check whether there are still listeners
+
         for (int i = 0; i < group_records.size(); i++) {
-            if (group_records[i].record_type == 3){
+            uint8_t record_type = group_records[i].record_type;
+
+            // current state reports
+            if (record_type == IGMP_V3_INCLUDE or record_type == IGMP_V3_EXCLUDE) {
+                process_current_state_report(&group_records[i]);
+            }
+
+            // filter mode change reports
+            else if (group_records[i].record_type == IGMP_V3_CHANGE_TO_INCLUDE){
                 Packet *q = make_group_specific_query_packet();
                 for(int i = 6; i<9;i++){
                     Packet *package = q->clone();
@@ -202,24 +283,6 @@ void IGMPRouterSide::push(int port, Packet *p) {
                 }
             }
         }
-        //click_chatter("when receiving packet, mode is %d", group_records[0].record_type);
-        /*
-        //receivers will have joined an not yet left
-        for (int i = 0; i < group_records.size(); i++) {
-            if (group_records[i].record_type == IGMP_V3_EXCLUDE or
-                group_records[i].record_type == IGMP_V3_CHANGE_TO_EXCLUDE) {
-                receivers.push_back(ip_header->ip_src);
-            }
-            if (group_records[i].record_type == IGMP_V3_INCLUDE or
-                group_records[i].record_type == IGMP_V3_CHANGE_TO_INCLUDE) {
-                for (int y = 0; y < receivers.size(); y++) {
-                    if (receivers[y] == ip_header->ip_src) {
-                        receivers.erase(receivers.begin(), receivers.begin() + y);
-                    }
-                }
-            }
-        }
-         */
         update_group_states(ip_header, group_records, port);
 
     } else if (ip_header->ip_p == 17) {
@@ -230,6 +293,11 @@ void IGMPRouterSide::push(int port, Packet *p) {
     }
 }
 
+
+void IGMPRouterSide::group_timer_ran_out(igmp_group_state *state)
+{
+    state->mode = IGMP_V3_INCLUDE;
+}
 /**
  * run timer will be triggered after the _timer gets scheduled
  * the timer gets scheduled by using _timer.schedule_after_sec(time)
@@ -251,12 +319,23 @@ void IGMPRouterSide::run_timer(Timer * timer)
     }
 
 
+    for (auto interface: interface_states)
+    {
+        // update group timers
+        for (igmp_group_state state: interface)
+        {
+            state.group_timer -= 1;
+            if (state.group_timer <= 0)
+            {
+                group_timer_ran_out(&state);
+            }
+        }
+    }
 
 }
 
 WritablePacket * IGMPRouterSide::make_general_query_packet()
 {
-
     WritablePacket *p = Packet::make(query_helper->get_size_of_data(0) + sizeof(click_ip) + 4);
     memset(p->data(), 0, p->length()); // erase previous random data on memory requested
 
