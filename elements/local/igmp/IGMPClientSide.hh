@@ -4,6 +4,7 @@
 #include <click/element.hh>
 #include "igmp.h"
 #include "IGMPV3ReportHelper.hh"
+#include "IGMPV3QueryHelper.hh"
 #include <click/timer.hh>
 
 CLICK_DECLS
@@ -49,14 +50,17 @@ private:
     IPAddress ALL_SYSTEMS_MC_ADDRESS;
     IGMPV3ReportHelper *helper = new IGMPV3ReportHelper();
     int _local_timer = 0;
+    int _query_timer = 0;
 
     uint32_t _get_size_of_igmp_data();
 
     WritablePacket *make_mem_report_packet();
 
     Timer _timer;
-
+    Vector <to_send> queue;
+    to_send currently_sending;
     Vector <URI_packages> URI_messages;
+    IGMPV3QueryHelper *query_helper = new IGMPV3QueryHelper();
 
 };
 

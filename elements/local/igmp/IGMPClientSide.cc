@@ -236,6 +236,10 @@ void IGMPClientSide::push(int port, Packet *p) {
     // IGMP QUERIES
         click_chatter("the client has received a igmp query");
         //ontleed de query, check van waar ze komt.
+        const router_alert *alert_ptr = reinterpret_cast<const router_alert *>(ip_header + 1);
+        igmp_mem_query_msg query_data = query_helper->unpack_query_data(alert_ptr+1);
+//        click_chatter("respcode %d", query_data.max_resp_code);
+
 //        igmp_mem_query_msg* query = (igmp_mem_query_msg*) ()
         for (int i = 0; i<group_records.size(); i++){
             //als group record mc adr overeenkomt met src van query, stuur v3 als join
@@ -248,9 +252,31 @@ void IGMPClientSide::push(int port, Packet *p) {
 //                grRecord.number_of_sources = 0;
 
                 WritablePacket *p = make_mem_report_packet();
-                click_chatter("Sending a package back to the router filter mode exclude");
-                output(0).push(p);
-
+                to_send packet;
+                packet.dest = ip_header->ip_dst;
+                //still working in milisecs here
+                packet.delay = click_random(0, query_data.max_resp_code*1000);
+                packet.p = p;
+                if(queue.size() == 0){
+                    currently_sending = packet;
+                    queue.push_back(packet);
+                }
+                //there are still records to be sent
+                else{
+                    bool in_queue = false;
+                    for(auto item : queue){
+                        if(item.dest = packet.dest){
+                            in_queue = true;
+                        }
+                    }
+                    click_chatter("not in queue");
+                    if(!in_queue){
+                        queue.push_back(packet);
+                        currently_sending = packet;
+                    }
+                }
+//                click_chatter("Sending a package back to the router filter mode exclude");
+//                output(0).push(p);
             }
         }
         return;
@@ -286,7 +312,6 @@ void IGMPClientSide::run_timer(Timer * timer)
     _timer.schedule_after_msec(1);
     if(URI_messages.size() > 0){
         URI_packages current_message = URI_messages[0];
-
         if(URI_messages[0].timings.size() > 0){
             if(URI_messages[0].timings[0] == _local_timer){
                 click_chatter("the timing size is %d", URI_messages[0].timings.size());
@@ -310,9 +335,23 @@ void IGMPClientSide::run_timer(Timer * timer)
 
         }
         _local_timer++;
-
     }
+    bool has_sent = false;
+    if(queue.size()>0){
+//        click_chatter("---%d %d", _query_timer, currently_sending.delay);
 
+        if(_query_timer == currently_sending.delay){
+            click_chatter("============================");
+            Packet *package = currently_sending.p->clone();
+            output(0).push(package);
+            has_sent = true;
+        }
+        _query_timer++;
+    }
+    if(has_sent){
+        _query_timer =0;
+        queue.erase(queue.begin());
+    }
 //    click_chatter("timer tick %d", _local_timer);
 }
 

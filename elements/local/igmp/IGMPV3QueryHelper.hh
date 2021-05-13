@@ -38,7 +38,7 @@ public:
     igmp_mem_query_msg *add_igmp_data(void *start, const Vector <IPAddress> source_addresses, IPAddress group_address,
                                       bool general, unsigned qrv, unsigned qqic, uint8_t max_resp_code);
 
-    igmp_mem_query_msg unpack_query_data(void *start);
+    igmp_mem_query_msg unpack_query_data(const void *start);
 //    igmp_mem_report igmp_unpack_info(const void *start);
 
 //    Vector <igmp_group_record> igmp_unpack_group_records(const void *start, uint16_t number_of_group_records);

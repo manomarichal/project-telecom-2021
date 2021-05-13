@@ -123,7 +123,12 @@ struct URI_packages{
     WritablePacket *p;
     Vector <int> timings;
     int _URI_timer;
+};
 
+struct to_send{
+    WritablePacket *p;
+    int delay;
+    IPAddress dest;
 };
 
 
