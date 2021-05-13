@@ -48,6 +48,7 @@ private:
     IPAddress MC_ADDRESS;
     IPAddress ALL_SYSTEMS_MC_ADDRESS;
     IGMPV3ReportHelper *helper = new IGMPV3ReportHelper();
+    int _local_timer =0;
 
     uint32_t _get_size_of_igmp_data();
 

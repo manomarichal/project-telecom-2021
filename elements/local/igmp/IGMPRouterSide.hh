@@ -44,7 +44,7 @@ private:
     unsigned robustness_variable;
     unsigned query_interval;
     unsigned max_response_time;
-    int _count;
+    int _local_timer =0;
     Timer _timer;
     IPAddress ASMC_ADDRESS= IPAddress("224.0.0.1");
     IPAddress MC_ADDRESS= IPAddress("224.0.0.22");

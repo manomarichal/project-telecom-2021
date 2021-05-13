@@ -87,7 +87,6 @@ igmp_mem_query_msg *IGMPV3QueryHelper::add_igmp_data(void *start, const Vector <
     query->type = IGMP_MEM_QUERY;
     query->group_adress = group_address.addr();
     query->resv = 0;
-    click_chatter("%d", qrv);
 //    if(!general){
 //        query->s = 1;
 //    }
@@ -107,7 +106,6 @@ igmp_mem_query_msg *IGMPV3QueryHelper::add_igmp_data(void *start, const Vector <
             igmp_adr = (struct ipadress *) (igmp_adr + 1);
         }
     }
-    click_chatter("%d", click_in_cksum((unsigned char *) query, get_size_of_data(source_addresses.size())));
     query->checksum = click_in_cksum((unsigned char *) query, get_size_of_data(source_addresses.size()));
     return query;
 }

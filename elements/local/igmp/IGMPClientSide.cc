@@ -37,7 +37,7 @@ int IGMPClientSide::configure(Vector <String> &conf, ErrorHandler *errh) {
         return -1;
     }
     _timer.initialize(this);
-    _timer.reschedule_after_sec(7);
+    _timer.schedule_after_sec(1);
     return 0;
 }
 
@@ -262,9 +262,8 @@ void IGMPClientSide::push(int port, Packet *p) {
 void IGMPClientSide::run_timer(Timer * timer)
 {
     assert(timer == &_timer);
-    click_chatter("the clientisde timer was just triggered");
-    _timer.reschedule_after_sec(10);
-
+    _timer.schedule_after_sec(1);
+    _local_timer++;
 }
 
 CLICK_ENDDECLS

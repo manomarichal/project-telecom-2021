@@ -36,7 +36,7 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
         interface_states.push_back(Vector<igmp_group_state>());
     }
     _timer.initialize(this);
-    _timer.reschedule_after_sec(query_interval);
+    _timer.schedule_after_sec(1);
     return 0;
 }
 
@@ -237,16 +237,20 @@ void IGMPRouterSide::push(int port, Packet *p) {
  */
 void IGMPRouterSide::run_timer(Timer * timer)
 {
+    _timer.schedule_after_sec(1);
+    _local_timer++;
+    click_chatter("local timer: %d",_local_timer);
     assert(timer == &_timer);
-    Packet *q = make_general_query_packet();
-//    Packet *q = make_group_specific_query_packet();
-//    //multicast_packet(q,0);
-    for(int i = 6; i<9;i++){
-        Packet *package = q->clone();
-        output(i).push(package);
+    if(_local_timer == query_interval){
+        Packet *q = make_general_query_packet();
+        for(int i = 6; i<9;i++){
+            Packet *package = q->clone();
+            output(i).push(package);
+        }
+        _local_timer=0;
     }
 
-    _timer.reschedule_after_sec(query_interval);
+
 
 }
 
@@ -274,7 +278,6 @@ WritablePacket * IGMPRouterSide::make_general_query_packet()
  */
 WritablePacket * IGMPRouterSide::make_group_specific_query_packet()
 {
-    click_chatter("=======adding group specific data");
     WritablePacket *p = Packet::make(query_helper->get_size_of_data(0) + sizeof(click_ip) + 4);
     memset(p->data(), 0, p->length()); // erase previous random data on memory requested
 
@@ -286,13 +289,10 @@ WritablePacket * IGMPRouterSide::make_group_specific_query_packet()
         for (igmp_group_state state: interface_states[i]) {
             if(!found) {
                 if (state.multicast_adress) {
-                    click_chatter("-+-+-+");
-
                     query_helper->add_igmp_data(r_alert + 1, Vector<IPAddress>(), state.multicast_adress, true,
                                                 robustness_variable, query_interval, max_response_time);
                     found = true;
                 } else {
-                    click_chatter("sending a group specific address when there are no groups yet :(");
                     return NULL;
                 }
             }
@@ -301,7 +301,6 @@ WritablePacket * IGMPRouterSide::make_group_specific_query_packet()
     p->set_ip_header(ip_header, sizeof(click_ip));
     p->timestamp_anno().assign_now();
     p->set_dst_ip_anno(IPAddress(ASMC_ADDRESS));
-    click_chatter("---------done with group specific data");
 
     return p;
 }
