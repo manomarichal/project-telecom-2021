@@ -38,8 +38,8 @@ public:
 
 
 private:
-    uint32_t robustness = 1; // TODO not hardcoded
-    uint32_t report_interval = 10; // TODO not hardcoded
+    uint32_t robustness = 2; // TODO not hardcoded
+    uint32_t unsolicited_report_interval = 1; // TODO not hardcoded
     uint32_t max_size;
     igmp_mem_report mem_report;
     Vector <igmp_group_record> group_records;
@@ -48,7 +48,7 @@ private:
     IPAddress MC_ADDRESS;
     IPAddress ALL_SYSTEMS_MC_ADDRESS;
     IGMPV3ReportHelper *helper = new IGMPV3ReportHelper();
-    int _local_timer =0;
+    int _local_timer = 0;
 
     uint32_t _get_size_of_igmp_data();
 
@@ -56,6 +56,7 @@ private:
 
     Timer _timer;
 
+    Vector <URI_packages> URI_messages;
 
 };
 

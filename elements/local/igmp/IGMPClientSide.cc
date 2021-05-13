@@ -30,14 +30,20 @@ int IGMPClientSide::configure(Vector <String> &conf, ErrorHandler *errh) {
     String ipadresstest;
     String madr;
     String asmadr;
-    if (Args(conf, this, errh).read_mp("CADDR", clientIP).read_mp("MADDR", MC_ADDRESS).read_mp("ASMADDR",
-                                                                                               ALL_SYSTEMS_MC_ADDRESS).complete() <
+    if (Args(conf, this, errh).read_mp("CADDR", clientIP)
+    .read_mp("MADDR", MC_ADDRESS)
+    .read_mp("ASMADDR",ALL_SYSTEMS_MC_ADDRESS)
+    .read_mp("URI",unsolicited_report_interval)
+    .read_mp("RV",robustness)
+    .complete() <
         0) {
         click_chatter("failed read, returning -1", ipadresstest);
         return -1;
     }
     _timer.initialize(this);
-    _timer.schedule_after_sec(1);
+    _timer.schedule_after_msec(1);
+    //change to miliseconds for timer reasons
+    unsolicited_report_interval= unsolicited_report_interval*1000;
     return 0;
 }
 
@@ -90,7 +96,15 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
     grRecord.number_of_sources = 0;
     element->group_records.push_back(grRecord);
     WritablePacket *p = element->make_mem_report_packet();
-    element->output(0).push(p);
+    URI_packages package;
+    for(int i = 0; i<element->robustness-1;i++){
+        package.timings.push_back(click_random(0, element->unsolicited_report_interval));
+    }
+    package.p = p;
+    package._URI_timer =0;
+    element->URI_messages.push_back(package);
+
+//    element->output(0).push(p);
     click_chatter("client %s joined multicast group %s", element->clientIP.unparse().c_str(), IPAddress(groupaddr).unparse().c_str());
     //uncomment if you would like more information about the group records
     //element->print_group_records();
@@ -124,8 +138,14 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((
                 element->group_records[i].record_type = change_to_include;
                 WritablePacket *p = element->make_mem_report_packet();
                 //push the packet to update mode
-                element->output(0).push(p);
-                click_chatter("client %s joined multicast group %s", element->clientIP.unparse().c_str(), IPAddress(groupaddr).unparse().c_str());
+                URI_packages package;
+                for(int i = 0; i<element->robustness-1;i++){
+                    package.timings.push_back(click_random(0, element->unsolicited_report_interval));
+                }
+                package.p = p;
+                package._URI_timer =0;
+                element->URI_messages.push_back(package);
+
             } else {
                 click_chatter("this client has already left this group");
                 return -1;
@@ -261,9 +281,39 @@ void IGMPClientSide::push(int port, Packet *p) {
  */
 void IGMPClientSide::run_timer(Timer * timer)
 {
+
     assert(timer == &_timer);
-    _timer.schedule_after_sec(1);
-    _local_timer++;
+    _timer.schedule_after_msec(1);
+    if(URI_messages.size() > 0){
+        URI_packages current_message = URI_messages[0];
+
+        if(URI_messages[0].timings.size() > 0){
+            if(URI_messages[0].timings[0] == _local_timer){
+                click_chatter("the timing size is %d", URI_messages[0].timings.size());
+
+                Packet *package = URI_messages[0].p->clone();
+                output(0).push(package);
+//                for(int b = 0; b<current_message.timings.size(); b++){
+//                }
+                URI_messages[0].timings.erase(URI_messages[0].timings.begin());
+                _local_timer = 0;
+                click_chatter("post timing size is %d", URI_messages[0].timings.size());
+
+            }
+        }
+        else{
+            URI_messages.erase(URI_messages.begin());
+
+        }
+        if(URI_messages[0].timings.size() ==0){
+            URI_messages.erase(URI_messages.begin());
+
+        }
+        _local_timer++;
+
+    }
+
+//    click_chatter("timer tick %d", _local_timer);
 }
 
 CLICK_ENDDECLS
