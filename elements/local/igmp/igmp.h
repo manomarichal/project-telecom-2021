@@ -62,6 +62,13 @@ struct igmp_group_record {
     Vector <IPAddress> sources;
 };
 
+
+struct igmp_reception_state {
+    IPAddress multicast_adress;
+    uint8_t filter_mode;
+    Vector <IPAddress> source_list;
+
+};
 #define IGMP_V3_MEM_RECORD 0x22
 #define IGMP_MEM_QUERY 0x11
 
@@ -93,6 +100,7 @@ struct igmp_mem_query_msg {
     uint16_t number_of_sources;
 };
 
+
 /**
  * struct for source record, contains adress and timer used later in the project, RFC page 26
  */
@@ -107,6 +115,7 @@ struct igmp_source_record {
 struct igmp_group_state {
     Vector <igmp_source_record> source_records;
     uint8_t mode;
+    uint32_t group_timer;
     IPAddress multicast_adress;
 };
 
