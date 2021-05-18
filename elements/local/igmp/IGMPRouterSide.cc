@@ -101,24 +101,15 @@ void IGMPRouterSide::multicast_udp_packet(Packet *p, int port) {
  * @param ip_header click ip struct of the obtained message
  * @param group_records vector containing group records of the message
  */
-void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector <igmp_group_record> group_records, int port) {
-    bool VERBOSE = true;
-
-    if (VERBOSE)
-    {
-        click_chatter("updating group states in interface %i", port);
-    }
+void IGMPRouterSide::check_if_group_exists(const click_ip *ip_header, Vector <igmp_group_record> group_records, int port) {
     for (igmp_group_record record:group_records) {
         bool exists = false;
         for (int i = 0; i<interface_states[port].size();i++) {
             if (record.multicast_adress == interface_states[port][i].multicast_adress) {
-                interface_states[port][i].mode = record.record_type;
-//                click_chatter("====state========= %d", interface_states[port][i].mode);
                 exists = true;
             }
         }
-
-            // if no group state exists for the multicast adress, make new one
+        // if no group state exists for the multicast adress, make new one
         if (!exists) {
             igmp_group_state new_state;
             new_state.mode = record.record_type;
@@ -126,17 +117,23 @@ void IGMPRouterSide::update_group_states(const click_ip *ip_header, Vector <igmp
             new_state.multicast_adress = record.multicast_adress;
             interface_states[port].push_back(new_state);
             new_state.source_records = Vector<igmp_source_record>();
-            if (VERBOSE) {
-                click_chatter("creating new group state for interface %i", port);
-                click_chatter("\t multicast adress: %s", IPAddress(record.multicast_adress).unparse().c_str());
-                click_chatter("\t mode: %i", record.record_type);
-            }
         }
     }
 }
 void IGMPRouterSide::process_filter_mode_change_report(const igmp_group_record *record)
 {
-    return;
+    // leave -> send group specific queries
+    if (record->record_type == IGMP_V3_CHANGE_TO_INCLUDE){
+        Packet *q = make_group_specific_query_packet();
+        for(int i = 6; i<9;i++){
+            Packet *package = q->clone();
+            output(i).push(package);
+        }
+    }
+    else
+    {
+        return; // TODO
+    }
 }
 
 void IGMPRouterSide::process_current_state_report(const igmp_group_record *record)
@@ -278,37 +275,28 @@ void IGMPRouterSide::push(int port, Packet *p) {
         // unpacking data
         const router_alert *alert_ptr = reinterpret_cast<const router_alert *>(ip_header + 1);
         const igmp_mem_report *info_ptr = reinterpret_cast<const igmp_mem_report *>(alert_ptr + 1);
-        const igmp_group_record_message *records_ptr = reinterpret_cast<const igmp_group_record_message *>(info_ptr +
-                                                                                                           1);
-
+        const igmp_group_record_message *records_ptr = reinterpret_cast<const igmp_group_record_message *>(info_ptr +1);
         igmp_mem_report report_info = report_helper->igmp_unpack_info(info_ptr);
-        Vector <igmp_group_record> group_records = report_helper->igmp_unpack_group_records(records_ptr,
-                                                                                            report_info.number_of_group_records);
+        Vector <igmp_group_record> group_records = report_helper->igmp_unpack_group_records(records_ptr, report_info.number_of_group_records);
 
+        // create new group states if necessary
+        check_if_group_exists(ip_header, group_records, port);
 
+        // processing packet
         for (int i = 0; i < group_records.size(); i++) {
             uint8_t record_type = group_records[i].record_type;
-
             // current state reports
             if (record_type == IGMP_V3_INCLUDE or record_type == IGMP_V3_EXCLUDE) {
+
                 process_current_state_report(&group_records[i]);
             }
-            // joins
-            else if (record_type == IGMP_V3_CHANGE_TO_EXCLUDE)
+            // filter mode change
+            else if (record_type == IGMP_V3_INCLUDE or record_type == IGMP_V3_CHANGE_TO_EXCLUDE)
             {
-                return;
+                process_filter_mode_change_report(&group_records[i]);
             }
 
-            // filter mode change reports
-            else if (group_records[i].record_type == IGMP_V3_CHANGE_TO_INCLUDE){
-                Packet *q = make_group_specific_query_packet();
-                for(int i = 6; i<9;i++){
-                    Packet *package = q->clone();
-                    output(i).push(package);
-                }
-            }
         }
-        update_group_states(ip_header, group_records, port);
     } else if (ip_header->ip_p == 17) {
         //click_chatter("UDP PACKET, %i, %i", ip_header->ip_p, port);
         multicast_udp_packet(p, port);
