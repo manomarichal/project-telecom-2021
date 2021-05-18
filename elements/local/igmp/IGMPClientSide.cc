@@ -59,6 +59,8 @@ int IGMPClientSide::configure(Vector <String> &conf, ErrorHandler *errh) {
  */
 int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((unused)) void *thunk,
                                 __attribute__((unused)) ErrorHandler *errh) {
+
+
     //click_chatter("Entering join handler");
     IGMPClientSide *element = reinterpret_cast<IGMPClientSide *>(e); //convert element to igmpclientside element
     //click_chatter(element->clientIP.unparse().c_str());
@@ -97,23 +99,22 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
     grRecord.number_of_sources = 0;
     element->group_records.push_back(grRecord);
     WritablePacket *p = element->make_mem_report_packet();
-    URI_packages package;
+    URI_packages* package = new URI_packages;
     if(element->robustness==1){
-//        Packet *pack = p->clone();
         element->output(0).push(p);
     }
     else {
         Packet *pack = p->clone();
         element->output(0).push(pack);
-        for (int i = 0; i < element->robustness-1; i++) {
-            package.timings.push_back(click_random(0, element->unsolicited_report_interval));
-            click_chatter("%d {{{{{{{{{{{{{{{{{{interval is ", package.timings[0]);
-        }
-
-        package.p = p;
-        package._URI_timer = 0;
-        element->URI_messages.push_back(package);
+        package->client = element;
+        package->p = p;
+        package->RV = element->robustness-1;
+        package->uri = element->unsolicited_report_interval;
+        Timer* timer = new Timer(&IGMPClientSide::URI_timer, package);
+        timer->initialize(element);
+        timer->schedule_after_msec(click_random(0, element->unsolicited_report_interval));
     }
+
 //    element->output(0).push(p);
     click_chatter("client %s joined multicast group %s", element->clientIP.unparse().c_str(), IPAddress(groupaddr).unparse().c_str());
     //uncomment if you would like more information about the group records
@@ -148,7 +149,7 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((
                 element->group_records[i].record_type = change_to_include;
                 WritablePacket *p = element->make_mem_report_packet();
                 //push the packet to update mode
-                URI_packages package;
+                URI_packages* package = new URI_packages;
                 if(element->robustness==1){
 //                    Packet *pack = p->clone();
                     element->output(0).push(p);
@@ -156,12 +157,13 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((
                 else {
                     Packet *pack = p->clone();
                     element->output(0).push(pack);
-                    for (int i = 0; i < element->robustness; i++) {
-                        package.timings.push_back(click_random(0, element->unsolicited_report_interval));
-                    }
-                    package.p = p;
-                    package._URI_timer = 0;
-                    element->URI_messages.push_back(package);
+                    package->client = element;
+                    package->p = p;
+                    package->RV = element->robustness-1;
+                    package->uri = element->unsolicited_report_interval;
+                    Timer* timer = new Timer(&IGMPClientSide::URI_timer, package);
+                    timer->initialize(element);
+                    timer->schedule_after_msec(click_random(0, element->unsolicited_report_interval));
                 }
                 click_chatter("======executing leave=====");
 
@@ -334,38 +336,9 @@ void IGMPClientSide::push(int port, Packet *p) {
  */
 void IGMPClientSide::run_timer(Timer * timer)
 {
-
+//    click_chatter("in run_timer");
     assert(timer == &_timer);
     _timer.schedule_after_msec(1);
-    if(URI_messages.size() > 0){
-        URI_packages current_message = URI_messages[0];
-        if(URI_messages[0].timings.size() > 0){
-            if(URI_messages[0].timings[0] == _local_timer){
-                click_chatter("the timing size is %d", URI_messages[0].timings.size());
-
-                Packet *package = URI_messages[0].p->clone();
-                output(0).push(package);
-//                for(int b = 0; b<current_message.timings.size(); b++){
-//                }
-                URI_messages[0].timings.erase(URI_messages[0].timings.begin());
-                _local_timer = 0;
-                click_chatter("post timing size is %d", URI_messages[0].timings.size());
-
-            }
-        }
-        else{
-            URI_messages.erase(URI_messages.begin());
-
-        }
-        if(URI_messages[0].timings.size() ==0){
-            URI_messages.erase(URI_messages.begin());
-
-        }
-//        if(_local_timer%50 ==0){
-//            click_chatter("%d is the current local timer", _local_timer);
-//        }
-        _local_timer++;
-    }
     bool has_sent = false;
     if(queue.size()>0){
 //        click_chatter("---%d %d", _query_timer, currently_sending.delay);
@@ -387,6 +360,25 @@ void IGMPClientSide::run_timer(Timer * timer)
     }
 //    click_chatter("timer tick %d", _local_timer);
 }
+
+/**
+ *
+ * @param timer
+ * @param data
+ */
+void IGMPClientSide::URI_timer(Timer * timer, void* data){
+    click_chatter("the test timer works");
+    URI_packages* package = (URI_packages*) data;
+    if(package->RV >0){
+        package->RV-=1;
+        Packet *pack = package->p->clone();
+        package->client->output(0).push(pack);
+        timer->schedule_after_msec(click_random(0, package->uri));
+    }
+    else{delete timer;}
+
+}
+
 
 CLICK_ENDDECLS
 EXPORT_ELEMENT(IGMPClientSide) // forces to create element within click
