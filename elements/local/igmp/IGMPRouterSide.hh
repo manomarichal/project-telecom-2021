@@ -46,6 +46,7 @@ private:
     Vector <IPAddress> receivers;
     unsigned robustness_variable;
     unsigned query_interval;
+    unsigned GMI = 5;
     unsigned max_response_time;
     int _local_timer =0;
     Timer _timer;

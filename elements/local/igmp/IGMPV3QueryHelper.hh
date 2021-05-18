@@ -31,7 +31,7 @@ public:
 
     uint32_t get_size_of_data(uint16_t number_of_sources);
 
-    click_ip *add_ip_header(WritablePacket *p, IPAddress source, IPAddress destination, bool verbose = true);
+    click_ip *add_ip_header(WritablePacket *p, IPAddress source, IPAddress destination, bool verbose = false);
 
     router_alert *add_router_alert(void *start, uint8_t octet_1 = 0, uint8_t octet_2 = 0);
 

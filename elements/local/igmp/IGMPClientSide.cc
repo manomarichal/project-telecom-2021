@@ -205,7 +205,7 @@ WritablePacket *IGMPClientSide::make_mem_report_packet() {
     WritablePacket *p = Packet::make(helper->get_size_of_data(group_records) + sizeof(click_ip) + 4);
     memset(p->data(), 0, p->length()); // erase previous random data on memory requested
 
-    click_ip *ip_header = helper->add_ip_header(p, clientIP, MC_ADDRESS);
+    click_ip *ip_header = helper->add_ip_header(p, clientIP, MC_ADDRESS, false);
     router_alert *r_alert = helper->add_router_alert(ip_header + 1);
     ip_header->ip_sum = click_in_cksum((unsigned char *) ip_header, sizeof(click_ip) + sizeof(router_alert));
     helper->add_igmp_data(r_alert + 1, group_records);
@@ -231,10 +231,10 @@ void IGMPClientSide::push(int port, Packet *p) {
     // unpacking data, based on elements/icmp/icmpsendpings.cc, line 194
 
     const click_ip *ip_header = p->ip_header();
-    click_chatter("received a package with protocol number %d", ip_header->ip_p);
+    //click_chatter("received a package with protocol number %d", ip_header->ip_p);
     if (ip_header->ip_p == IP_PROTO_IGMP) {
     // IGMP QUERIES
-        click_chatter("the client has received a igmp query");
+        //click_chatter("the client has received a igmp query");
         //ontleed de query, check van waar ze komt.
         const router_alert *alert_ptr = reinterpret_cast<const router_alert *>(ip_header + 1);
         igmp_mem_query_msg query_data = query_helper->unpack_query_data(alert_ptr+1);
@@ -286,7 +286,7 @@ void IGMPClientSide::push(int port, Packet *p) {
         if (p->has_network_header()) {
             for (int i = 0; i < group_records.size(); i++) {
                 if (group_records[i].multicast_adress == ip_header->ip_dst and group_records[i].record_type == 4) {
-                    //click_chatter("client %s recieved their packet", clientIP.unparse().c_str());
+                    click_chatter("client %s recieved their packet", clientIP.unparse().c_str());
                     output(1).push(p);
                 }
             }
