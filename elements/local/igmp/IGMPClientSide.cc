@@ -285,6 +285,7 @@ void IGMPClientSide::push(int port, Packet *p) {
 
                     currently_sending = packet;
                     queue.push_back(packet);
+                    //only in this situation the timer gets scheduled.
                     _timer.schedule_after_msec(packet.delay);
                 }
                 //there are still records to be sent
@@ -304,8 +305,6 @@ void IGMPClientSide::push(int port, Packet *p) {
                         currently_sending = packet;
                     }
                 }
-//                click_chatter("Sending a package back to the router filter mode exclude");
-//                output(0).push(p);
             }
         }
         return;
@@ -332,37 +331,34 @@ void IGMPClientSide::push(int port, Packet *p) {
 
 /**
  * run timer will be triggered after the _timer gets scheduled
- * the timer gets scheduled by using _timer.schedule_after_sec(time)
+ * the timer gets scheduled by using _timer.schedule_after_msec(time)
  * you can check whether the timer is set by using _timer.scheduled()
+ * this timer runs the responses to the queries.
+ * this timer checks if the queue is empty or not
+ * if it is not, the package is sent, the function is only triggered after a random time within [0, mrt]
+ * the triggered function will output the package marked as currently_sending
  */
 void IGMPClientSide::run_timer(Timer * timer)
 {
-//    click_chatter("in run_timer");
     assert(timer == &_timer);
     _timer.schedule_after_msec(1);
     bool has_sent = false;
     if(queue.size()>0){
-//        click_chatter("---%d %d", _query_timer, currently_sending.delay);
-//        if(_query_timer%50 ==0){
-//            click_chatter("%d is the current query timer", _query_timer);
-//        }
-           //click_chatter("============================");
         Packet *package = currently_sending.p->clone();
         output(0).push(package);
         has_sent = true;
     }
     if(has_sent){
-        click_chatter("+-+-+resetting the timer-+-+-+");
-        _query_timer =0;
         queue.erase(queue.begin());
     }
-//    click_chatter("timer tick %d", _local_timer);
 }
 
 /**
- *
- * @param timer
- * @param data
+ * function which runs the scheduled time, it checks the amount of packages left to send and sends one
+ * it then randomly schedules it again
+ * if the timer does not need to send the package anymore, it is deleted
+ * @param timer the timer param
+ * @param data the data, in this case a struct of URI_packages which is defined in the public of IGMPClientside.hh
  */
 void IGMPClientSide::URI_timer(Timer * timer, void* data){
     click_chatter("the test timer works");
@@ -374,7 +370,6 @@ void IGMPClientSide::URI_timer(Timer * timer, void* data){
         timer->schedule_after_msec(click_random(0, package->uri));
     }
     else{delete timer;}
-
 }
 
 
