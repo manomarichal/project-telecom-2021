@@ -43,6 +43,7 @@ int IGMPClientSide::configure(Vector <String> &conf, ErrorHandler *errh) {
     _timer.initialize(this);
     _timer.schedule_after_msec(1);
     //change to miliseconds for timer reasons
+    click_chatter("*******************%d %d", unsolicited_report_interval, robustness);
     unsolicited_report_interval= unsolicited_report_interval*1000;
     return 0;
 }
@@ -97,13 +98,22 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
     element->group_records.push_back(grRecord);
     WritablePacket *p = element->make_mem_report_packet();
     URI_packages package;
-    for(int i = 0; i<element->robustness-1;i++){
-        package.timings.push_back(click_random(0, element->unsolicited_report_interval));
+    if(element->robustness==1){
+//        Packet *pack = p->clone();
+        element->output(0).push(p);
     }
-    package.p = p;
-    package._URI_timer =0;
-    element->URI_messages.push_back(package);
+    else {
+        Packet *pack = p->clone();
+        element->output(0).push(pack);
+        for (int i = 0; i < element->robustness-1; i++) {
+            package.timings.push_back(click_random(0, element->unsolicited_report_interval));
+            click_chatter("%d {{{{{{{{{{{{{{{{{{interval is ", package.timings[0]);
+        }
 
+        package.p = p;
+        package._URI_timer = 0;
+        element->URI_messages.push_back(package);
+    }
 //    element->output(0).push(p);
     click_chatter("client %s joined multicast group %s", element->clientIP.unparse().c_str(), IPAddress(groupaddr).unparse().c_str());
     //uncomment if you would like more information about the group records
@@ -139,12 +149,21 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((
                 WritablePacket *p = element->make_mem_report_packet();
                 //push the packet to update mode
                 URI_packages package;
-                for(int i = 0; i<element->robustness-1;i++){
-                    package.timings.push_back(click_random(0, element->unsolicited_report_interval));
+                if(element->robustness==1){
+//                    Packet *pack = p->clone();
+                    element->output(0).push(p);
                 }
-                package.p = p;
-                package._URI_timer =0;
-                element->URI_messages.push_back(package);
+                else {
+                    Packet *pack = p->clone();
+                    element->output(0).push(pack);
+                    for (int i = 0; i < element->robustness; i++) {
+                        package.timings.push_back(click_random(0, element->unsolicited_report_interval));
+                    }
+                    package.p = p;
+                    package._URI_timer = 0;
+                    element->URI_messages.push_back(package);
+                }
+                click_chatter("======executing leave=====");
 
             } else {
                 click_chatter("this client has already left this group");
@@ -234,7 +253,7 @@ void IGMPClientSide::push(int port, Packet *p) {
     //click_chatter("received a package with protocol number %d", ip_header->ip_p);
     if (ip_header->ip_p == IP_PROTO_IGMP) {
     // IGMP QUERIES
-        //click_chatter("the client has received a igmp query");
+        click_chatter("the client has received a igmp query");
         //ontleed de query, check van waar ze komt.
         const router_alert *alert_ptr = reinterpret_cast<const router_alert *>(ip_header + 1);
         igmp_mem_query_msg query_data = query_helper->unpack_query_data(alert_ptr+1);
@@ -244,6 +263,7 @@ void IGMPClientSide::push(int port, Packet *p) {
         for (int i = 0; i<group_records.size(); i++){
             //als group record mc adr overeenkomt met src van query, stuur v3 als join
             if(group_records[i].record_type == 4 or group_records[i].record_type == 2){
+                click_chatter("\t there has been an query while we joined");
                 group_records[i].record_type = 2;
 //                igmp_group_record grRecord;
 //                //the group record needs to be made
@@ -255,22 +275,28 @@ void IGMPClientSide::push(int port, Packet *p) {
                 to_send packet;
                 packet.dest = ip_header->ip_dst;
                 //still working in milisecs here
-                packet.delay = click_random(0, query_data.max_resp_code*1000);
+                packet.delay = click_random(0, query_data.max_resp_code*100);
                 packet.p = p;
                 if(queue.size() == 0){
+                    click_chatter("\t mrq ==  %d", query_data.max_resp_code);
+                    click_chatter("\t queue is empty atm, delay is %d", packet.delay);
+
                     currently_sending = packet;
                     queue.push_back(packet);
                 }
                 //there are still records to be sent
                 else{
+                    click_chatter("\t queue is not empty");
+
                     bool in_queue = false;
                     for(auto item : queue){
                         if(item.dest = packet.dest){
+                            click_chatter("\t the item is already in the queue tho :):)");
                             in_queue = true;
                         }
                     }
-                    click_chatter("not in queue");
                     if(!in_queue){
+                        click_chatter("====pushing response to queue");
                         queue.push_back(packet);
                         currently_sending = packet;
                     }
@@ -283,6 +309,7 @@ void IGMPClientSide::push(int port, Packet *p) {
     }
     // UDP MESSAGES
     else if (ip_header->ip_p == 17) {
+//        click_chatter("received a udp packet");
         if (p->has_network_header()) {
             for (int i = 0; i < group_records.size(); i++) {
                 if (group_records[i].multicast_adress == ip_header->ip_dst and group_records[i].record_type == 4) {
@@ -334,14 +361,19 @@ void IGMPClientSide::run_timer(Timer * timer)
             URI_messages.erase(URI_messages.begin());
 
         }
+//        if(_local_timer%50 ==0){
+//            click_chatter("%d is the current local timer", _local_timer);
+//        }
         _local_timer++;
     }
     bool has_sent = false;
     if(queue.size()>0){
 //        click_chatter("---%d %d", _query_timer, currently_sending.delay);
-
+//        if(_query_timer%50 ==0){
+//            click_chatter("%d is the current query timer", _query_timer);
+//        }
         if(_query_timer == currently_sending.delay){
-            click_chatter("============================");
+            //click_chatter("============================");
             Packet *package = currently_sending.p->clone();
             output(0).push(package);
             has_sent = true;
@@ -349,6 +381,7 @@ void IGMPClientSide::run_timer(Timer * timer)
         _query_timer++;
     }
     if(has_sent){
+        click_chatter("+-+-+resetting the timer-+-+-+");
         _query_timer =0;
         queue.erase(queue.begin());
     }
