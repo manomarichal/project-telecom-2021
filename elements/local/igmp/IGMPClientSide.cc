@@ -285,6 +285,7 @@ void IGMPClientSide::push(int port, Packet *p) {
 
                     currently_sending = packet;
                     queue.push_back(packet);
+                    _timer.schedule_after_msec(packet.delay);
                 }
                 //there are still records to be sent
                 else{
@@ -345,13 +346,10 @@ void IGMPClientSide::run_timer(Timer * timer)
 //        if(_query_timer%50 ==0){
 //            click_chatter("%d is the current query timer", _query_timer);
 //        }
-        if(_query_timer == currently_sending.delay){
-            //click_chatter("============================");
-            Packet *package = currently_sending.p->clone();
-            output(0).push(package);
-            has_sent = true;
-        }
-        _query_timer++;
+           //click_chatter("============================");
+        Packet *package = currently_sending.p->clone();
+        output(0).push(package);
+        has_sent = true;
     }
     if(has_sent){
         click_chatter("+-+-+resetting the timer-+-+-+");
