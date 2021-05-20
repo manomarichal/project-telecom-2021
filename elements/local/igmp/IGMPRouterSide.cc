@@ -236,6 +236,7 @@ WritablePacket * IGMPRouterSide::make_group_specific_query_packet()
                     // when querying a specific group, lower that groups timer to a small interval
                     state.group_timer = LMQT; //TODO wa betekent small interval
 
+
                     query_helper->add_igmp_data(r_alert + 1, Vector<IPAddress>(), state.multicast_adress, true,
                                                 robustness_variable, query_interval / 10, max_response_time);
                     found = true;
