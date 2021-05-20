@@ -11,6 +11,13 @@ CLICK_DECLS
 
 class IGMPClientSide : public Element {
 public:
+    struct URI_packages{
+        IGMPClientSide* client;
+        WritablePacket *p;
+        int RV;
+        uint32_t uri;
+    };
+
     IGMPClientSide();
 
     ~IGMPClientSide();
@@ -39,8 +46,9 @@ public:
 
 
 private:
-    uint32_t robustness = 2; // TODO not hardcoded
-    uint32_t unsolicited_report_interval = 1; // TODO not hardcoded
+    static void URI_timer(Timer *, void *);
+    uint32_t robustness; // TODO not hardcoded
+    uint32_t unsolicited_report_interval; // TODO not hardcoded
     uint32_t max_size;
     igmp_mem_report mem_report;
     Vector <igmp_group_record> group_records;

@@ -119,11 +119,12 @@ struct igmp_group_state {
     IPAddress multicast_adress;
 };
 
-struct URI_packages{
-    WritablePacket *p;
-    Vector <int> timings;
-    int _URI_timer;
-};
+//struct URI_packages{
+//    IGMPClientSide* client;
+//    WritablePacket *p;
+//    int RV;
+//    uint32_t uri;
+//};
 
 struct to_send{
     WritablePacket *p;

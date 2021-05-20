@@ -43,6 +43,7 @@ int IGMPClientSide::configure(Vector <String> &conf, ErrorHandler *errh) {
     _timer.initialize(this);
     _timer.schedule_after_msec(1);
     //change to miliseconds for timer reasons
+    click_chatter("*******************%d %d", unsolicited_report_interval, robustness);
     unsolicited_report_interval= unsolicited_report_interval*1000;
     return 0;
 }
@@ -58,6 +59,8 @@ int IGMPClientSide::configure(Vector <String> &conf, ErrorHandler *errh) {
  */
 int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((unused)) void *thunk,
                                 __attribute__((unused)) ErrorHandler *errh) {
+
+
     //click_chatter("Entering join handler");
     IGMPClientSide *element = reinterpret_cast<IGMPClientSide *>(e); //convert element to igmpclientside element
     //click_chatter(element->clientIP.unparse().c_str());
@@ -96,13 +99,21 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
     grRecord.number_of_sources = 0;
     element->group_records.push_back(grRecord);
     WritablePacket *p = element->make_mem_report_packet();
-    URI_packages package;
-    for(int i = 0; i<element->robustness-1;i++){
-        package.timings.push_back(click_random(0, element->unsolicited_report_interval));
+    URI_packages* package = new URI_packages;
+    if(element->robustness==1){
+        element->output(0).push(p);
     }
-    package.p = p;
-    package._URI_timer =0;
-    element->URI_messages.push_back(package);
+    else {
+        Packet *pack = p->clone();
+        element->output(0).push(pack);
+        package->client = element;
+        package->p = p;
+        package->RV = element->robustness-1;
+        package->uri = element->unsolicited_report_interval;
+        Timer* timer = new Timer(&IGMPClientSide::URI_timer, package);
+        timer->initialize(element);
+        timer->schedule_after_msec(click_random(0, element->unsolicited_report_interval));
+    }
 
 //    element->output(0).push(p);
     click_chatter("client %s joined multicast group %s", element->clientIP.unparse().c_str(), IPAddress(groupaddr).unparse().c_str());
@@ -138,13 +149,23 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((
                 element->group_records[i].record_type = change_to_include;
                 WritablePacket *p = element->make_mem_report_packet();
                 //push the packet to update mode
-                URI_packages package;
-                for(int i = 0; i<element->robustness-1;i++){
-                    package.timings.push_back(click_random(0, element->unsolicited_report_interval));
+                URI_packages* package = new URI_packages;
+                if(element->robustness==1){
+//                    Packet *pack = p->clone();
+                    element->output(0).push(p);
                 }
-                package.p = p;
-                package._URI_timer =0;
-                element->URI_messages.push_back(package);
+                else {
+                    Packet *pack = p->clone();
+                    element->output(0).push(pack);
+                    package->client = element;
+                    package->p = p;
+                    package->RV = element->robustness-1;
+                    package->uri = element->unsolicited_report_interval;
+                    Timer* timer = new Timer(&IGMPClientSide::URI_timer, package);
+                    timer->initialize(element);
+                    timer->schedule_after_msec(click_random(0, element->unsolicited_report_interval));
+                }
+                click_chatter("======executing leave=====");
 
             } else {
                 click_chatter("this client has already left this group");
@@ -234,7 +255,7 @@ void IGMPClientSide::push(int port, Packet *p) {
     //click_chatter("received a package with protocol number %d", ip_header->ip_p);
     if (ip_header->ip_p == IP_PROTO_IGMP) {
     // IGMP QUERIES
-        //click_chatter("the client has received a igmp query");
+        click_chatter("the client has received a igmp query");
         //ontleed de query, check van waar ze komt.
         const router_alert *alert_ptr = reinterpret_cast<const router_alert *>(ip_header + 1);
         igmp_mem_query_msg query_data = query_helper->unpack_query_data(alert_ptr+1);
@@ -244,6 +265,7 @@ void IGMPClientSide::push(int port, Packet *p) {
         for (int i = 0; i<group_records.size(); i++){
             //als group record mc adr overeenkomt met src van query, stuur v3 als join
             if(group_records[i].record_type == 4 or group_records[i].record_type == 2){
+                click_chatter("\t there has been an query while we joined");
                 group_records[i].record_type = 2;
 //                igmp_group_record grRecord;
 //                //the group record needs to be made
@@ -255,34 +277,41 @@ void IGMPClientSide::push(int port, Packet *p) {
                 to_send packet;
                 packet.dest = ip_header->ip_dst;
                 //still working in milisecs here
-                packet.delay = click_random(0, query_data.max_resp_code*1000);
+                packet.delay = click_random(0, query_data.max_resp_code*100);
                 packet.p = p;
                 if(queue.size() == 0){
+                    click_chatter("\t mrq ==  %d", query_data.max_resp_code);
+                    click_chatter("\t queue is empty atm, delay is %d", packet.delay);
+
                     currently_sending = packet;
                     queue.push_back(packet);
+                    //only in this situation the timer gets scheduled.
+                    _timer.schedule_after_msec(packet.delay);
                 }
                 //there are still records to be sent
                 else{
+                    click_chatter("\t queue is not empty");
+
                     bool in_queue = false;
                     for(auto item : queue){
                         if(item.dest = packet.dest){
+                            click_chatter("\t the item is already in the queue tho :):)");
                             in_queue = true;
                         }
                     }
-                    click_chatter("not in queue");
                     if(!in_queue){
+                        click_chatter("====pushing response to queue");
                         queue.push_back(packet);
                         currently_sending = packet;
                     }
                 }
-//                click_chatter("Sending a package back to the router filter mode exclude");
-//                output(0).push(p);
             }
         }
         return;
     }
     // UDP MESSAGES
     else if (ip_header->ip_p == 17) {
+//        click_chatter("received a udp packet");
         if (p->has_network_header()) {
             for (int i = 0; i < group_records.size(); i++) {
                 if (group_records[i].multicast_adress == ip_header->ip_dst and group_records[i].record_type == 4) {
@@ -302,58 +331,47 @@ void IGMPClientSide::push(int port, Packet *p) {
 
 /**
  * run timer will be triggered after the _timer gets scheduled
- * the timer gets scheduled by using _timer.schedule_after_sec(time)
+ * the timer gets scheduled by using _timer.schedule_after_msec(time)
  * you can check whether the timer is set by using _timer.scheduled()
+ * this timer runs the responses to the queries.
+ * this timer checks if the queue is empty or not
+ * if it is not, the package is sent, the function is only triggered after a random time within [0, mrt]
+ * the triggered function will output the package marked as currently_sending
  */
 void IGMPClientSide::run_timer(Timer * timer)
 {
-
     assert(timer == &_timer);
     _timer.schedule_after_msec(1);
-    if(URI_messages.size() > 0){
-        URI_packages current_message = URI_messages[0];
-        if(URI_messages[0].timings.size() > 0){
-            if(URI_messages[0].timings[0] == _local_timer){
-                click_chatter("the timing size is %d", URI_messages[0].timings.size());
-
-                Packet *package = URI_messages[0].p->clone();
-                output(0).push(package);
-//                for(int b = 0; b<current_message.timings.size(); b++){
-//                }
-                URI_messages[0].timings.erase(URI_messages[0].timings.begin());
-                _local_timer = 0;
-                click_chatter("post timing size is %d", URI_messages[0].timings.size());
-
-            }
-        }
-        else{
-            URI_messages.erase(URI_messages.begin());
-
-        }
-        if(URI_messages[0].timings.size() ==0){
-            URI_messages.erase(URI_messages.begin());
-
-        }
-        _local_timer++;
-    }
     bool has_sent = false;
     if(queue.size()>0){
-//        click_chatter("---%d %d", _query_timer, currently_sending.delay);
-
-        if(_query_timer == currently_sending.delay){
-            click_chatter("============================");
-            Packet *package = currently_sending.p->clone();
-            output(0).push(package);
-            has_sent = true;
-        }
-        _query_timer++;
+        Packet *package = currently_sending.p->clone();
+        output(0).push(package);
+        has_sent = true;
     }
     if(has_sent){
-        _query_timer =0;
         queue.erase(queue.begin());
     }
-//    click_chatter("timer tick %d", _local_timer);
 }
+
+/**
+ * function which runs the scheduled time, it checks the amount of packages left to send and sends one
+ * it then randomly schedules it again
+ * if the timer does not need to send the package anymore, it is deleted
+ * @param timer the timer param
+ * @param data the data, in this case a struct of URI_packages which is defined in the public of IGMPClientside.hh
+ */
+void IGMPClientSide::URI_timer(Timer * timer, void* data){
+    click_chatter("the test timer works");
+    URI_packages* package = (URI_packages*) data;
+    if(package->RV >0){
+        package->RV-=1;
+        Packet *pack = package->p->clone();
+        package->client->output(0).push(pack);
+        timer->schedule_after_msec(click_random(0, package->uri));
+    }
+    else{delete timer;}
+}
+
 
 CLICK_ENDDECLS
 EXPORT_ELEMENT(IGMPClientSide) // forces to create element within click
