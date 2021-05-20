@@ -23,13 +23,15 @@ IGMPRouterSide::~IGMPRouterSide() {}
 int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
     //cunfugure like RFC 8.14
     if (Args(conf, this, errh).read_mp("ROUTERADDRESS", routerIP).read_mp("RV", robustness_variable)
-                .read_mp("QI", query_interval).read_mp("MRT", max_response_time).complete() < 0) {
+                .read_mp("QI", query_interval).read_mp("SQI", startup_interval).read_mp("SQC", startup_count).read_mp("LMQI", LMQI).read_mp("LMQC", LMQC).read_mp("MRT", max_response_time).complete() < 0) {
         click_chatter("failed read when initialising router, returning 0");
         if(0<robustness_variable<7){
             return  -1;
         }
         return -1;
     }
+    GMI = (robustness_variable * query_interval) + max_response_time;
+    LMQT = LMQI * LMQC;
    // click_chatter("initialising routeraddress %s", routerIP.unparse().c_str());
     for (int i=0; i < port_count()[2] - 48; i++)
     {
@@ -120,6 +122,10 @@ void IGMPRouterSide::check_if_group_exists(const click_ip *ip_header, Vector <ig
         }
     }
 }
+
+/***
+ * title
+ */
 void IGMPRouterSide::process_filter_mode_change_report(const igmp_group_record *record)
 {
     // leave -> send group specific queries
@@ -144,9 +150,9 @@ void IGMPRouterSide::process_current_state_report(const igmp_group_record *recor
         {
             if (state.multicast_adress == record->multicast_adress)
             {
-                if (state.mode == IGMP_V3_INCLUDE and record->record_type == IGMP_V3_INCLUDE) { return;}
+                if (state.mode == IGMP_V3_INCLUDE and record->record_type == IGMP_V3_INCLUDE) { return;} // source timers dont exist so not necessary
                 else if (state.mode == IGMP_V3_INCLUDE and record->record_type == IGMP_V3_EXCLUDE) { state.group_timer = GMI;}
-                else if (state.mode == IGMP_V3_EXCLUDE and record->record_type == IGMP_V3_INCLUDE) { return; }
+                else if (state.mode == IGMP_V3_EXCLUDE and record->record_type == IGMP_V3_INCLUDE) { return; } // source timers dont exist so not necessary
                 else if (state.mode == IGMP_V3_EXCLUDE and record->record_type == IGMP_V3_EXCLUDE) { state.group_timer = GMI;}
 
             }
@@ -187,7 +193,7 @@ void IGMPRouterSide::run_timer(Timer * timer)
 
     //click_chatter("local timer: %d",_local_timer);
     assert(timer == &_timer);
-    if(_local_timer == query_interval){
+    if(_local_timer == query_interval/10){
         Packet *q = make_general_query_packet();
         for(int i = 6; i<9;i++){
             Packet *package = q->clone();
@@ -206,7 +212,7 @@ WritablePacket * IGMPRouterSide::make_general_query_packet()
     router_alert *r_alert = query_helper->add_router_alert(ip_header + 1);
     ip_header->ip_sum = click_in_cksum((unsigned char *) ip_header, sizeof(click_ip) + sizeof(router_alert));
     query_helper->add_igmp_data(r_alert + 1, Vector <IPAddress>(), IPAddress("0.0.0.0"), false,
-                                robustness_variable, query_interval, max_response_time);
+                                robustness_variable, query_interval / 10, max_response_time);
 
     p->set_ip_header(ip_header, sizeof(click_ip));
     p->timestamp_anno().assign_now();
@@ -232,7 +238,7 @@ WritablePacket * IGMPRouterSide::make_group_specific_query_packet()
             if(!found) {
                 if (state.multicast_adress) {
                     query_helper->add_igmp_data(r_alert + 1, Vector<IPAddress>(), state.multicast_adress, true,
-                                                robustness_variable, query_interval, max_response_time);
+                                                robustness_variable, query_interval / 10, max_response_time);
                     found = true;
                 } else {
                     return NULL;
@@ -260,18 +266,6 @@ void IGMPRouterSide::push(int port, Packet *p) {
 
     const click_ip *ip_header = p->ip_header();
     if (ip_header->ip_p == IP_PROTO_IGMP) {
-        /*
-         * input port of the igmp messages
-         * ontbind de igmp header
-         * kijk na of het een v3 membership report is
-         * haal de filter mode uit de igmp header
-         * als filtermode exclude is (en de src list leeg is) voer je join uit
-         *      voeg toe aan group state, zet timer
-         * als filtermode include is (en de src list is leeg) voer je leave uit
-         *      voeg toe aan group state, zet timer
-         * steeds kijken of deze messages geen repeat messages zijn, deze renewed de timers enkel en moet dus niet opnieuw worden geadd
-         */
-        //click_chatter("IGMP PACKET type %i, port %i", ip_header->ip_p, port);
         // unpacking data
         const router_alert *alert_ptr = reinterpret_cast<const router_alert *>(ip_header + 1);
         const igmp_mem_report *info_ptr = reinterpret_cast<const igmp_mem_report *>(alert_ptr + 1);

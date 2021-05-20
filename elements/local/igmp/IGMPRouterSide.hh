@@ -28,32 +28,33 @@ public:
     void push(int, Packet *);
 
 private:
+    unsigned robustness_variable;
+    unsigned query_interval;
+    unsigned GMI;
+    unsigned startup_interval;
+    unsigned startup_count;
+    unsigned LMQI;
+    unsigned LMQC;
+    unsigned LMQT;
+    unsigned max_response_time;
+    int _local_timer =0;
+
+    IPAddress routerIP;
+    IPAddress ASMC_ADDRESS= IPAddress("224.0.0.1");
+    IPAddress MC_ADDRESS= IPAddress("224.0.0.22");
+    Vector <Vector<igmp_group_state>> interface_states;
+    Vector <IPAddress> receivers;
+    Timer _timer;
+
     void check_if_group_exists(const click_ip *ip_header, Vector <igmp_group_record> group_records,  int port);
     static void group_timer_ran_out(igmp_group_state* state);
     void process_current_state_report(const igmp_group_record *record);
     void process_filter_mode_change_report(const igmp_group_record *record);
-
-    //void update_group_state(const click_ip *ip_header, igmp_group_state state, igmp_group_record record);
-
     void multicast_udp_packet(Packet *p, int port);
     WritablePacket *make_general_query_packet();
     WritablePacket *make_group_specific_query_packet();
     IGMPV3QueryHelper *query_helper = new IGMPV3QueryHelper();
     IGMPV3ReportHelper *report_helper = new IGMPV3ReportHelper();
-
-    IPAddress routerIP;
-    Vector <Vector<igmp_group_state>> interface_states;
-    Vector <IPAddress> receivers;
-    unsigned robustness_variable;
-    unsigned query_interval;
-    unsigned GMI = 5;
-    unsigned max_response_time;
-    int _local_timer =0;
-    Timer _timer;
-    IPAddress ASMC_ADDRESS= IPAddress("224.0.0.1");
-    IPAddress MC_ADDRESS= IPAddress("224.0.0.22");
-
-
 };
 
 CLICK_ENDDECLS

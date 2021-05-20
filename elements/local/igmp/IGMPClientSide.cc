@@ -211,10 +211,6 @@ void IGMPClientSide::print_group_records() {
 }
 
 
-////////////////////////
-/// PACKET FUNCTIONS ///
-////////////////////////
-
 /**
  * makes membership v3 packets, based on RFC3376 page 13-14
  * @return a writablepacket object which will be the IGMPV3 membership report
