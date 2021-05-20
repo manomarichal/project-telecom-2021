@@ -83,6 +83,7 @@ void IGMPRouterSide::multicast_udp_packet(Packet *p, int port) {
                     // if no more source records exist, delete the group record
                     if (state.source_records.size() == 0)
                     {
+                        click_chatter("removing group state");
                         interface_states[i].erase(interface_states[i].begin() + j);
                     }
                 }
@@ -99,32 +100,7 @@ void IGMPRouterSide::multicast_udp_packet(Packet *p, int port) {
 
 }
 
-/**
- * check if group exists, if not create one
- * @param ip_header click ip struct of the obtained message
- * @param group_records vector containing group records of the message
- */
-void IGMPRouterSide::check_if_group_exists(const click_ip *ip_header, Vector <igmp_group_record> group_records, int port) {
-    for (igmp_group_record record:group_records) {
-        bool exists = false;
-        for (int i = 0; i<interface_states[port].size();i++) {
-            if (record.multicast_adress == interface_states[port][i].multicast_adress) {
-                exists = true;
-            }
-        }
-        // if no group state exists for the multicast adress, make new one
-        if (!exists) {
-            igmp_group_state new_state;
-            new_state.mode = record.record_type;
-            new_state.group_timer = GMI;
-            new_state.multicast_adress = record.multicast_adress;
-            interface_states[port].push_back(new_state);
-            new_state.source_records = Vector<igmp_source_record>();
-        }
-    }
-}
-
-void IGMPRouterSide::process_filter_mode_change_report(const igmp_group_record *record)
+void IGMPRouterSide::process_filter_mode_change_report(const igmp_group_record *record, int port)
 {
     // leave -> send group specific queries
     if (record->record_type == IGMP_V3_CHANGE_TO_INCLUDE){
@@ -135,9 +111,24 @@ void IGMPRouterSide::process_filter_mode_change_report(const igmp_group_record *
             output(i).push(package);
         }
     }
+    // join -> make new group state if one doesnt exist
     else
     {
-        click_chatter("change to excludes normally should never appear in the reference soluiton")
+        bool exists = false;
+        for (int i = 0; i<interface_states[port].size();i++) {
+            if (record->multicast_adress == interface_states[port][i].multicast_adress) {
+                exists = true;
+            }
+        }
+
+        if (exists) return;
+
+        igmp_group_state new_state;
+        new_state.mode = record->record_type;
+        new_state.group_timer = GMI;
+        new_state.multicast_adress = record->multicast_adress;
+        interface_states[port].push_back(new_state);
+        new_state.source_records = Vector<igmp_source_record>();
     }
 }
 
@@ -267,9 +258,6 @@ void IGMPRouterSide::push(int port, Packet *p) {
         igmp_mem_report report_info = report_helper->igmp_unpack_info(info_ptr);
         Vector <igmp_group_record> group_records = report_helper->igmp_unpack_group_records(records_ptr, report_info.number_of_group_records);
 
-        // create new group states if necessary
-        check_if_group_exists(ip_header, group_records, port);
-
         // processing packet
         for (int i = 0; i < group_records.size(); i++) {
             uint8_t record_type = group_records[i].record_type;
@@ -281,7 +269,7 @@ void IGMPRouterSide::push(int port, Packet *p) {
             // filter mode change
             else if (record_type == IGMP_V3_CHANGE_TO_INCLUDE or record_type == IGMP_V3_CHANGE_TO_EXCLUDE)
             {
-                process_filter_mode_change_report(&group_records[i]);
+                process_filter_mode_change_report(&group_records[i], port);
             }
 
         }
