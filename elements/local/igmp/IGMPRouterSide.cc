@@ -85,7 +85,6 @@ void IGMPRouterSide::multicast_udp_packet(Packet *p, int port) {
                     {
                         interface_states[i].erase(interface_states[i].begin() + j);
                     }
-                    return;
                 }
 
                 // send the packet if the group state is include and it is in the source records, or the reverse for exclude
@@ -94,7 +93,6 @@ void IGMPRouterSide::multicast_udp_packet(Packet *p, int port) {
                     Packet *package = p->clone();
                     output(i + 3).push(package);
                 }
-                return;
             }
         }
     }
@@ -102,8 +100,7 @@ void IGMPRouterSide::multicast_udp_packet(Packet *p, int port) {
 }
 
 /**
- * function to update group states when receiving new igmp message, not fully implemented like the RFC
- * this is still TODO:
+ * check if group exists, if not create one
  * @param ip_header click ip struct of the obtained message
  * @param group_records vector containing group records of the message
  */
@@ -140,7 +137,7 @@ void IGMPRouterSide::process_filter_mode_change_report(const igmp_group_record *
     }
     else
     {
-        return; // TODO
+        click_chatter("change to excludes normally should never appear in the reference soluiton")
     }
 }
 
@@ -174,11 +171,11 @@ void IGMPRouterSide::run_timer(Timer * timer)
         // update group timers
         for (igmp_group_state &state: interface)
         {
-            // click_chatter("group timer = %i", state.group_timer);
+            //click_chatter("group timer = %i", state.group_timer);
             if (state.group_timer < 1)
             {
                 // group timer ran out, transition to include mode
-                state.mode = IGMP_V3_INCLUDE;
+                state.mode = IGMP_V3_INCLUDE; //TODO wanneer deleten, of nooit delete? momenteel probleem dat dubbel joinen niet werkt
             }
             else
             {
@@ -232,11 +229,9 @@ WritablePacket * IGMPRouterSide::make_group_specific_query_packet()
     for (int i = 0; i < interface_states.size(); i++) {
         for (igmp_group_state &state: interface_states[i]) {
             if(!found) {
-                if (state.multicast_adress) { // TODO how do know what group?
+                if (state.multicast_adress) { // TODO how do know what group?, nu stuurt het op elke interface eentje
                     // when querying a specific group, lower that groups timer to a small interval
                     state.group_timer = LMQT; //TODO wa betekent small interval
-
-
                     query_helper->add_igmp_data(r_alert + 1, Vector<IPAddress>(), state.multicast_adress, true,
                                                 robustness_variable, query_interval / 10, max_response_time);
                     found = true;

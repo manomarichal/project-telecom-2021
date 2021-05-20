@@ -1,6 +1,11 @@
+vragen
 - is het oké dat timers niet super accurate zijn
 - wat is dat last interval
 - in reference implementation is GMI precies 0
-- 3 group specifics na leave
-- geen general queries meer
+- 3 group specifics na leave in reference solution
+
+bugs
+- bij het antwoorden op een general query, moet er maar 1 keer gestuurd worden of robustneess variale
+- clients prnten maar een keer da ze een paketje aankrijgen
+
 
