@@ -1,5 +1,6 @@
-
-
-
-wat officieel te doen op join/leave (staat niet in de tabellen)
+- is het oké dat timers niet super accurate zijn
+- wat is dat last interval
+- in reference implementation is GMI precies 0
+- 3 group specifics na leave
+- geen general queries meer
 

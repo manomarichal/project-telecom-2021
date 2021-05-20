@@ -251,7 +251,7 @@ void IGMPClientSide::push(int port, Packet *p) {
     //click_chatter("received a package with protocol number %d", ip_header->ip_p);
     if (ip_header->ip_p == IP_PROTO_IGMP) {
     // IGMP QUERIES
-        click_chatter("the client has received a igmp query");
+        //click_chatter("the client has received a igmp query");
         //ontleed de query, check van waar ze komt.
         const router_alert *alert_ptr = reinterpret_cast<const router_alert *>(ip_header + 1);
         igmp_mem_query_msg query_data = query_helper->unpack_query_data(alert_ptr+1);
@@ -261,7 +261,7 @@ void IGMPClientSide::push(int port, Packet *p) {
         for (int i = 0; i<group_records.size(); i++){
             //als group record mc adr overeenkomt met src van query, stuur v3 als join
             if(group_records[i].record_type == 4 or group_records[i].record_type == 2){
-                click_chatter("\t there has been an query while we joined");
+                //click_chatter("\t there has been an query while we joined");
                 group_records[i].record_type = 2;
 //                igmp_group_record grRecord;
 //                //the group record needs to be made
@@ -276,8 +276,8 @@ void IGMPClientSide::push(int port, Packet *p) {
                 packet.delay = click_random(0, query_data.max_resp_code*100);
                 packet.p = p;
                 if(queue.size() == 0){
-                    click_chatter("\t mrq ==  %d", query_data.max_resp_code);
-                    click_chatter("\t queue is empty atm, delay is %d", packet.delay);
+                    //click_chatter("\t mrq ==  %d", query_data.max_resp_code);
+                    //click_chatter("\t queue is empty atm, delay is %d", packet.delay);
 
                     currently_sending = packet;
                     queue.push_back(packet);
@@ -286,17 +286,17 @@ void IGMPClientSide::push(int port, Packet *p) {
                 }
                 //there are still records to be sent
                 else{
-                    click_chatter("\t queue is not empty");
+                    //click_chatter("\t queue is not empty");
 
                     bool in_queue = false;
                     for(auto item : queue){
                         if(item.dest = packet.dest){
-                            click_chatter("\t the item is already in the queue tho :):)");
+                            //click_chatter("\t the item is already in the queue tho :):)");
                             in_queue = true;
                         }
                     }
                     if(!in_queue){
-                        click_chatter("====pushing response to queue");
+                        //click_chatter("====pushing response to queue");
                         queue.push_back(packet);
                         currently_sending = packet;
                     }
@@ -357,7 +357,6 @@ void IGMPClientSide::run_timer(Timer * timer)
  * @param data the data, in this case a struct of URI_packages which is defined in the public of IGMPClientside.hh
  */
 void IGMPClientSide::URI_timer(Timer * timer, void* data){
-    click_chatter("the test timer works");
     URI_packages* package = (URI_packages*) data;
     if(package->RV >0){
         package->RV-=1;

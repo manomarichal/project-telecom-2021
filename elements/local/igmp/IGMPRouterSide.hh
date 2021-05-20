@@ -48,7 +48,7 @@ private:
 
     void check_if_group_exists(const click_ip *ip_header, Vector <igmp_group_record> group_records,  int port);
     static void group_timer_ran_out(igmp_group_state* state);
-    void process_current_state_report(const igmp_group_record *record);
+    void process_current_state_report(const igmp_group_record *record, int port);
     void process_filter_mode_change_report(const igmp_group_record *record);
     void multicast_udp_packet(Packet *p, int port);
     WritablePacket *make_general_query_packet();

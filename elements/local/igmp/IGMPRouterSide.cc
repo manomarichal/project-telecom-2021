@@ -22,8 +22,14 @@ IGMPRouterSide::~IGMPRouterSide() {}
  */
 int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
     //cunfugure like RFC 8.14
-    if (Args(conf, this, errh).read_mp("ROUTERADDRESS", routerIP).read_mp("RV", robustness_variable)
-                .read_mp("QI", query_interval).read_mp("SQI", startup_interval).read_mp("SQC", startup_count).read_mp("LMQI", LMQI).read_mp("LMQC", LMQC).read_mp("MRT", max_response_time).complete() < 0) {
+    if (Args(conf, this, errh)
+    .read_mp("ROUTERADDRESS", routerIP)
+    .read_mp("RV", robustness_variable)
+    .read_mp("QI", query_interval)
+    .read_mp("SQI", startup_interval)
+    .read_mp("SQC", startup_count)
+    .read_mp("LMQI", LMQI).read_mp("LMQC", LMQC)
+    .read_mp("MRT", max_response_time).complete() < 0) {
         click_chatter("failed read when initialising router, returning 0");
         if(0<robustness_variable<7){
             return  -1;
@@ -83,8 +89,7 @@ void IGMPRouterSide::multicast_udp_packet(Packet *p, int port) {
                 }
 
                 // send the packet if the group state is include and it is in the source records, or the reverse for exclude
-
-                if ((IGMP_V3_INCLUDE == state.mode) == (index != -1))
+                if (((IGMP_V3_INCLUDE == state.mode) == (index != -1)) and state.group_timer > 0)
                 {
                     Packet *package = p->clone();
                     output(i + 3).push(package);
@@ -95,7 +100,6 @@ void IGMPRouterSide::multicast_udp_packet(Packet *p, int port) {
     }
 
 }
-
 
 /**
  * function to update group states when receiving new igmp message, not fully implemented like the RFC
@@ -123,13 +127,11 @@ void IGMPRouterSide::check_if_group_exists(const click_ip *ip_header, Vector <ig
     }
 }
 
-/***
- * title
- */
 void IGMPRouterSide::process_filter_mode_change_report(const igmp_group_record *record)
 {
     // leave -> send group specific queries
     if (record->record_type == IGMP_V3_CHANGE_TO_INCLUDE){
+        // TODO queries sent need to be transmitted [Last Member Query Count] times, once every [Last Member Query Interval] (page 32)
         Packet *q = make_group_specific_query_packet();
         for(int i = 6; i<9;i++){
             Packet *package = q->clone();
@@ -142,28 +144,21 @@ void IGMPRouterSide::process_filter_mode_change_report(const igmp_group_record *
     }
 }
 
-void IGMPRouterSide::process_current_state_report(const igmp_group_record *record)
+void IGMPRouterSide::process_current_state_report(const igmp_group_record *record, int port)
 {
-    for (auto &interface: interface_states)
+    // source lists will always be empty so nly need to update the group timer
+    for (igmp_group_state &state: interface_states[port])
     {
-        for (igmp_group_state &state: interface)
+        if (state.multicast_adress == record->multicast_adress)
         {
-            if (state.multicast_adress == record->multicast_adress)
+            if (record->record_type == IGMP_V3_EXCLUDE)
             {
-                if (state.mode == IGMP_V3_INCLUDE and record->record_type == IGMP_V3_INCLUDE) { return;} // source timers dont exist so not necessary
-                else if (state.mode == IGMP_V3_INCLUDE and record->record_type == IGMP_V3_EXCLUDE) { state.group_timer = GMI;}
-                else if (state.mode == IGMP_V3_EXCLUDE and record->record_type == IGMP_V3_INCLUDE) { return; } // source timers dont exist so not necessary
-                else if (state.mode == IGMP_V3_EXCLUDE and record->record_type == IGMP_V3_EXCLUDE) { state.group_timer = GMI;}
-
+                state.group_timer = GMI;
             }
         }
     }
 }
 
-void IGMPRouterSide::group_timer_ran_out(igmp_group_state *state)
-{
-    state->mode = IGMP_V3_INCLUDE;
-}
 /**
  * run timer will be triggered after the _timer gets scheduled
  * the timer gets scheduled by using _timer.schedule_after_sec(time)
@@ -171,7 +166,7 @@ void IGMPRouterSide::group_timer_ran_out(igmp_group_state *state)
  */
 void IGMPRouterSide::run_timer(Timer * timer)
 {
-    _timer.schedule_after_sec(1);
+    _timer.schedule_after_msec(100);
     _local_timer++;
 
     for (auto &interface: interface_states)
@@ -179,10 +174,11 @@ void IGMPRouterSide::run_timer(Timer * timer)
         // update group timers
         for (igmp_group_state &state: interface)
         {
-            click_chatter("group timer = %i", state.group_timer);
+            // click_chatter("group timer = %i", state.group_timer);
             if (state.group_timer < 1)
             {
-                group_timer_ran_out(&state);
+                // group timer ran out, transition to include mode
+                state.mode = IGMP_V3_INCLUDE;
             }
             else
             {
@@ -193,7 +189,7 @@ void IGMPRouterSide::run_timer(Timer * timer)
 
     //click_chatter("local timer: %d",_local_timer);
     assert(timer == &_timer);
-    if(_local_timer == query_interval/10){
+    if(_local_timer == query_interval){
         Packet *q = make_general_query_packet();
         for(int i = 6; i<9;i++){
             Packet *package = q->clone();
@@ -234,9 +230,12 @@ WritablePacket * IGMPRouterSide::make_group_specific_query_packet()
     ip_header->ip_sum = click_in_cksum((unsigned char *) ip_header, sizeof(click_ip) + sizeof(router_alert));
     bool found = false;
     for (int i = 0; i < interface_states.size(); i++) {
-        for (igmp_group_state state: interface_states[i]) {
+        for (igmp_group_state &state: interface_states[i]) {
             if(!found) {
-                if (state.multicast_adress) {
+                if (state.multicast_adress) { // TODO how do know what group?
+                    // when querying a specific group, lower that groups timer to a small interval
+                    state.group_timer = LMQT; //TODO wa betekent small interval
+
                     query_helper->add_igmp_data(r_alert + 1, Vector<IPAddress>(), state.multicast_adress, true,
                                                 robustness_variable, query_interval / 10, max_response_time);
                     found = true;
@@ -249,7 +248,6 @@ WritablePacket * IGMPRouterSide::make_group_specific_query_packet()
     p->set_ip_header(ip_header, sizeof(click_ip));
     p->timestamp_anno().assign_now();
     p->set_dst_ip_anno(IPAddress(ASMC_ADDRESS));
-
     return p;
 }
 
@@ -282,17 +280,16 @@ void IGMPRouterSide::push(int port, Packet *p) {
             // current state reports
             if (record_type == IGMP_V3_INCLUDE or record_type == IGMP_V3_EXCLUDE) {
 
-                process_current_state_report(&group_records[i]);
+                process_current_state_report(&group_records[i], port);
             }
             // filter mode change
-            else if (record_type == IGMP_V3_INCLUDE or record_type == IGMP_V3_CHANGE_TO_EXCLUDE)
+            else if (record_type == IGMP_V3_CHANGE_TO_INCLUDE or record_type == IGMP_V3_CHANGE_TO_EXCLUDE)
             {
                 process_filter_mode_change_report(&group_records[i]);
             }
 
         }
     } else if (ip_header->ip_p == 17) {
-        //click_chatter("UDP PACKET, %i, %i", ip_header->ip_p, port);
         multicast_udp_packet(p, port);
     } else {
         output(port).push(p);
