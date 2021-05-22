@@ -38,13 +38,17 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
     }
     GMI = (robustness_variable * query_interval) + max_response_time;
     LMQT = LMQI * LMQC;
-   // click_chatter("initialising routeraddress %s", routerIP.unparse().c_str());
+
     for (int i=0; i < port_count()[2] - 48; i++)
     {
         interface_states.push_back(Vector<igmp_group_state>());
     }
+
+    // initialize group timer
     _timer.initialize(this);
     _timer.schedule_after_sec(0);
+
+    // initialize general query timer
     query_timer* qt = new query_timer;
     qt->router = this;
     Timer* general_timer= new Timer(&general_query_timer, qt);
@@ -169,41 +173,27 @@ void IGMPRouterSide::run_timer(Timer * timer)
             }
         }
     }
-
-    if (startup_count > 0)
-    {
-        if (_local_startup_timer == 0 )
-        {
-            Packet *q = make_general_query_packet();
-            for(int i = 6; i<9;i++){
-                Packet *package = q->clone();
-                output(i).push(package);
-            }
-            startup_count--;
-            _local_startup_timer = startup_interval;
-        }
-        else
-        {
-            _local_startup_timer--;
-        }
-    }
-    // startup done, start sending general queries
-    else
-    {
-        //click_chatter("local timer: %d",_local_timer);
-        _local_timer++;
-        assert(timer == &_timer);
-        if(_local_timer == query_interval){
-            Packet *q = make_general_query_packet();
-            for(int i = 6; i<9;i++){
-                Packet *package = q->clone();
-                output(i).push(package);
-            }
-            _local_timer=0;
-        }
-    }
 }
 
+void IGMPRouterSide::general_query_timer(Timer * timer, void* data){
+
+    query_timer* timerdata = (query_timer*) data;
+    Packet *q = timerdata->router->make_general_query_packet();
+    for(int i = 6; i<9;i++){
+        Packet *package = q->clone();
+        timerdata->router->output(i).push(package);
+    }
+
+    if (timerdata->router->startup_count > 1)
+    {
+        timerdata->router->startup_count--;
+        timer->schedule_after_msec(timerdata->router->startup_interval * 100);
+    }
+    else
+    {
+        timer->schedule_after_msec(timerdata->router->query_interval * 100);
+    }
+}
 
 WritablePacket * IGMPRouterSide::make_general_query_packet()
 {
@@ -291,13 +281,6 @@ void IGMPRouterSide::push(int port, Packet *p) {
     {
         output(port).push(p);
     }
-}
-
-void IGMPRouterSide::general_query_timer(Timer * timer, void* data){
-    query_timer* timerdata = (query_timer*) data;
-
-    click_chatter("called the second timer in router side||||||||||||||||||||||||||");
-    timer->schedule_after_msec(timerdata->router->startup_interval);
 }
 
 CLICK_ENDDECLS
