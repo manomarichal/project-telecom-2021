@@ -69,6 +69,7 @@ struct igmp_reception_state {
     Vector <IPAddress> source_list;
 
 };
+
 #define IGMP_V3_MEM_RECORD 0x22
 #define IGMP_MEM_QUERY 0x11
 
@@ -99,7 +100,6 @@ struct igmp_mem_query_msg {
     uint8_t qqic; // queries query interval
     uint16_t number_of_sources;
 };
-
 
 /**
  * struct for source record, contains adress and timer used later in the project, RFC page 26

@@ -57,7 +57,7 @@ private:
     void process_report(igmp_group_record *record, int port);
     void multicast_udp_packet(Packet *p);
     WritablePacket *make_general_query_packet();
-    WritablePacket *make_group_specific_query_packet();
+    WritablePacket *make_group_specific_query_packet(IPAddress group_address, int interface);
     IGMPV3QueryHelper *query_helper = new IGMPV3QueryHelper();
     IGMPV3ReportHelper *report_helper = new IGMPV3ReportHelper();
 };

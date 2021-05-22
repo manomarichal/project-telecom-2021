@@ -1,13 +1,9 @@
 vragen
-- is het oké dat timers niet super accurate zijn
 - wat is dat last interval
-- in reference implementation is GMI precies 0
-- 3 group specifics na leave in reference solution
+- in reference implementation is GMI precies 0, aka er kome geen paketjes meer aan na leaven
+- join na leave probleem door queue
 
 bugs
-- bij het antwoorden op een general query, moet er maar 1 keer gestuurd worden of robustneess variale
-- clients prnten maar een keer da ze een paketje aankrijgen
-- dubbel joinen/leaven, wat doen we ermee
-- 3 leaves
-
+- ni vergeten dubbel joinen en leaven te testen, op twee manieren
+- ni vergeten te testen of joinen voor de group record gedelete wordt erkt
 
