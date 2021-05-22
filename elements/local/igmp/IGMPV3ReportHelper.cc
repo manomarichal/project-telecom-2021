@@ -29,9 +29,7 @@ int IGMPV3ReportHelper::configure(Vector <String> &conf, ErrorHandler *errh) {
  * @param port
  * @param p
  */
-void IGMPV3ReportHelper::push(int port, Packet *p) {
-
-}
+void IGMPV3ReportHelper::push(int port, Packet *p) {}
 
 /**
  * returns the size of the data, helpfull for checksums
@@ -70,7 +68,7 @@ click_ip *IGMPV3ReportHelper::add_ip_header(WritablePacket *p, IPAddress client_
     nip->ip_ttl = 1; // specified in RFC3376 page 7
     nip->ip_src = client_ip.in_addr();
     nip->ip_dst = multicast_address.in_addr(); // all multicast routers listen to this adress
-//    nip->ip_sum = click_in_cksum((unsigned char *) nip, sizeof(click_ip) + sizeof(router_alert)); // copy paste from icmpsendpings.cc
+    //nip->ip_sum = click_in_cksum((unsigned char *) nip, sizeof(click_ip) + sizeof(router_alert)); // copy paste from icmpsendpings.cc
 
     if (verbose) {
         click_chatter("printing click ip while making report message: ");
@@ -102,12 +100,10 @@ igmp_mem_report *IGMPV3ReportHelper::add_igmp_data(void *start, const Vector <ig
     if (group_records.size() == 0) { return igmp_mr; };
     igmp_group_record_message *igmp_grp = (struct igmp_group_record_message *) (igmp_mr + 1);
     for (int i = 0; i < group_records.size(); i++) {
-        //click_chatter("adding igmp data for group %d", i);
         // set the fields in the reserved space to the correct thing
         igmp_grp->multicast_adress = group_records[i].multicast_adress.addr();
         igmp_grp->number_of_sources = group_records[i].number_of_sources;
         igmp_grp->record_type = group_records[i].record_type;
-//        click_chatter("%d type when leaving", igmp_grp->record_type);
 
         // add source adresses on top
         ipadress *igmp_adr = (struct ipadress *) (igmp_grp + 1);
@@ -123,7 +119,6 @@ igmp_mem_report *IGMPV3ReportHelper::add_igmp_data(void *start, const Vector <ig
         if (i < group_records.size() - 1) {
             igmp_grp = (struct igmp_group_record_message *) (igmp_adr + 1);
         }
-        //per group record there is a report and a message struct
     }
     igmp_mr->checksum = click_in_cksum((unsigned char *) igmp_mr, get_size_of_data(group_records));
     return igmp_mr;

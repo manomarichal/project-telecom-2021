@@ -9,14 +9,6 @@
 #include <clicknet/ip.h>
 #include "./IGMPV3QueryHelper.hh"
 
-/**
- * adds ip header, thus kind of initialisation
- * @param p the packet that needs ipheader
- * @param client_ip clients ip address
- * @param multicast_address the multicast address
- * @param verbose if you want cmd outputs or not
- * @return a click_ip object
- */
 CLICK_DECLS
 IGMPV3QueryHelper::IGMPV3QueryHelper() {}
 
@@ -26,14 +18,7 @@ int IGMPV3QueryHelper::configure(Vector <String> &conf, ErrorHandler *errh) {
 return 0;
 }
 
-/**
- * needs to be here to be considered an element
- * @param port
- * @param p
- */
-void IGMPV3QueryHelper::push(int port, Packet *p) {
-
-}
+void IGMPV3QueryHelper::push(int port, Packet *p) {}
 
 click_ip *IGMPV3QueryHelper::add_ip_header(WritablePacket *p, IPAddress source, IPAddress destination, bool verbose) {
     click_ip *nip = reinterpret_cast<click_ip *>(p->data());
@@ -87,12 +72,7 @@ igmp_mem_query_msg *IGMPV3QueryHelper::add_igmp_data(void *start, const Vector <
     query->type = IGMP_MEM_QUERY;
     query->group_adress = group_address.addr();
     query->resv = 0;
-//    if(!general){
-//        query->s = 1;
-//    }
-//    else{
-//        query->s = 0;
-//    }
+
     query->qrv = qrv;
     query->qqic = qqic; // queries query interval
     query->number_of_sources = source_addresses.size();
@@ -106,6 +86,7 @@ igmp_mem_query_msg *IGMPV3QueryHelper::add_igmp_data(void *start, const Vector <
             igmp_adr = (struct ipadress *) (igmp_adr + 1);
         }
     }
+
     query->checksum = click_in_cksum((unsigned char *) query, get_size_of_data(source_addresses.size()));
     return query;
 }
