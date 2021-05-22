@@ -73,47 +73,62 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
         if (element->group_records[i].multicast_adress == groupaddr and (element->group_records[i].record_type == IGMP_V3_CHANGE_TO_EXCLUDE
         or element->group_records[i].record_type == IGMP_V3_EXCLUDE)) {
             //check if the client is a part of this group record already, might be helpful later
-//            for (int y =0; y<element->group_records[i].sources.size(); y++){
-//                if (element->group_records[i].sources[y] == element->clientIP){
-//                    //case if the client has already joined the group address
-//                    //the mc address exists and the client is already a part of it
-//                    click_chatter("The group you are trying to join already has this source address");
-//                    return -1;
-//                }
-//            }
 
-            //if the client is not a part off the group, add it to the group, might be helpful later
-//            element->group_records[i].sources.push_back(element->clientIP);
-//            element->group_records[i].number_of_sources++;
 
             click_chatter("You have already joined this multicast group");
             return -1;
         }
     }
+    bool sent = false;
+    for (int i = 0; i < element->group_records.size(); i++) {
+        if (element->group_records[i].multicast_adress == groupaddr) {
+            element->group_records[i].record_type = change_to_exclude;
+            WritablePacket *p = element->make_mem_report_packet();
+            URI_packages* package = new URI_packages;
+            if(element->robustness==1){
+                element->output(0).push(p);
+            }
+            else {
+                Packet *pack = p->clone();
+                element->output(0).push(pack);
+                package->client = element;
+                package->p = p;
+                package->RV = element->robustness-1;
+                package->uri = element->unsolicited_report_interval;
+                Timer* timer = new Timer(&IGMPClientSide::URI_timer, package);
+                timer->initialize(element);
+                timer->schedule_after_msec(click_random(0, element->unsolicited_report_interval));
+            }
+            sent = true;
 
-    //make new group record if it does not yet exist
-    igmp_group_record grRecord;
-    //the group record needs to be made
-    grRecord.record_type = change_to_exclude;
-    grRecord.multicast_adress = groupaddr;
-    grRecord.number_of_sources = 0;
-    element->group_records.push_back(grRecord);
-    WritablePacket *p = element->make_mem_report_packet();
-    URI_packages* package = new URI_packages;
-    if(element->robustness==1){
-        element->output(0).push(p);
+        }
     }
-    else {
-        Packet *pack = p->clone();
-        element->output(0).push(pack);
-        package->client = element;
-        package->p = p;
-        package->RV = element->robustness-1;
-        package->uri = element->unsolicited_report_interval;
-        Timer* timer = new Timer(&IGMPClientSide::URI_timer, package);
-        timer->initialize(element);
-        timer->schedule_after_msec(click_random(0, element->unsolicited_report_interval));
+    if(!sent){
+        //make new group record if it does not yet exist
+        igmp_group_record grRecord;
+        //the group record needs to be made
+        grRecord.record_type = change_to_exclude;
+        grRecord.multicast_adress = groupaddr;
+        grRecord.number_of_sources = 0;
+        element->group_records.push_back(grRecord);
+        WritablePacket *p = element->make_mem_report_packet();
+        URI_packages* package = new URI_packages;
+        if(element->robustness==1){
+            element->output(0).push(p);
+        }
+        else {
+            Packet *pack = p->clone();
+            element->output(0).push(pack);
+            package->client = element;
+            package->p = p;
+            package->RV = element->robustness-1;
+            package->uri = element->unsolicited_report_interval;
+            Timer* timer = new Timer(&IGMPClientSide::URI_timer, package);
+            timer->initialize(element);
+            timer->schedule_after_msec(click_random(0, element->unsolicited_report_interval));
+        }
     }
+
 
 //    element->output(0).push(p);
     click_chatter("client %s joined multicast group %s", element->clientIP.unparse().c_str(), IPAddress(groupaddr).unparse().c_str());
