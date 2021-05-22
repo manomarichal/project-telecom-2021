@@ -61,7 +61,8 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
 
     specific_query_timer* st = new specific_query_timer;
     st->router = this;
-    Timer* specific_timer= new Timer(&group_specific_query_timer, st);
+    specific_timer= new Timer(&group_specific_query_timer, st);
+
     specific_timer->initialize(this);
     specific_timer->schedule_after_msec(0);
     return 0;

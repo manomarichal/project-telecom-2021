@@ -50,6 +50,7 @@ int IGMPClientSide::configure(Vector <String> &conf, ErrorHandler *errh) {
 /**
  * handles the client join for the system.
  * return integer, done throughout other click elements
+ * also times when the packet needs to be retransmitted accoring to the robustness variable
  * @param conf standard handler parameter, click practice
  * @param e standard handler parameter, click practice
  * @param thunk standard handler parameter, click practice
@@ -58,11 +59,7 @@ int IGMPClientSide::configure(Vector <String> &conf, ErrorHandler *errh) {
  */
 int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((unused)) void *thunk,
                                 __attribute__((unused)) ErrorHandler *errh) {
-
-
-    //click_chatter("Entering join handler");
     IGMPClientSide *element = reinterpret_cast<IGMPClientSide *>(e); //convert element to igmpclientside element
-    //click_chatter(element->clientIP.unparse().c_str());
     Vector <String> arg_list;
     cp_argvec(conf, arg_list);   //splits up the conf vector into more readable version in the arg_list vector
 
@@ -73,13 +70,12 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
         if (element->group_records[i].multicast_adress == groupaddr and (element->group_records[i].record_type == IGMP_V3_CHANGE_TO_EXCLUDE
         or element->group_records[i].record_type == IGMP_V3_EXCLUDE)) {
             //check if the client is a part of this group record already, might be helpful later
-
-
             click_chatter("You have already joined this multicast group");
             return -1;
         }
     }
     bool sent = false;
+    //case of you have joined before, this will be a rejoin
     for (int i = 0; i < element->group_records.size(); i++) {
         if (element->group_records[i].multicast_adress == groupaddr) {
             element->group_records[i].record_type = change_to_exclude;
@@ -100,9 +96,9 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
                 timer->schedule_after_msec(click_random(0, element->unsolicited_report_interval));
             }
             sent = true;
-
         }
     }
+    //send a first time join
     if(!sent){
         //make new group record if it does not yet exist
         igmp_group_record grRecord;
@@ -128,18 +124,14 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
             timer->schedule_after_msec(click_random(0, element->unsolicited_report_interval));
         }
     }
-
-
-//    element->output(0).push(p);
     click_chatter("client %s joined multicast group %s", element->clientIP.unparse().c_str(), IPAddress(groupaddr).unparse().c_str());
-    //uncomment if you would like more information about the group records
-    //element->print_group_records();
     return 0;
 }
 
 
 /**
  * handles the client leave, changes the filter mode fo that group record from exclude to include as defined in RFC
+ * also times when the packet needs to be retransmitted accoring to the robustness variable
  * @param conf standard handler parameter, click practice
  * @param e standard handler parameter, click practice
  * @param thunk standard handler parameter, click practice
@@ -148,7 +140,6 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
  */
 int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((unused)) void *thunk,
                                  __attribute__((unused)) ErrorHandler *errh) {
-    //click_chatter("Entering leave handler");
     IGMPClientSide *element = reinterpret_cast<IGMPClientSide *>(e); //convert element to igmpclientside element
     Vector <String> arg_list;
     cp_argvec(conf, arg_list);   //splits up the conf vector into more readable version in the arg_list vector
@@ -166,7 +157,6 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((
                 //push the packet to update mode
                 URI_packages* package = new URI_packages;
                 if(element->robustness==1){
-//                    Packet *pack = p->clone();
                     element->output(0).push(p);
                 }
                 else {
@@ -187,8 +177,6 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((
                     element->currently_sending.p = pack;
                     element->queue[0].p = pack;
                 }
-
-
             } else {
                 click_chatter("this client has already left this group");
                 return -1;
@@ -210,8 +198,6 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((
  * -client leave which wil let the client leave the reception of a given multicast address /rfc page 4
  */
 void IGMPClientSide::add_handlers() {
-    //click_chatter("hallo, adding handlers");
-
     add_write_handler("join", &client_join, (void *) 0);
     add_write_handler("leave", &client_leave, (void *) 0);
 }
@@ -238,14 +224,12 @@ void IGMPClientSide::print_group_records() {
  * @return a writablepacket object which will be the IGMPV3 membership report
  */
 WritablePacket *IGMPClientSide::make_mem_report_packet() {
-    //click_chatter("creating membership report for %s", clientIP.unparse().c_str());
-
-    //uint32_t size = sizeof(click_ip) + sizeof(igmp_mem_report) + (sizeof(igmp_group_record_message)*group_records.size()); // TODO size of the entire packet
     WritablePacket *p = Packet::make(helper->get_size_of_data(group_records) + sizeof(click_ip) + 4);
     memset(p->data(), 0, p->length()); // erase previous random data on memory requested
-
     click_ip *ip_header = helper->add_ip_header(p, clientIP, MC_ADDRESS, false);
+
     router_alert *r_alert = helper->add_router_alert(ip_header + 1);
+
     ip_header->ip_sum = click_in_cksum((unsigned char *) ip_header, sizeof(click_ip) + sizeof(router_alert));
     helper->add_igmp_data(r_alert + 1, group_records);
 
@@ -257,7 +241,8 @@ WritablePacket *IGMPClientSide::make_mem_report_packet() {
 
 /**
  * push function will get the packages and asses what needs to be done with them based on the port they entered
- * Port 0 will be IGMP Queries, these have not yet been implemented for deadline 1
+ * Port 0 will be IGMP Queries, the client will add a response to its queue, a new query will be ignored if there is
+ * already a response scheduled
  * Port 1 will be UDP messages, these are the messages multicasted by the router and accepted by the client if they have joined the
  * multicast group, we will also check whether the multicast group has the right filter mode so that the client only accepts
  * packets from the multicast group it has joined.
@@ -266,21 +251,16 @@ WritablePacket *IGMPClientSide::make_mem_report_packet() {
  * @param p The packet itself
  */
 void IGMPClientSide::push(int port, Packet *p) {
-    // TODO needs to accept and process queries (also something about udp)
     // unpacking data, based on elements/icmp/icmpsendpings.cc, line 194
-
     const click_ip *ip_header = p->ip_header();
-    //click_chatter("received a package with protocol number %d", ip_header->ip_p);
-    if (ip_header->ip_p == IP_PROTO_IGMP) {
     // IGMP QUERIES
-        //click_chatter("the client has received a igmp query");
+    if (ip_header->ip_p == IP_PROTO_IGMP) {
         //ontleed de query, check van waar ze komt.
         const router_alert *alert_ptr = reinterpret_cast<const router_alert *>(ip_header + 1);
         igmp_mem_query_msg query_data = query_helper->unpack_query_data(alert_ptr+1);
         for (int i = 0; i<group_records.size(); i++){
             //als group record mc adr overeenkomt met src van query, stuur v3 als join
             if(group_records[i].record_type == 4 or group_records[i].record_type == 2){
-                //click_chatter("\t there has been an query while we joined");
                 group_records[i].record_type = 2;
                 //the group record needs to be made
 
@@ -291,27 +271,21 @@ void IGMPClientSide::push(int port, Packet *p) {
                 packet.delay = click_random(0, query_data.max_resp_code*100);
                 packet.p = p;
                 if(queue.size() == 0){
-                    //click_chatter("\t mrq ==  %d", query_data.max_resp_code);
-                    //click_chatter("\t queue is empty atm, delay is %d", packet.delay);
-
                     currently_sending = packet;
                     queue.push_back(packet);
+
                     //only in this situation the timer gets scheduled.
                     _timer.schedule_after_msec(packet.delay);
                 }
                 //there are still records to be sent
                 else{
-                    //click_chatter("\t queue is not empty");
-
                     bool in_queue = false;
                     for(auto item : queue){
                         if(item.dest = packet.dest){
-                            //click_chatter("\t the item is already in the queue tho :):)");
                             in_queue = true;
                         }
                     }
                     if(!in_queue){
-                        //click_chatter("====pushing response to queue");
                         queue.push_back(packet);
                         currently_sending = packet;
                     }
@@ -322,7 +296,6 @@ void IGMPClientSide::push(int port, Packet *p) {
     }
     // UDP MESSAGES
     else if (ip_header->ip_p == 17) {
-//        click_chatter("received a udp packet");
         if (p->has_network_header()) {
             for (int i = 0; i < group_records.size(); i++) {
                 if (group_records[i].multicast_adress == ip_header->ip_dst and (group_records[i].record_type == 4

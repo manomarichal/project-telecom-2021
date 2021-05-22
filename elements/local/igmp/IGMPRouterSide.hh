@@ -37,6 +37,8 @@ public:
 
 private:
 
+    Timer* specific_timer;
+
     static void general_query_timer(Timer *, void *);
     static void group_specific_query_timer(Timer *, void *);
 
