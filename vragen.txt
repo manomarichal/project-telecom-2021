@@ -8,5 +8,6 @@ bugs
 - bij het antwoorden op een general query, moet er maar 1 keer gestuurd worden of robustneess variale
 - clients prnten maar een keer da ze een paketje aankrijgen
 - dubbel joinen/leaven, wat doen we ermee
+- 3 leaves
 
 

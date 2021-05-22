@@ -91,7 +91,7 @@ void IGMPRouterSide::multicast_udp_packet(Packet *p) {
                     // if no more source records exist, delete the group record
                     if (state.source_records.size() == 0)
                     {
-                        click_chatter("removing group state");
+                        // click_chatter("removing group state");
                         interface_states[i].erase(interface_states[i].begin() + j);
                     }
                 }
@@ -129,20 +129,26 @@ void IGMPRouterSide::process_report(igmp_group_record *record, int port)
     else if (record->record_type == IGMP_V3_CHANGE_TO_EXCLUDE) // joins
     {
         bool exists = false;
-        for (int i = 0; i<interface_states[port].size();i++)
+        for (igmp_group_state &state: interface_states[port])
         {
-            if (record->multicast_adress == interface_states[port][i].multicast_adress)
+            if (record->multicast_adress == state.multicast_adress)
             {
+                // there is interest in the group, so we set the type back to exclude, and update the group timer
                 exists = true;
+                state.mode = IGMP_V3_EXCLUDE;
+                state.group_timer = GMI;
             }
         }
-        if (exists) return;
-        igmp_group_state new_state;
-        new_state.mode = record->record_type;
-        new_state.group_timer = GMI;
-        new_state.multicast_adress = record->multicast_adress;
-        interface_states[port].push_back(new_state);
-        new_state.source_records = Vector<igmp_source_record>();
+
+        if (!exists)
+        {
+            igmp_group_state new_state;
+            new_state.mode = IGMP_V3_EXCLUDE;
+            new_state.group_timer = GMI;
+            new_state.multicast_adress = record->multicast_adress;
+            interface_states[port].push_back(new_state);
+            new_state.source_records = Vector<igmp_source_record>();
+        }
     }
 }
 
@@ -183,7 +189,6 @@ void IGMPRouterSide::general_query_timer(Timer * timer, void* data){
         Packet *package = q->clone();
         timerdata->router->output(i).push(package);
     }
-
     if (timerdata->router->startup_count > 1)
     {
         timerdata->router->startup_count--;
