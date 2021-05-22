@@ -104,7 +104,8 @@ void IGMPRouterSide::process_report(igmp_group_record *record, int port)
 
                 // and schedule [Last Member Query Count -1] query retransmissions
                 state.scheduled_queries = LMQC - 1;
-                specific_timer->schedule_after_msec(100*LMQI);
+                if (port == 1) {specific_timer->schedule_after_msec(100*LMQI);}
+                else {second_specific_timer->schedule_after_msec(100*LMQI);}
             }
         }
     }
@@ -210,18 +211,16 @@ void IGMPRouterSide::group_specific_query_timer(Timer * timer, void* data){
  */
 void IGMPRouterSide::second_group_specific_query_timer(Timer * timer, void* data){
     specific_query_timer* timerdata = (specific_query_timer*) data;
-//    click_chatter("aaaaa");
-    timer->schedule_after_msec(100);
-//    for (igmp_group_state &state: timerdata->router->interface_states[1])
-//    {
-//        if (state.scheduled_queries > 0)
-//        {
-//            Packet *q = timerdata->router->make_group_specific_query_packet(state.multicast_adress, 1);
-//            timerdata->router->output(7).push(q);
-//            state.scheduled_queries--;
-//            timer->schedule_after_msec(timerdata->router->LMQT * 100);
-//        }
-//    }
+    for (igmp_group_state &state: timerdata->router->interface_states[2])
+    {
+        if (state.scheduled_queries > 0)
+        {
+            Packet *q = timerdata->router->make_group_specific_query_packet(state.multicast_adress, 2);
+            timerdata->router->output(8).push(q);
+            state.scheduled_queries--;
+            timer->schedule_after_msec(timerdata->router->LMQT * 100);
+        }
+    }
 }
 
 /***

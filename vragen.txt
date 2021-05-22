@@ -1,9 +1,1 @@
-vragen
-- wat is dat last interval
-- in reference implementation is GMI precies 0, aka er kome geen paketjes meer aan na leaven
-- join na leave probleem door queue
-
-bugs
-- ni vergeten dubbel joinen en leaven te testen, op twee manieren
-- ni vergeten te testen of joinen voor de group record gedelete wordt erkt
 
