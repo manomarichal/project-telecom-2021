@@ -309,7 +309,8 @@ void IGMPClientSide::push(int port, Packet *p) {
 //        click_chatter("received a udp packet");
         if (p->has_network_header()) {
             for (int i = 0; i < group_records.size(); i++) {
-                if (group_records[i].multicast_adress == ip_header->ip_dst and group_records[i].record_type == 4) {
+                if (group_records[i].multicast_adress == ip_header->ip_dst and (group_records[i].record_type == 4
+                or group_records[i].record_type == 2)) {
                     click_chatter("client %s recieved their packet", clientIP.unparse().c_str());
                     output(1).push(p);
                 }
