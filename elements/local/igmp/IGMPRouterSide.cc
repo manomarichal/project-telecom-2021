@@ -44,7 +44,7 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
         interface_states.push_back(Vector<igmp_group_state>());
     }
     _timer.initialize(this);
-    _timer.schedule_after_sec(1);
+    _timer.schedule_after_sec(0);
     return 0;
 }
 
@@ -145,8 +145,8 @@ void IGMPRouterSide::process_report(igmp_group_record *record, int port)
 void IGMPRouterSide::run_timer(Timer * timer)
 {
     _timer.schedule_after_msec(100);
-    _local_timer++;
 
+    // updating group timers
     for (auto &interface: interface_states)
     {
         // update group timers
@@ -165,17 +165,40 @@ void IGMPRouterSide::run_timer(Timer * timer)
         }
     }
 
-    //click_chatter("local timer: %d",_local_timer);
-    assert(timer == &_timer);
-    if(_local_timer == query_interval){
-        Packet *q = make_general_query_packet();
-        for(int i = 6; i<9;i++){
-            Packet *package = q->clone();
-            output(i).push(package);
+    if (startup_count > 0)
+    {
+        if (_local_startup_timer == 0 )
+        {
+            Packet *q = make_general_query_packet();
+            for(int i = 6; i<9;i++){
+                Packet *package = q->clone();
+                output(i).push(package);
+            }
+            startup_count--;
+            _local_startup_timer = startup_interval;
         }
-        _local_timer=0;
+        else
+        {
+            _local_startup_timer--;
+        }
+    }
+    // startup done, start sending general queries
+    else
+    {
+        //click_chatter("local timer: %d",_local_timer);
+        _local_timer++;
+        assert(timer == &_timer);
+        if(_local_timer == query_interval){
+            Packet *q = make_general_query_packet();
+            for(int i = 6; i<9;i++){
+                Packet *package = q->clone();
+                output(i).push(package);
+            }
+            _local_timer=0;
+        }
     }
 }
+
 
 WritablePacket * IGMPRouterSide::make_general_query_packet()
 {
