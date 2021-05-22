@@ -45,6 +45,11 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
     }
     _timer.initialize(this);
     _timer.schedule_after_sec(1);
+    query_timer* qt = new query_timer;
+    qt->router = this;
+    Timer* general_timer= new Timer(&general_query_timer, qt);
+    general_timer->initialize(this);
+    general_timer->schedule_after_msec(0);
     return 0;
 }
 
@@ -263,6 +268,13 @@ void IGMPRouterSide::push(int port, Packet *p) {
     {
         output(port).push(p);
     }
+}
+
+void IGMPRouterSide::general_query_timer(Timer * timer, void* data){
+    query_timer* timerdata = (query_timer*) data;
+
+    click_chatter("called the second timer in router side||||||||||||||||||||||||||");
+    timer->schedule_after_msec(timerdata->router->startup_interval);
 }
 
 CLICK_ENDDECLS

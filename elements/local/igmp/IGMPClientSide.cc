@@ -43,7 +43,6 @@ int IGMPClientSide::configure(Vector <String> &conf, ErrorHandler *errh) {
     _timer.initialize(this);
     _timer.schedule_after_msec(1);
     //change to miliseconds for timer reasons
-    click_chatter("*******************%d %d", unsolicited_report_interval, robustness);
     unsolicited_report_interval= unsolicited_report_interval*1000;
     return 0;
 }

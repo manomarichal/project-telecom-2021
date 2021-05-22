@@ -11,6 +11,10 @@ CLICK_DECLS
 
 class IGMPRouterSide : public Element {
 public:
+    struct query_timer{
+        IGMPRouterSide* router;
+    };
+
     IGMPRouterSide();
 
     ~IGMPRouterSide();
@@ -28,6 +32,9 @@ public:
     void push(int, Packet *);
 
 private:
+
+    static void general_query_timer(Timer *, void *);
+
     unsigned robustness_variable;
     unsigned query_interval;
     unsigned GMI;
