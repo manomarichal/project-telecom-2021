@@ -40,6 +40,7 @@ private:
 
     static void general_query_timer(Timer *, void *);
     static void group_specific_query_timer(Timer *, void *);
+    static void second_group_specific_query_timer(Timer *, void *);
 
     unsigned robustness_variable;
     unsigned query_interval;
@@ -58,6 +59,7 @@ private:
     Vector <IPAddress> receivers;
 
     Timer* specific_timer;
+    Timer* second_specific_timer;
     Timer _timer;
 
     void process_report(igmp_group_record *record, int port);

@@ -65,6 +65,13 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
 
     specific_timer->initialize(this);
     specific_timer->schedule_after_msec(0);
+
+    specific_query_timer* st2 = new specific_query_timer;
+    st2->router = this;
+    second_specific_timer= new Timer(&second_group_specific_query_timer, st2);
+
+    second_specific_timer->initialize(this);
+    second_specific_timer->schedule_after_msec(0);
     return 0;
 }
 
@@ -178,12 +185,12 @@ void IGMPRouterSide::general_query_timer(Timer * timer, void* data){
 }
 
 /***
- * a timer for sending general queries, both during startup and after
+ * a timer for sending specific queries, both during startup and after
  * @param timer
  * @param data
  */
 void IGMPRouterSide::group_specific_query_timer(Timer * timer, void* data){
-    query_timer* timerdata = (query_timer*) data;
+    specific_query_timer* timerdata = (specific_query_timer*) data;
     for (igmp_group_state &state: timerdata->router->interface_states[1])
     {
         if (state.scheduled_queries > 0)
@@ -194,6 +201,27 @@ void IGMPRouterSide::group_specific_query_timer(Timer * timer, void* data){
             timer->schedule_after_msec(timerdata->router->LMQT * 100);
         }
     }
+}
+
+/***
+ * a timer for sending specific queries, both during startup and after
+ * @param timer
+ * @param data
+ */
+void IGMPRouterSide::second_group_specific_query_timer(Timer * timer, void* data){
+    specific_query_timer* timerdata = (specific_query_timer*) data;
+//    click_chatter("aaaaa");
+    timer->schedule_after_msec(100);
+//    for (igmp_group_state &state: timerdata->router->interface_states[1])
+//    {
+//        if (state.scheduled_queries > 0)
+//        {
+//            Packet *q = timerdata->router->make_group_specific_query_packet(state.multicast_adress, 1);
+//            timerdata->router->output(7).push(q);
+//            state.scheduled_queries--;
+//            timer->schedule_after_msec(timerdata->router->LMQT * 100);
+//        }
+//    }
 }
 
 /***
