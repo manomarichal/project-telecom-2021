@@ -84,10 +84,22 @@ void IGMPRouterSide::process_report(igmp_group_record *record, int port)
     }
     else if (record->record_type == IGMP_V3_CHANGE_TO_INCLUDE) // leaves
     {
-        // TODO queries sent need to be transmitted [Last Member Query Count] times, once every [Last Member Query Interval] (page 32)
-        Packet *q = make_group_specific_query_packet(record->multicast_adress, port);
-        output(port + 6).push(q);
+        for (igmp_group_state &state: interface_states[port])
+        {
+            if (state.multicast_adress == record->multicast_adress)
+            {
+                // when querying a specific group, lower that groups timer to a small interval of Last Member Query Time seconds
+                state.group_timer = LMQT;
 
+                // the router must immediately send a group specific query
+                Packet *q = make_group_specific_query_packet(record->multicast_adress, port);
+                output(port + 6).push(q);
+
+                // and schedule [Last Member Query Count -1] query retransmissions
+                state.scheduled_queries = LMQC - 1;
+                specific_timer->schedule_after_msec(100*LMQI);
+            }
+        }
     }
     else if (record->record_type == IGMP_V3_CHANGE_TO_EXCLUDE) // joins
     {
@@ -108,9 +120,10 @@ void IGMPRouterSide::process_report(igmp_group_record *record, int port)
             igmp_group_state new_state;
             new_state.mode = IGMP_V3_EXCLUDE;
             new_state.group_timer = GMI;
+            new_state.scheduled_queries = 0;
             new_state.multicast_adress = record->multicast_adress;
-            interface_states[port].push_back(new_state);
             new_state.source_records = Vector<igmp_source_record>();
+            interface_states[port].push_back(new_state);
         }
     }
 }
@@ -165,6 +178,25 @@ void IGMPRouterSide::general_query_timer(Timer * timer, void* data){
 }
 
 /***
+ * a timer for sending general queries, both during startup and after
+ * @param timer
+ * @param data
+ */
+void IGMPRouterSide::group_specific_query_timer(Timer * timer, void* data){
+    query_timer* timerdata = (query_timer*) data;
+    for (igmp_group_state &state: timerdata->router->interface_states[1])
+    {
+        if (state.scheduled_queries > 0)
+        {
+            Packet *q = timerdata->router->make_group_specific_query_packet(state.multicast_adress, 1);
+            timerdata->router->output(7).push(q);
+            state.scheduled_queries--;
+            timer->schedule_after_msec(timerdata->router->LMQT * 100);
+        }
+    }
+}
+
+/***
  * makes a general query
  * @return the query packet
  */
@@ -193,9 +225,6 @@ WritablePacket * IGMPRouterSide::make_group_specific_query_packet(IPAddress grou
 {
     for (igmp_group_state &state: interface_states[interface]) {
         if (state.multicast_adress == group_address) {
-            // when querying a specific group, lower that groups timer to a small interval of Last Member Query Time seconds
-            state.group_timer = LMQT;// TODO wat is da small interval
-
             // make the packet
             WritablePacket *p = Packet::make(query_helper->get_size_of_data(0) + sizeof(click_ip) + 4);
             memset(p->data(), 0, p->length()); // erase previous random data on memory requested
@@ -204,8 +233,7 @@ WritablePacket * IGMPRouterSide::make_group_specific_query_packet(IPAddress grou
             router_alert *r_alert = query_helper->add_router_alert(ip_header + 1);
             ip_header->ip_sum = click_in_cksum((unsigned char *) ip_header, sizeof(click_ip) + sizeof(router_alert));
 
-            // TODO S flags
-            query_helper->add_igmp_data(r_alert + 1, Vector<IPAddress>(), state.multicast_adress, true, robustness_variable, query_interval / 10, max_response_time);
+            query_helper->add_igmp_data(r_alert + 1, Vector<IPAddress>(), state.multicast_adress, state.group_timer > LMQT, robustness_variable, query_interval / 10, max_response_time);
 
             p->set_ip_header(ip_header, sizeof(click_ip));
             p->timestamp_anno().assign_now();
@@ -301,18 +329,6 @@ void IGMPRouterSide::multicast_udp_packet(Packet *p) {
             }
         }
     }
-}
-
-/***
- * a timer for sending general queries, both during startup and after
- * @param timer
- * @param data
- */
-void IGMPRouterSide::group_specific_query_timer(Timer * timer, void* data){
-
-    specific_query_timer* timerdata = (specific_query_timer*) data;
-//    click_chatter("works");
-    timer->schedule_after_msec(100);
 }
 
 CLICK_ENDDECLS

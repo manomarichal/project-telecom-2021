@@ -64,7 +64,7 @@ router_alert *IGMPV3QueryHelper::add_router_alert(void *start, uint8_t octet_1, 
     }
 }
 
-igmp_mem_query_msg *IGMPV3QueryHelper::add_igmp_data(void *start, const Vector <IPAddress> source_addresses, IPAddress group_address, bool general
+igmp_mem_query_msg *IGMPV3QueryHelper::add_igmp_data(void *start, const Vector <IPAddress> source_addresses, IPAddress group_address, bool router_side_bit
         , unsigned qrv, unsigned qqic, uint8_t max_resp_code) {
     // add the membership report info
     igmp_mem_query_msg *query = reinterpret_cast<igmp_mem_query_msg *>(start);
@@ -72,7 +72,7 @@ igmp_mem_query_msg *IGMPV3QueryHelper::add_igmp_data(void *start, const Vector <
     query->type = IGMP_MEM_QUERY;
     query->group_adress = group_address.addr();
     query->resv = 0;
-
+    query->s = router_side_bit;
     query->qrv = qrv;
     query->qqic = qqic; // queries query interval
     query->number_of_sources = source_addresses.size();

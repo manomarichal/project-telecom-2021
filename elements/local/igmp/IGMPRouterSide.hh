@@ -37,7 +37,6 @@ public:
 
 private:
 
-    Timer* specific_timer;
 
     static void general_query_timer(Timer *, void *);
     static void group_specific_query_timer(Timer *, void *);
@@ -51,14 +50,14 @@ private:
     unsigned LMQC;
     unsigned LMQT;
     unsigned max_response_time;
-    unsigned int _local_timer =0;
-    unsigned int _local_startup_timer =0;
 
     IPAddress routerIP;
     IPAddress ASMC_ADDRESS= IPAddress("224.0.0.1");
     IPAddress MC_ADDRESS= IPAddress("224.0.0.22");
     Vector <Vector<igmp_group_state>> interface_states;
     Vector <IPAddress> receivers;
+
+    Timer* specific_timer;
     Timer _timer;
 
     void process_report(igmp_group_record *record, int port);

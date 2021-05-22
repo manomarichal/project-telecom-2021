@@ -117,6 +117,7 @@ struct igmp_group_state {
     uint8_t mode;
     uint32_t group_timer;
     IPAddress multicast_adress;
+    uint8_t scheduled_queries;
 };
 
 //struct URI_packages{
