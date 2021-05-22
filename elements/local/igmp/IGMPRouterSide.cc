@@ -21,7 +21,6 @@ IGMPRouterSide::~IGMPRouterSide() {}
  * @return returns -1 on failed read and 0 on completed read
  */
 int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
-    //cunfugure like RFC 8.14
     if (Args(conf, this, errh)
     .read_mp("ROUTERADDRESS", routerIP)
     .read_mp("RV", robustness_variable)
@@ -31,14 +30,18 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
     .read_mp("LMQI", LMQI).read_mp("LMQC", LMQC)
     .read_mp("MRT", max_response_time).complete() < 0) {
         click_chatter("failed read when initialising router, returning 0");
-        if(0<robustness_variable<7){
+        // RV needs to be between 0 and 7 according to the RFC
+        if(0<robustness_variable and robustness_variable<7){
+            click_chatter("Invalid value for the Robustness variable");
             return  -1;
         }
         return -1;
     }
+
     GMI = (robustness_variable * query_interval) + max_response_time;
     LMQT = LMQI * LMQC;
 
+    // create an interface for each input port
     for (int i=0; i < port_count()[2] - 48; i++)
     {
         interface_states.push_back(Vector<igmp_group_state>());
@@ -65,7 +68,7 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
 void IGMPRouterSide::process_report(igmp_group_record *record, int port)
 {
     if (record->record_type == IGMP_V3_EXCLUDE) {
-        // source lists will always be empty so nly need to update the group timer
+        // source lists will always be empty so only need to update the group timer
         for (igmp_group_state &state: interface_states[port])
         {
             if (state.multicast_adress == record->multicast_adress) {state.group_timer = GMI;}
@@ -112,17 +115,14 @@ void IGMPRouterSide::run_timer(Timer * timer)
 {
     _timer.schedule_after_msec(100);
 
-    // updating group timers
     for (auto &interface: interface_states)
     {
-        // update group timers
         for (igmp_group_state &state: interface)
         {
-            //click_chatter("group timer = %i", state.group_timer);
             if (state.group_timer < 1)
             {
                 // group timer ran out, transition to include mode
-                state.mode = IGMP_V3_INCLUDE; //TODO wanneer deleten, of nooit delete? momenteel probleem dat dubbel joinen niet werkt
+                state.mode = IGMP_V3_INCLUDE;
             }
             else
             {
@@ -185,7 +185,7 @@ WritablePacket * IGMPRouterSide::make_group_specific_query_packet(IPAddress grou
 {
     for (igmp_group_state &state: interface_states[interface]) {
         if (state.multicast_adress == group_address) {
-            // when querying a specific group, lower that groups timer to a small interval
+            // when querying a specific group, lower that groups timer to a small interval of Last Member Query Time seconds
             state.group_timer = LMQT;// TODO wat is da small interval
 
             // make the packet
@@ -196,6 +196,7 @@ WritablePacket * IGMPRouterSide::make_group_specific_query_packet(IPAddress grou
             router_alert *r_alert = query_helper->add_router_alert(ip_header + 1);
             ip_header->ip_sum = click_in_cksum((unsigned char *) ip_header, sizeof(click_ip) + sizeof(router_alert));
 
+            // TODO S flags
             query_helper->add_igmp_data(r_alert + 1, Vector<IPAddress>(), state.multicast_adress, true, robustness_variable, query_interval / 10, max_response_time);
 
             p->set_ip_header(ip_header, sizeof(click_ip));
