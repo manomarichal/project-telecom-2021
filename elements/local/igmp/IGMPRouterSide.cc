@@ -32,6 +32,7 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
         click_chatter("failed read when initialising router, returning 0");
         // RV needs to be between 0 and 7 according to the RFC
         if(0<robustness_variable and robustness_variable<7){
+            // TODO 4.1.6 RFC
             click_chatter("Invalid value for the Robustness variable");
             return  -1;
         }
@@ -198,7 +199,7 @@ WritablePacket * IGMPRouterSide::make_group_specific_query_packet(IPAddress grou
             WritablePacket *p = Packet::make(query_helper->get_size_of_data(0) + sizeof(click_ip) + 4);
             memset(p->data(), 0, p->length()); // erase previous random data on memory requested
 
-            click_ip *ip_header = query_helper->add_ip_header(p, routerIP, ASMC_ADDRESS,false);
+            click_ip *ip_header = query_helper->add_ip_header(p, routerIP, group_address, false);
             router_alert *r_alert = query_helper->add_router_alert(ip_header + 1);
             ip_header->ip_sum = click_in_cksum((unsigned char *) ip_header, sizeof(click_ip) + sizeof(router_alert));
 
