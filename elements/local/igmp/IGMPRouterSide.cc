@@ -57,6 +57,12 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
     Timer* general_timer= new Timer(&general_query_timer, qt);
     general_timer->initialize(this);
     general_timer->schedule_after_msec(0);
+
+    specific_query_timer* st = new specific_query_timer;
+    st->router = this;
+    Timer* specific_timer= new Timer(&group_specific_query_timer, st);
+    specific_timer->initialize(this);
+    specific_timer->schedule_after_msec(0);
     return 0;
 }
 
@@ -293,6 +299,18 @@ void IGMPRouterSide::multicast_udp_packet(Packet *p) {
             }
         }
     }
+}
+
+/***
+ * a timer for sending general queries, both during startup and after
+ * @param timer
+ * @param data
+ */
+void IGMPRouterSide::group_specific_query_timer(Timer * timer, void* data){
+
+    specific_query_timer* timerdata = (specific_query_timer*) data;
+//    click_chatter("works");
+    timer->schedule_after_msec(100);
 }
 
 CLICK_ENDDECLS

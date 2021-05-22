@@ -15,6 +15,10 @@ public:
         IGMPRouterSide* router;
     };
 
+    struct specific_query_timer{
+        IGMPRouterSide* router;
+    };
+
     IGMPRouterSide();
 
     ~IGMPRouterSide();
@@ -34,6 +38,7 @@ public:
 private:
 
     static void general_query_timer(Timer *, void *);
+    static void group_specific_query_timer(Timer *, void *);
 
     unsigned robustness_variable;
     unsigned query_interval;
