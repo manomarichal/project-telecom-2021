@@ -70,7 +70,8 @@ int IGMPClientSide::client_join(const String &conf, Element *e, __attribute__((u
 
     bool exists = false;
     for (int i = 0; i < element->group_records.size(); i++) {
-        if (element->group_records[i].multicast_adress == groupaddr) {
+        if (element->group_records[i].multicast_adress == groupaddr and (element->group_records[i].record_type == IGMP_V3_CHANGE_TO_EXCLUDE
+        or element->group_records[i].record_type == IGMP_V3_EXCLUDE)) {
             //check if the client is a part of this group record already, might be helpful later
 //            for (int y =0; y<element->group_records[i].sources.size(); y++){
 //                if (element->group_records[i].sources[y] == element->clientIP){
@@ -165,6 +166,13 @@ int IGMPClientSide::client_leave(const String &conf, Element *e, __attribute__((
                     timer->schedule_after_msec(click_random(0, element->unsolicited_report_interval));
                 }
                 click_chatter("======executing leave=====");
+                if(element->queue.size() >0){
+                    element->group_records[i].record_type = include;
+                    WritablePacket *pack = element->make_mem_report_packet();
+                    element->currently_sending.p = pack;
+                    element->queue[0].p = pack;
+                }
+
 
             } else {
                 click_chatter("this client has already left this group");
@@ -254,19 +262,12 @@ void IGMPClientSide::push(int port, Packet *p) {
         //ontleed de query, check van waar ze komt.
         const router_alert *alert_ptr = reinterpret_cast<const router_alert *>(ip_header + 1);
         igmp_mem_query_msg query_data = query_helper->unpack_query_data(alert_ptr+1);
-//        click_chatter("respcode %d", query_data.max_resp_code);
-
-//        igmp_mem_query_msg* query = (igmp_mem_query_msg*) ()
         for (int i = 0; i<group_records.size(); i++){
             //als group record mc adr overeenkomt met src van query, stuur v3 als join
             if(group_records[i].record_type == 4 or group_records[i].record_type == 2){
                 //click_chatter("\t there has been an query while we joined");
                 group_records[i].record_type = 2;
-//                igmp_group_record grRecord;
-//                //the group record needs to be made
-//                grRecord.record_type = change_to_exclude;
-//                grRecord.multicast_adress = groupaddr;
-//                grRecord.number_of_sources = 0;
+                //the group record needs to be made
 
                 WritablePacket *p = make_mem_report_packet();
                 to_send packet;
@@ -333,6 +334,9 @@ void IGMPClientSide::push(int port, Packet *p) {
  * this timer checks if the queue is empty or not
  * if it is not, the package is sent, the function is only triggered after a random time within [0, mrt]
  * the triggered function will output the package marked as currently_sending
+ *
+ * QUERY REPLIES
+ *
  */
 void IGMPClientSide::run_timer(Timer * timer)
 {
@@ -353,6 +357,9 @@ void IGMPClientSide::run_timer(Timer * timer)
  * function which runs the scheduled time, it checks the amount of packages left to send and sends one
  * it then randomly schedules it again
  * if the timer does not need to send the package anymore, it is deleted
+ *
+ * JOIN/LEAVE INTERVALS
+ *
  * @param timer the timer param
  * @param data the data, in this case a struct of URI_packages which is defined in the public of IGMPClientside.hh
  */
