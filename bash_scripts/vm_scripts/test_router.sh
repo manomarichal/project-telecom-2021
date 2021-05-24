@@ -20,4 +20,4 @@ echo "================= RUNNING CLICK ===================="
 chmod +x /home/student/click-reference/solution/start_click.sh
 chmod +x /home/student/click/scripts/start_click.sh
 sudo /home/student/click-reference/solution/start_click.sh &
-/home/student/click-reference/solution/start_click.sh
+/home/student/click/scripts/start_click.sh
