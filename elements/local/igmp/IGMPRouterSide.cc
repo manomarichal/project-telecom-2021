@@ -225,6 +225,7 @@ void IGMPRouterSide::second_group_specific_query_timer(Timer * timer, void* data
 
 /***
  * makes a general query
+ * //TODO max resp time anders bij general query
  * @return the query packet
  */
 WritablePacket * IGMPRouterSide::make_general_query_packet()
