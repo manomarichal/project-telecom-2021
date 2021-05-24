@@ -30,7 +30,7 @@ elementclass Router {
 
 	// Input and output paths for interface 0
 	input[0]
-	    -> [0]igmprouter::IGMPRouterSide(ROUTERADDRESS $server_address, RV 2, QI 200, SQI 50, SQC 2, LMQI 10, LMQC 2, MRT 10)[0]
+	    -> [0]igmprouter::IGMPRouterSide(ROUTERADDRESS $server_address, RV 2, QI 200, SQI 50, SQC 2, LMQI 10, LMQC 2, QRI 50)[0]
 		-> HostEtherFilter($server_address)
 		-> server_class :: Classifier(12/0806 20/0001, 12/0806 20/0002, -)
 		-> ARPResponder($server_address)

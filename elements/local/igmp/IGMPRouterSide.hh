@@ -50,7 +50,7 @@ private:
     unsigned LMQI;
     unsigned LMQC;
     unsigned LMQT;
-    unsigned max_response_time;
+    unsigned QRI;
 
     IPAddress routerIP;
     IPAddress ASMC_ADDRESS= IPAddress("224.0.0.1");

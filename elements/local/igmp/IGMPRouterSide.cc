@@ -28,7 +28,7 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
     .read_mp("SQI", startup_interval)
     .read_mp("SQC", startup_count)
     .read_mp("LMQI", LMQI).read_mp("LMQC", LMQC)
-    .read_mp("MRT", max_response_time).complete() < 0) {
+    .read_mp("QRI", QRI).complete() < 0) {
         click_chatter("failed read when initialising router, returning 0");
         // RV needs to be between 0 and 7 according to the RFC
         if(0<robustness_variable and robustness_variable<7){
@@ -39,7 +39,7 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
         return -1;
     }
 
-    GMI = (robustness_variable * query_interval) + max_response_time;
+    GMI = (robustness_variable * query_interval) + QRI;
     LMQT = LMQI * LMQC;
 
     // create an interface for each input port
@@ -236,7 +236,7 @@ WritablePacket * IGMPRouterSide::make_general_query_packet()
     router_alert *r_alert = query_helper->add_router_alert(ip_header + 1);
     ip_header->ip_sum = click_in_cksum((unsigned char *) ip_header, sizeof(click_ip) + sizeof(router_alert));
     query_helper->add_igmp_data(r_alert + 1, Vector <IPAddress>(), IPAddress("0.0.0.0"), false,
-                                robustness_variable, query_interval / 10, max_response_time);
+                                robustness_variable, query_interval / 10, QRI);
 
     p->set_ip_header(ip_header, sizeof(click_ip));
     p->timestamp_anno().assign_now();
@@ -260,7 +260,7 @@ WritablePacket * IGMPRouterSide::make_group_specific_query_packet(IPAddress grou
             router_alert *r_alert = query_helper->add_router_alert(ip_header + 1);
             ip_header->ip_sum = click_in_cksum((unsigned char *) ip_header, sizeof(click_ip) + sizeof(router_alert));
 
-            query_helper->add_igmp_data(r_alert + 1, Vector<IPAddress>(), state.multicast_adress, state.group_timer > LMQT, robustness_variable, query_interval / 10, max_response_time);
+            query_helper->add_igmp_data(r_alert + 1, Vector<IPAddress>(), state.multicast_adress, state.group_timer > LMQT, robustness_variable, query_interval / 10, LMQI);
 
             p->set_ip_header(ip_header, sizeof(click_ip));
             p->timestamp_anno().assign_now();
