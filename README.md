@@ -68,7 +68,7 @@ These can be found in `project-telecom-2021/bash_scripts/vm_scripts`
 - `leave_test`: client21 leaves twice
 
 ## Parameters
-IGMPv3 uses a lot of different parameters that can impact how the router works, in `library/router.click` on line 33 you can change the following parameters:
+IGMPv3 uses a lot of different parameters that can impact how the router works, in `library/router.click` on line 33 you can change them. Only natural numbers are supported, and values are in tenths of seconds.
 - `RV`: the robustness variable
 - `QI`: the query interval
 - `SQI`: the startup query interval
@@ -76,4 +76,3 @@ IGMPv3 uses a lot of different parameters that can impact how the router works, 
 - `LMQI`: the last member query interval
 - `LMQC`: the last member query count
 - `QRI`: the query response interval
-Note that 10 equals one second, and only natural numbers are supported
