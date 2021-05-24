@@ -34,7 +34,6 @@ This sets up the other bash scripts and the taps
 
 - `test_client.sh`: runs our clients, and the server and router from the reference implementation
 - `test_router.sh`: runs our router, and the server and clients from the reference implementation
-- `test_router+client.sh`: runs our client and router, and the server from the reference implementation
 
 ## Using Click 
 

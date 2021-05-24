@@ -1,9 +1,6 @@
 #!/bin/sh
 
-cd /home/student/click/scripts/
-../userlevel/click glue.click &
 cd /home/student/click-reference/solution/
-
 
 sleep 1
 
@@ -12,6 +9,6 @@ sleep 1
 ./client22.bin & # port 10004
 ./client31.bin & # port 10005
 ./client32.bin & # port 10006
-./server.bin &   # port 10002
+#./server.bin &   # port 10002
 
 wait

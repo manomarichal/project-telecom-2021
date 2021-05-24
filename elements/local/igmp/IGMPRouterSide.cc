@@ -43,7 +43,7 @@ int IGMPRouterSide::configure(Vector <String> &conf, ErrorHandler *errh) {
     LMQT = LMQI * LMQC;
 
     // create an interface for each input port
-    for (int i=0; i < port_count()[2] - 48; i++)
+    for (int i=0; i < 3; i++)
     {
         interface_states.push_back(Vector<igmp_group_state>());
     }
